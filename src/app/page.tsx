@@ -8,7 +8,7 @@ import { Navbar } from "@/components/Navbar";
 export default function Home() {
   return (
     <div className="bg-surface text-on-surface selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed border-t-2 border-transparent">
-      {/* Rebuild Trigger 2 */}
+      {/* Vercel Rebuild Trigger - Fix 404 Case Sensitivity & Versions */}
       <Navbar />
       
       <main className="pt-24 overflow-hidden">
