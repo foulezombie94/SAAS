@@ -1,0 +1,545 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { Quote, QuoteItem } from '@/types/dashboard'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { SignaturePad } from '@/components/SignaturePad'
+import { useSearchParams } from 'next/navigation'
+import { 
+  CheckCircle2, 
+  PenTool, 
+  FileText,
+  Clock,
+  Receipt,
+  Download,
+  AlertCircle,
+  MapPin,
+  User,
+  Calendar,
+  ShieldCheck,
+  Briefcase,
+  CreditCard,
+  Loader2
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
+import { createClient } from '@/utils/supabase/client'
+
+interface QuotePublicViewProps {
+  quote: Quote
+}
+
+export function QuotePublicView({ quote }: QuotePublicViewProps) {
+  const [currentQuote, setCurrentQuote] = useState<Quote>(quote)
+  const [isSigning, setIsSigning] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [isPaying, setIsPaying] = useState(false)
+  const [signature, setSignature] = useState<string | null>(quote.signature_url || null)
+  const [isDone, setIsDone] = useState(false)
+  const searchParams = useSearchParams()
+
+  const [showSuccess, setShowSuccess] = useState(false)
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment')
+    if (paymentStatus === 'success') {
+      setShowSuccess(true)
+      toast.success("Paiement validé !")
+    } else if (paymentStatus === 'canceled') {
+      toast.error("Le paiement a été annulé.")
+    }
+  }, [searchParams])
+
+  // Real-time synchronization
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`quote-${quote.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'quotes', filter: `id=eq.${quote.id}` },
+        (payload: any) => {
+          const updated = payload.new as Quote
+          setCurrentQuote(prev => ({ ...prev, ...updated }))
+          if (updated.status === 'paid' && currentQuote.status !== 'paid') {
+            toast.success("Paiement confirmé en direct !")
+          }
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [quote.id, currentQuote.status])
+
+  const handleDownloadPdf = async () => {
+    const printElement = document.getElementById('pdf-template')
+    if (!printElement) return
+    setIsGeneratingPdf(true)
+    
+    try {
+      const canvas = await html2canvas(printElement, {
+        scale: 4,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      })
+      const imgData = canvas.toDataURL('image/png', 1.0)
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST')
+      pdf.save(`Devis_${quote.number}.pdf`)
+      toast.success("Téléchargement réussi !")
+    } catch (e) {
+      toast.error("Erreur génération PDF")
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }
+
+  const handleSaveSignature = async (dataUrl: string) => {
+    try {
+      // 1. Send signature to storage & update (via API)
+      const response = await fetch('/api/quotes/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          quoteId: quote.id, 
+          signatureDataUrl: dataUrl, // API will handle storage for public users
+          isPublic: true
+        })
+      })
+
+      if (!response.ok) throw new Error("Erreur serveur")
+      
+      const { signatureUrl } = await response.json()
+      setSignature(signatureUrl)
+      setIsSigning(false)
+      setIsDone(true)
+      toast.success("Devis signé avec succès !")
+    } catch (e: any) {
+      toast.error("Échec : " + e.message)
+    }
+  }
+
+  const handlePayment = async () => {
+    setIsPaying(true)
+    try {
+      const response = await fetch('/api/payments/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteId: quote.id })
+      })
+      const data = await response.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error(data.error || "Erreur de paiement")
+      }
+    } catch (e: any) {
+      toast.error("Impossible d'initier le paiement : " + e.message)
+    } finally {
+      setIsPaying(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-8 pb-32">
+      {/* 
+        SUCCESS OVERLAY (Congratulations)
+      */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-500">
+           <div className="bg-white rounded-[40px] p-12 max-w-lg w-full mx-4 shadow-2xl text-center border border-slate-100 animate-in zoom-in-95 duration-500">
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
+                 <CheckCircle2 className="text-emerald-600" size={48} />
+              </div>
+              <h2 className="text-4xl font-black text-[#002878] tracking-tighter mb-4 uppercase">FÉLICITATIONS !</h2>
+              <p className="text-xl font-bold text-slate-500 mb-8 leading-relaxed">
+                 Votre paiement a été traité avec succès.<br/>
+                 Merci de votre confiance.
+              </p>
+              <div className="space-y-4">
+                 <Button 
+                    onClick={() => setShowSuccess(false)}
+                    className="w-full h-16 bg-[#002878] font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-blue-900/20"
+                 >
+                    Consulter ma facture en ligne
+                 </Button>
+                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Référence : {currentQuote.number}</p>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* 
+        Professional PDF Template - Shared Logic
+      */}
+      {/* 
+        PREMIUM RESPONSIVE WEB VIEW 
+        This is what the client see on their screen (Desktop/Mobile).
+      */}
+      <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className={`h-24 ${currentQuote.status === 'paid' ? 'bg-emerald-600' : 'bg-[#002878]'} flex items-center justify-between px-8 text-white transition-colors duration-500`}>
+           <div className="flex items-center gap-3">
+              <FileText className="opacity-50" size={24} />
+              <span className="font-black uppercase tracking-widest text-[10px]">
+                 {currentQuote.status === 'paid' ? 'Facture & Reçu d\'Achat' : 'Devis Officiel'}
+              </span>
+           </div>
+           <div className="flex items-center gap-4">
+              <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 ${currentQuote.status === 'paid' ? 'bg-emerald-500 shadow-xl' : 'bg-white/10'}`}>
+                 {currentQuote.status === 'paid' ? '✓ RÉGLÉ' : '⚠ EN ATTENTE'}
+              </div>
+              <div className="text-right">
+                 <p className="text-sm font-black uppercase tracking-tighter">REF: {currentQuote.number}</p>
+              </div>
+           </div>
+        </div>
+
+        <div className="p-8 md:p-12 space-y-12">
+          {/* Artisan & Client Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-[#002878]/5 rounded-xl flex items-center justify-center text-[#002878]">
+                    <Briefcase size={20} />
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Artisan</p>
+                    <h2 className="text-xl font-black text-[#002878] uppercase">{currentQuote.profiles?.company_name || 'Artisan Professionnel'}</h2>
+                 </div>
+              </div>
+              <div className="pl-14 space-y-1">
+                 <p className="text-sm font-bold text-slate-600 flex items-center gap-2"><MapPin size={14} /> {currentQuote.profiles?.address}</p>
+                 <p className="text-sm font-bold text-slate-400">France • Certifié ArtisanFlow</p>
+              </div>
+            </div>
+            
+            <div className="md:text-right space-y-4">
+              <div className="flex items-center md:justify-end gap-3">
+                 <div className="text-right">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Client</p>
+                    <h3 className="text-xl font-black text-slate-900 uppercase">{currentQuote.clients?.name}</h3>
+                 </div>
+                 <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
+                    <User size={20} />
+                 </div>
+              </div>
+              <div className="pr-0 md:pr-14 space-y-1">
+                 <p className="text-sm font-bold text-slate-600 italic leading-relaxed">{currentQuote.clients?.address}, {currentQuote.clients?.city}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Project Details Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-slate-50 rounded-3xl border border-slate-100">
+             <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Émission</p>
+                <p className="font-bold text-[#002878]">{new Date(currentQuote.created_at).toLocaleDateString()}</p>
+             </div>
+             <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Validité</p>
+                <p className="font-bold text-[#002878]">30 Jours</p>
+             </div>
+             <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Paiement</p>
+                <p className="font-bold text-[#002878]">Virement</p>
+             </div>
+             <div className="space-y-1 col-span-2 md:col-span-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Réf. Projet</p>
+                <p className="font-bold text-[#002878] truncate">Rénovation - {currentQuote.clients?.city}</p>
+             </div>
+          </div>
+
+          {/* Items List - Mobile Optimized */}
+          <div className="space-y-4">
+            <div className="hidden md:grid grid-cols-12 gap-4 border-b border-slate-100 pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <div className="col-span-6 px-4">Désignation des prestations</div>
+              <div className="col-span-2 text-center">Quantité</div>
+              <div className="col-span-2 text-right">PU HT</div>
+              <div className="col-span-2 text-right px-4">Total HT</div>
+            </div>
+            {currentQuote.quote_items?.map((item: QuoteItem) => (
+              <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 py-6 border-b border-slate-50 items-center hover:bg-slate-50/50 transition-colors px-4 rounded-xl">
+                <div className="col-span-1 md:col-span-6">
+                   <p className="font-black text-[#002878] uppercase tracking-tight text-lg leading-tight">{item.description}</p>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 italic">Qualité Artisanale Certifiée</p>
+                </div>
+                <div className="col-span-1 md:col-span-2 text-left md:text-center font-bold text-slate-500">
+                   <span className="md:hidden text-[9px] uppercase mr-2 font-black text-slate-300">Qté:</span>{item.quantity} Unit
+                </div>
+                <div className="col-span-1 md:col-span-2 text-left md:text-right font-bold text-slate-500">
+                   <span className="md:hidden text-[9px] uppercase mr-2 font-black text-slate-300">PU:</span>{item.unit_price}€
+                </div>
+                <div className="col-span-1 md:col-span-2 text-right font-black text-[#002878] text-xl">
+                   {item.total_price}€
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Totals & Signature */}
+          <div className="flex flex-col md:flex-row items-end justify-between gap-10 pt-10 border-t-2 border-slate-50">
+            <div className="w-full md:flex-1">
+              {signature ? (
+                <div className="bg-green-50/50 p-6 rounded-2xl border border-green-100 relative overflow-hidden group">
+                  <div className="flex items-center gap-3 mb-4 relative z-10">
+                     <ShieldCheck className="text-green-600" size={18} />
+                     <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Devis Signé Numériquement</p>
+                  </div>
+                  <img src={signature} alt="Client Signature" className="h-24 object-contain mix-blend-multiply opacity-80 relative z-10" />
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">Accord contractuel validé le {new Date().toLocaleDateString()}</p>
+                </div>
+              ) : (
+                <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100 flex items-center gap-4 text-orange-700">
+                   <AlertCircle size={24} className="shrink-0" />
+                   <div>
+                      <p className="text-xs font-black uppercase tracking-widest leading-none mb-1">Signature Requise</p>
+                      <p className="text-[10px] font-bold opacity-70">Veuillez valider le devis pour lancer le chantier.</p>
+                   </div>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full md:w-auto space-y-4">
+              <div className="flex justify-between md:justify-end gap-10 text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">
+                 <span>Sous-Total HT</span>
+                 <span>{currentQuote.total_ht} €</span>
+              </div>
+              <div className="flex justify-between md:justify-end gap-10 text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 pb-4 border-b border-slate-100">
+                 <span>TVA (20%)</span>
+                 <span>{(currentQuote.total_ht * 0.2).toFixed(2)} €</span>
+              </div>
+              <div className="bg-[#002878] text-white p-8 rounded-3xl flex justify-between items-center gap-10 shadow-xl shadow-blue-900/10 scale-105 origin-right">
+                 <span className="font-black uppercase tracking-[0.2em] text-[10px] opacity-40 leading-none">Net à Payer TTC</span>
+                 <span className="text-4xl font-black tracking-tighter leading-none whitespace-nowrap">{currentQuote.total_ttc} €</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Legal Footer */}
+          <div className="pt-12 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#002878]">Informations Légales</p>
+                <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
+                   SIRET : {currentQuote.profiles?.siret || 'En cours d\'immatriculation'} | ID : {currentQuote.profiles?.id.slice(0, 8).toUpperCase()}<br />
+                   {currentQuote.status === 'paid' ? 'Règlement : Carte Bancaire (Payé)' : 'Règlement : Carte Bancaire / Virement'}
+                </p>
+             </div>
+             <div className="md:text-right flex flex-col md:items-end justify-center">
+                <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Certifié Par ArtisanFlow</p>
+                <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-400">
+                   ID TRANSACTION : {currentQuote.id.slice(0, 8).toUpperCase()}
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-center">
+         <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">Logiciel de Gestion ArtisanFlow • Sécurisé & Certifié</p>
+      </div>
+
+      {/* 
+        HIDDEN HIGH-FIDELITY PDF TEMPLATE
+        This is captured by html2canvas for the download.
+      */}
+      <div id="pdf-template" style={{ 
+        position: 'fixed',
+        left: '-9999px',
+        top: 0,
+        width: '1000px', 
+        padding: '80px',
+        backgroundColor: '#ffffff',
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        color: '#1e293b'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '80px' }}>
+           <div>
+              <h2 style={{ fontSize: '14px', fontWeight: '900', color: '#002878', letterSpacing: '0.2em', textTransform: 'uppercase', margin: '0 0 4px 0' }}>{currentQuote.profiles?.company_name || 'Artisan Professionnel'}</h2>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#64748b', margin: 0 }}>ArtisanFlow SaaS Integration</p>
+           </div>
+           <div style={{ 
+              backgroundColor: currentQuote.status === 'paid' ? '#10b981' : '#f8fafc',
+              color: currentQuote.status === 'paid' ? '#ffffff' : '#64748b',
+              padding: '12px 24px',
+              borderRadius: '50px',
+              fontSize: '12px',
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              border: currentQuote.status === 'paid' ? 'none' : '2px solid #e2e8f0'
+           }}>
+              {currentQuote.status === 'paid' ? '✓ DOCUMENT PAYÉ (REÇU)' : '⚠ EN ATTENTE DE RÈGLEMENT'}
+           </div>
+        </div>
+
+        <div style={{ marginBottom: '4px' }}>
+           <h1 style={{ fontSize: '56px', fontWeight: '900', color: '#002878', margin: 0, letterSpacing: '-0.04em' }}>
+              {currentQuote.status === 'paid' ? 'Facture' : 'Devis'} #{currentQuote.number}
+           </h1>
+        </div>
+        
+        <div style={{ height: '4px', backgroundColor: currentQuote.status === 'paid' ? '#10b981' : '#002878', width: '100%', marginBottom: '80px', marginTop: '30px' }}></div>
+
+        <div style={{ display: 'flex', gap: '80px', marginBottom: '80px' }}>
+           <div style={{ flex: 1, backgroundColor: '#f8fafc', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <p style={{ fontSize: '11px', fontWeight: '900', color: '#002878', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>Facturer à</p>
+              <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1e293b', margin: '0 0 16px 0' }}>{currentQuote.clients?.name}</h3>
+              <p style={{ fontSize: '14px', color: '#64748b', fontWeight: '600', margin: '0 0 4px 0' }}>Chantier :</p>
+              <p style={{ fontSize: '16px', color: '#334155', fontWeight: '700', margin: 0 }}>{currentQuote.clients?.address}</p>
+              <p style={{ fontSize: '16px', color: '#334155', fontWeight: '700', margin: 0 }}>{currentQuote.clients?.city}</p>
+           </div>
+           <div style={{ width: '350px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignContent: 'start' }}>
+              <div>
+                 <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Date d'émission</p>
+                 <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>{new Date(currentQuote.created_at).toLocaleDateString()}</p>
+              </div>
+              <div>
+                 <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Validité</p>
+                 <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>30 Jours</p>
+              </div>
+              <div style={{ gridColumn: 'span 2', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+                 <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Mode de règlement</p>
+                 <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Virement Bancaire</p>
+              </div>
+           </div>
+        </div>
+
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '60px' }}>
+           <thead>
+              <tr style={{ backgroundColor: '#002878', color: '#ffffff' }}>
+                 <th style={{ textAlign: 'left', padding: '20px 30px', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', borderRadius: '8px 0 0 0' }}>Désignation des prestations</th>
+                 <th style={{ textAlign: 'center', padding: '20px', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>Qté</th>
+                 <th style={{ textAlign: 'right', padding: '20px', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>PU HT</th>
+                 <th style={{ textAlign: 'right', padding: '20px 30px', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', borderRadius: '0 8px 0 0' }}>Total HT</th>
+              </tr>
+           </thead>
+           <tbody>
+              {currentQuote.quote_items?.map((item: QuoteItem) => (
+                 <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '30px' }}>
+                       <p style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: '0 0 4px 0' }}>{item.description}</p>
+                       <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', margin: 0 }}>Prestation certifiée ArtisanFlow - Finition premium.</p>
+                    </td>
+                    <td style={{ textAlign: 'center', fontSize: '16px', fontWeight: '700', color: '#475569' }}>{item.quantity}</td>
+                    <td style={{ textAlign: 'right', fontSize: '16px', fontWeight: '700', color: '#475569' }}>{item.unit_price} €</td>
+                    <td style={{ textAlign: 'right', paddingRight: '30px', fontSize: '18px', fontWeight: '900', color: '#1e293b' }}>{item.total_price} €</td>
+                 </tr>
+              ))}
+           </tbody>
+        </table>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '40px' }}>
+           <div style={{ flex: 1 }}>
+              {signature && (
+                 <div style={{ textAlign: 'left' }}>
+                    <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '10px' }}>Approuvé par le client</p>
+                    <img src={signature} alt="Client Signature" style={{ height: '100px', mixBlendMode: 'multiply' }} />
+                    <p style={{ fontSize: '9px', fontStyle: 'italic', marginTop: '5px', color: '#94a3b8' }}>Signé numériquement le {new Date().toLocaleDateString()}</p>
+                 </div>
+              )}
+           </div>
+           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+              <div style={{ width: '400px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', color: '#64748b' }}>
+                 <span>Total Hors Taxes</span>
+                 <span>{currentQuote.total_ht} €</span>
+              </div>
+              <div style={{ width: '400px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', color: '#64748b', paddingBottom: '20px', borderBottom: '2px solid #e2e8f0' }}>
+                 <span>TVA (20%)</span>
+                 <span>{(currentQuote.total_ht * 0.2).toFixed(2)} €</span>
+              </div>
+              <div style={{ width: '500px', marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                 <span style={{ fontSize: '16px', fontWeight: '900', color: '#002878', textTransform: 'uppercase' }}>Net à Payer TTC</span>
+                 <span style={{ fontSize: '48px', fontWeight: '900', color: '#002878' }}>{currentQuote.total_ttc} €</span>
+              </div>
+           </div>
+        </div>
+
+        <div style={{ marginTop: '100px', borderTop: '1px solid #e2e8f0', paddingTop: '40px' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', lineHeight: '1.8' }}>
+              <div style={{ flex: 1 }}>
+                 <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Informations Légales</p>
+                 <p style={{ margin: 0 }}>SIRET : {currentQuote.profiles?.siret || 'En cours d\'immatriculation'}</p>
+                 <p style={{ margin: 0 }}>ID Artisan : {currentQuote.profiles?.id.slice(0, 8).toUpperCase()}</p>
+                 <p style={{ margin: 0 }}>Document généré par ArtisanFlow SaaS.</p>
+              </div>
+              <div style={{ flex: 1, textAlign: 'right' }}>
+                 <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Règlement</p>
+                 {currentQuote.status === 'paid' ? (
+                     <div style={{ textAlign: 'right' }}>
+                        <p style={{ margin: 0, color: '#166534', fontWeight: '900', fontSize: '14px', letterSpacing: '0.05em' }}>✓ PAYÉ LE {new Date(currentQuote.updated_at || Date.now()).toLocaleDateString()}</p>
+                        <p style={{ margin: '4px 0 0 0', color: '#475569', fontSize: '10px' }}>Mode : {currentQuote.payment_method === 'card' ? 'Carte Bancaire' : 'Virement Bancaire'}</p>
+                        <p style={{ marginTop: '10px', fontSize: '9px', fontWeight: 'bold', color: '#94a3b8' }}>IBAN ARTISAN : {currentQuote.profiles?.iban || 'N/A'}</p>
+                     </div>
+                  ) : (
+                     <div style={{ textAlign: 'right' }}>
+                        <p style={{ margin: 0, fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>Mode attendu : Virement / Carte</p>
+                        {currentQuote.profiles?.iban && (
+                           <div style={{ marginTop: '12px', fontSize: '11px', color: '#1e293b', lineHeight: '1.6' }}>
+                              <p style={{ margin: 0 }}>IBAN : <span style={{ fontWeight: '900' }}>{currentQuote.profiles.iban}</span></p>
+                              <p style={{ margin: 0 }}>BIC : {currentQuote.profiles.bic || 'NON RENSEIGNÉ'}</p>
+                           </div>
+                        )}
+                     </div>
+                  )}
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* 
+        BARRE D'ACTIONS PUBLIQUES DYNAMIQUE 
+      */}
+      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/80 backdrop-blur-xl p-4 rounded-3xl shadow-2xl border border-white z-50">
+        <Button 
+          variant="outline" 
+          onClick={handleDownloadPdf} 
+          isLoading={isGeneratingPdf}
+          className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-3 border-slate-100 hover:bg-slate-50"
+        >
+          <Download size={20} /> Télécharger
+        </Button>
+
+        {/* Bouton de Paiement (si pas encore payé) */}
+        {currentQuote.status !== 'paid' && (
+          <Button 
+            onClick={handlePayment}
+            disabled={isPaying}
+            className="h-16 px-10 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-xl shadow-emerald-900/10"
+          >
+            {isPaying ? (
+              <Loader2 className="animate-spin" size={20} />
+            ) : (
+              <CreditCard size={20} />
+            )}
+            Payer par Carte
+          </Button>
+        )}
+
+        {isDone || signature || currentQuote.status === 'paid' ? (
+          <div className="h-16 px-10 bg-green-500/10 border border-green-200 text-green-600 rounded-2xl flex items-center gap-3 font-black uppercase tracking-widest text-xs animate-in zoom-in duration-300">
+            <CheckCircle2 size={24} /> Document Validé
+          </div>
+        ) : (
+          <Button 
+            onClick={() => setIsSigning(true)} 
+            className="h-16 px-12 rounded-2xl bg-[#002878] hover:bg-slate-900 font-black uppercase tracking-widest text-xs gap-3 shadow-xl"
+          >
+            <PenTool size={20} /> Signer et Accepter
+          </Button>
+        )}
+      </div>
+
+      {isSigning && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-6">
+           <SignaturePad 
+             onSave={handleSaveSignature} 
+             onCancel={() => setIsSigning(false)} 
+           />
+        </div>
+      )}
+    </div>
+  )
+}

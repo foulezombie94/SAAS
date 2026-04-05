@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors from user provided config */
+  --color-primary: #00236f;
+  --color-primary-container: #1e3a8a;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #90a8ff;
+  --color-primary-fixed: #dce1ff;
+  --color-primary-fixed-dim: #b6c4ff;
+  --color-on-primary-fixed: #00164e;
+  --color-on-primary-fixed-variant: #264191;
+
+  --color-secondary: #555d7e;
+  --color-secondary-container: #d0d8ff;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #555e7f;
+  --color-secondary-fixed: #dce1ff;
+  --color-secondary-fixed-dim: #bdc5eb;
+  --color-on-secondary-fixed: #111a37;
+  --color-on-secondary-fixed-variant: #3d4565;
+
+  --color-tertiary: #3e2400;
+  --color-tertiary-container: #5c3800;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #ef9900;
+  --color-tertiary-fixed: #ffddb8;
+  --color-tertiary-fixed-dim: #ffb95f;
+  --color-on-tertiary-fixed: #2a1700;
+  --color-on-tertiary-fixed-variant: #653e00;
+
+  --color-background: #ffffff;
+  --color-on-background: #1a1b21;
+  --color-surface: #ffffff;
+  --color-on-surface: #1a1b21;
+  --color-surface-variant: #e3e1e9;
+  --color-on-surface-variant: #444651;
+  --color-surface-dim: #dad9e1;
+  --color-surface-bright: #faf8ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #ffffff;
+  --color-surface-container: #ffffff;
+  --color-surface-container-high: #fdfdfd;
+  --color-surface-container-highest: #f8f8f8;
+
+  --color-outline: #757682;
+  --color-outline-variant: #c5c5d3;
+  --color-inverse-surface: #2f3036;
+  --color-inverse-on-surface: #f1f0f7;
+  --color-inverse-primary: #b6c4ff;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  /* Border Radius */
+  --radius-default: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  /* Font Family */
+  --font-headline: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+}
+
+/* Custom Utilities for Glassmorphism & Misc */
+@layer utilities {
+  .glass {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  
+  .shadow-diffused {
+    box-shadow: 0px 24px 48px rgba(0, 35, 111, 0.06);
+  }
+
+  /* Premium Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center font-black tracking-tight transition-all duration-200 cursor-pointer select-none active:scale-95 disabled:opacity-50 disabled:pointer-events-none rounded-full px-6 py-3 min-h-[48px];
+  }
+
+  .btn-primary {
+    @apply bg-primary text-on-primary hover:bg-primary-container hover:shadow-lg active:bg-primary;
+  }
+
+  .btn-tertiary {
+    @apply bg-tertiary-fixed-dim text-on-tertiary-fixed hover:bg-tertiary-fixed hover:shadow-md active:bg-tertiary-fixed-dim;
+  }
+
+  .btn-outline {
+    @apply bg-white border border-slate-100 text-primary hover:bg-slate-50 hover:border-slate-200 active:bg-slate-100;
+  }
+
+  /* Notification Animation */
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s infinite ease-in-out;
+  }
+
+  @keyframes bounce-subtle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+}
+
+
+/* Base resets and Google Fonts specific styles */
+:root {
+  font-family: 'Inter', sans-serif;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
