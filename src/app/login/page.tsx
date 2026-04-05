@@ -1,6 +1,4 @@
-import { login } from './actions'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { LoginForm } from '@/components/auth/LoginForm'
 import { Card } from '@/components/ui/Card'
 import { HardHat, CheckCircle2, ShieldCheck, Zap } from 'lucide-react'
 import Link from 'next/link'
@@ -83,39 +81,13 @@ export default function LoginPage({
             <p className="text-on-surface-variant font-medium">Saisissez vos identifiants pour accéder à votre espace pro.</p>
           </div>
 
-          <form className="flex flex-col gap-6">
-            <div className="space-y-4">
-              <Input
-                name="email"
-                label="Email Professionnel"
-                placeholder="nom@entreprise.fr"
-                required
-                type="email"
-              />
-              <Input
-                type="password"
-                name="password"
-                label="Mot de passe"
-                placeholder="••••••••"
-                required
-              />
+          {searchParams?.message && (
+            <div className="mb-6 p-4 bg-secondary-container text-on-secondary-container rounded-md text-sm font-bold border border-secondary/10">
+              {searchParams.message}
             </div>
+          )}
 
-            {searchParams?.error && (
-              <div className="p-4 bg-error-container text-on-error-container rounded-md text-sm font-bold border border-error/10 animate-shake">
-                {searchParams.error}
-              </div>
-            )}
-
-            {searchParams?.message && (
-              <div className="p-4 bg-secondary-container text-on-secondary-container rounded-md text-sm font-bold border border-secondary/10">
-                {searchParams.message}
-              </div>
-            )}
-
-            <Button className="w-full py-4 text-lg font-black mt-2" formAction={login}>
-              Se connecter
-            </Button>
+          <LoginForm />
 
             <div className="mt-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-2 justify-center">
               <span className="text-on-surface-variant text-sm font-medium">Nouveau sur ArtisanFlow ?</span>
@@ -123,7 +95,7 @@ export default function LoginPage({
                 Créer un compte gratuitement
               </Link>
             </div>
-          </form>
+
 
           <div className="mt-16 pt-8 border-t border-outline-variant/30 text-center">
             <p className="text-[0.6875rem] uppercase tracking-widest text-on-surface-variant/50 font-bold">
