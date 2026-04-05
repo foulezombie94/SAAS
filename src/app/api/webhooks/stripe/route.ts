@@ -61,7 +61,8 @@ export async function POST(req: Request) {
                stripe_session_id: session.id,
                payment_intent_id: session.payment_intent as string,
                completed_at: new Date().toISOString()
-            }
+            },
+            updated_at: new Date().toISOString()
           })
           .eq('id', quoteId)
         

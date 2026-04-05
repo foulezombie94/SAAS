@@ -97,7 +97,9 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log(`Notification Channel status for ${userId}:`, status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
