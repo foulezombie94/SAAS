@@ -283,6 +283,32 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Help Video Section */}
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm overflow-hidden">
+            <h3 className="text-sm font-black text-[#00236f] uppercase tracking-widest mb-4 flex items-center gap-2">
+              <HelpCircle size={18} className="text-primary" /> Guide Vidéo : Mot de passe Google
+            </h3>
+            <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-50 bg-slate-900 aspect-video relative group">
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                controls
+                className="w-full h-full object-cover"
+              >
+                <source src="/videos/google_app_password.mp4" type="video/mp4" />
+                Votre navigateur ne supporte pas la lecture de vidéos.
+              </video>
+              <div className="absolute top-4 right-4 p-2 bg-primary/90 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <HelpCircle size={16} />
+              </div>
+            </div>
+            <p className="mt-4 text-[10px] font-bold text-slate-400 italic text-center">
+              Suivez ces étapes pour sécuriser votre compte et autoriser l'envoi d'emails.
+            </p>
+          </div>
         </div>
       </div>
     </div>

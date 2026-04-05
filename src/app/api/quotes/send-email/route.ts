@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_SITE_URL || 'https://artisanflow.app')
     
     const shareUrl = `${baseUrl}/share/quotes/${quote.id}`
-    const paymentUrl = shareUrl // The share page has the payment button
+    const paymentUrl = `${shareUrl}?pay=true` // Triggers Stripe checkout immediately
 
     // 3. Construct HTML Email
     const htmlEmail = `
