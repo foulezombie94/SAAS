@@ -139,23 +139,25 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
             </div>
           )}
         </div>
-        
-        <div className="flex items-center gap-3 pl-2 relative border-l border-slate-200/20 ml-2">
+        <div className="flex items-center gap-4 pl-4 border-l border-slate-200/20 ml-2">
           <div className="text-right hidden sm:block">
-             <p className="text-xs font-black text-primary uppercase tracking-tighter">Artisan Connecté</p>
-             <p className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]">{userEmail}</p>
+            <p className="text-[10px] font-black text-primary uppercase tracking-tighter opacity-40 mb-0.5">Connecté en tant que</p>
+            <p className="text-[11px] font-bold text-slate-600 truncate max-w-[150px]">{userEmail}</p>
           </div>
-          <button className="p-1 text-slate-300 dark:text-slate-500">
-            <User size={32} />
-          </button>
           
+          <div className="p-1 text-slate-300">
+            <User size={28} className="bg-slate-50 rounded-full border border-slate-100 p-1" />
+          </div>
+
           <button 
             onClick={handleSignOut}
-            className="flex flex-col items-center gap-0.5 p-2 ml-2 group transition-all rounded-xl hover:bg-error/5"
+            className="flex items-center gap-2 px-3 py-1.5 ml-2 group transition-all rounded-full bg-slate-50/50 border border-slate-100 hover:bg-red-50/50 hover:border-red-200 hover:shadow-[0_4px_12px_rgba(239,68,68,0.08)] active:scale-95"
             title="Se déconnecter"
           >
-            <LogOut size={20} className="text-slate-300 group-hover:text-error group-hover:translate-x-0.5 transition-all" />
-            <span className="text-[8px] font-black text-slate-300 group-hover:text-error uppercase tracking-widest">Déconnexion</span>
+            <div className="bg-white p-1 rounded-full shadow-sm border border-slate-50 group-hover:border-red-100 group-hover:bg-red-50 transition-all">
+              <LogOut size={10} className="text-slate-400 group-hover:text-red-500 transition-colors" />
+            </div>
+            <span className="text-[9px] font-black text-slate-500 group-hover:text-red-600 uppercase tracking-widest leading-none pr-1">Quitter</span>
           </button>
         </div>
       </div>
