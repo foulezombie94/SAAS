@@ -44,6 +44,7 @@ interface Client {
 
 import { getUsageLimits } from '@/app/dashboard/actions'
 import { LimitBanner } from '@/components/ui/LimitBanner'
+import { createQuoteAction } from '../actions'
 
 export default function NewQuotePage() {
   const router = useRouter()
@@ -121,45 +122,30 @@ export default function NewQuotePage() {
     setLoading(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Utilisateur non connecté')
-
-      // Double check limits on submit for security
-      const limitStatus = await getUsageLimits('quotes')
-      if (!limitStatus.allowed) throw new Error("Limite de 3 devis atteinte. Passez en PRO pour continuer !")
-
-      const { data: quote, error: qError } = await supabase
-        .from('quotes')
-        .insert({
-          user_id: user.id, // Now safe as we checked above
-          client_id: selectedClientId,
-          number,
-          status,
-          total_ht: totalHt,
-          tax_rate: taxRate,
-          total_ttc: totalTtc
-        })
-        .select()
-        .single()
-
-      if (qError) throw qError
-
-      const { error: iError } = await supabase
-        .from('quote_items')
-        .insert(items.map(item => ({
-          quote_id: quote.id,
+      const payload = {
+        client_id: selectedClientId,
+        status,
+        total_ht: totalHt,
+        tax_rate: taxRate,
+        total_ttc: totalTtc,
+        items: items.map(item => ({
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          total_price: item.total, // HT
+          total_price: item.total,
           tax_rate: taxRate,
           total_ht: item.total,
           total_ttc: item.total * (1 + taxRate / 100)
-        })))
+        }))
+      };
 
-      if (iError) throw iError
+      const result = await createQuoteAction(payload);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
-      toast.success(status === 'draft' ? "Brouillon enregistré" : "Devis envoyé au client !")
+      toast.success(status === 'draft' ? "Brouillon enregistré" : "Devis créé et sécurisé par Zod !")
       router.push('/dashboard')
     } catch (e: any) {
       toast.error(e.message)

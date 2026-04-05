@@ -175,7 +175,7 @@ export default function Home() {
               <h2 className="text-4xl font-extrabold tracking-tighter mb-4">Une tarification transparente</h2>
               <p className="text-on-primary-container text-lg">Choisissez le plan adapté à la taille de votre entreprise.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* Pricing Card 1 */}
               <div className="bg-white/5 backdrop-blur-md rounded-xl p-10 border border-white/10 flex flex-col h-full">
                 <div className="mb-8">
@@ -205,9 +205,14 @@ export default function Home() {
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-2 text-primary">Pro</h3>
                   <p className="text-on-surface-variant text-sm">Pour les artisans actifs</p>
-                  <div className="mt-4 flex items-baseline text-primary">
-                    <span className="text-4xl font-black">15€</span>
-                    <span className="ml-2 text-on-surface-variant">/mois</span>
+                  <div className="mt-4 flex flex-col items-start text-primary">
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-black">22€</span>
+                      <span className="ml-2 text-on-surface-variant font-bold">/mois</span>
+                    </div>
+                    <div className="text-sm font-bold text-tertiary-fixed mt-1 border border-tertiary-fixed/30 bg-tertiary-fixed/10 px-2 py-0.5 rounded-md">
+                      ou 199.99€/an
+                    </div>
                   </div>
                 </div>
                 <ul className="space-y-4 mb-10 flex-grow">
@@ -225,29 +230,6 @@ export default function Home() {
                   </li>
                 </ul>
                 <button className="w-full py-4 bg-tertiary-fixed-dim text-on-tertiary-fixed rounded-md font-black shadow-md hover:opacity-90 transition-all active:scale-95">Essayer Pro</button>
-              </div>
-              {/* Pricing Card 3 */}
-              <div className="bg-white/5 backdrop-blur-md rounded-xl p-10 border border-white/10 flex flex-col h-full">
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold mb-2">Premium</h3>
-                  <p className="text-on-primary-container/80 text-sm">Pour les PME du bâtiment</p>
-                  <div className="mt-4 flex items-baseline">
-                    <span className="text-4xl font-black">25€</span>
-                    <span className="ml-2 text-on-primary-container/60">/mois</span>
-                  </div>
-                </div>
-                <ul className="space-y-4 mb-10 flex-grow">
-                  <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Tout ce qui est Pro
-                  </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Multi-utilisateurs (3)
-                  </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Export comptable avancé
-                  </li>
-                </ul>
-                <button className="w-full py-4 border border-white/30 rounded-md font-bold hover:bg-white/10 transition-all">Choisir Premium</button>
               </div>
             </div>
           </div>

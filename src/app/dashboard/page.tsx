@@ -17,7 +17,10 @@ import {
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+  if (!user) return null
+  const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single()
+  const isPro = profile?.is_pro || false
+
   const { data: quotes } = await supabase.from('quotes').select('*, clients(*)').order('created_at', { ascending: false })
   const { data: invoices } = await supabase.from('invoices').select('*, clients(*)').order('created_at', { ascending: false })
 
@@ -35,15 +38,7 @@ export default async function DashboardPage() {
           <h2 className="text-2xl font-black tracking-tighter text-primary leading-none uppercase">Bonjour, {user?.email?.split('@')[0]}</h2>
           <p className="text-on-surface-variant font-bold text-sm">Voici l'état actuel de votre activité pour ce mois.</p>
         </div>
-        <div className="bg-primary-container/10 px-5 py-3 rounded-xl flex items-center gap-3 border border-primary/5 shadow-sm">
-          <div className="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container">
-            <TrendingUp size={20} />
-          </div>
-          <div>
-            <p className="text-[0.625rem] font-black uppercase tracking-widest text-on-surface-variant/60">Votre Plan</p>
-            <p className="font-black text-primary text-base uppercase tracking-tighter">Plan Pro Actif</p>
-          </div>
-        </div>
+
       </section>
 
       {/* Stats Bento Grid */}
