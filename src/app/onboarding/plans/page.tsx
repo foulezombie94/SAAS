@@ -49,7 +49,7 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 min-h-screen">
+    <div className="max-w-7xl mx-auto px-6 pt-12 md:pt-20 pb-0 min-h-screen">
       {/* Google Material Symbols Link (Required for the provided HTML style) */}
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       
@@ -124,9 +124,13 @@ export default function PlansPage() {
                 <span className="material-symbols-outlined text-primary text-xl">check_circle</span>
                 <span className="text-sm font-medium">Signature électronique incluise</span>
               </li>
+              <li className="flex items-center gap-3 text-on-surface">
+                <span className="material-symbols-outlined text-primary text-xl">check_circle</span>
+                <span className="text-sm font-medium">Paiements en ligne</span>
+              </li>
               <li className="flex items-center gap-3 text-on-surface opacity-40">
                 <span className="material-symbols-outlined text-slate-400 text-xl">cancel</span>
-                <span className="text-sm font-medium">Paiements en ligne</span>
+                <span className="text-sm font-medium">Envoi d'email intégré</span>
               </li>
             </ul>
             <Button 
@@ -184,6 +188,10 @@ export default function PlansPage() {
                   <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                   <span className="text-sm font-bold">Relances automatiques</span>
                 </li>
+                <li className="flex items-center gap-3 text-white">
+                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <span className="text-sm font-bold">Envoi d'email avec SMTP</span>
+                </li>
               </ul>
               <Button 
                 onClick={handleSelectPro}
@@ -197,32 +205,6 @@ export default function PlansPage() {
         </div>
       </div>
 
-      {/* FOOTER SECTION FROM HTML */}
-      <section className="mt-32 max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7">
-            <img 
-              alt="Tablette de chantier" 
-              className="w-full h-[400px] object-cover rounded-xl shadow-2xl" 
-              src="https://images.unsplash.com/photo-1503387762-592dea58ef23?auto=format&fit=crop&q=80&w=2000" 
-            />
-          </div>
-          <div className="lg:col-span-5 space-y-6">
-            <h3 className="text-3xl font-black tracking-tight text-primary leading-tight">Conçu par des artisans, pour des artisans.</h3>
-            <p className="text-secondary leading-relaxed">ArtisanFlow n'est pas qu'un outil de facturation. C'est votre bras droit sur le chantier et au bureau. Nous avons automatisé tout ce qui vous fait perdre du temps.</p>
-            <div className="flex gap-4">
-              <div className="p-4 bg-surface-container-high rounded-lg flex-1">
-                <div className="text-2xl font-black text-primary mb-1">12h</div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-outline">Gagnées par semaine</div>
-              </div>
-              <div className="p-4 bg-surface-container-high rounded-lg flex-1">
-                <div className="text-2xl font-black text-primary mb-1">+30%</div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-outline">Taux d'acceptation</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   )
 }

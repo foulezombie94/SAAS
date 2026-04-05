@@ -170,9 +170,11 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
               {isGeneratingPdf ? <Loader className="animate-spin" size={20} /> : <Download size={20} />}
               Télécharger PDF
            </Button>
-           <Button className="h-14 px-10 font-black uppercase tracking-widest text-xs gap-3 shadow-lg">
-              <Send size={20} /> Envoyer au client
-           </Button>
+           {invoice.profiles?.is_pro && (
+             <Button className="h-14 px-10 font-black uppercase tracking-widest text-xs gap-3 shadow-lg">
+                <Send size={20} /> Envoyer au client
+             </Button>
+           )}
         </div>
       </div>
 

@@ -733,13 +733,15 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 </Button>
               )}
 
-              <Button
-                onClick={() => setIsEmailModalOpen(true)}
-                disabled={quote.status === 'paid' || quote.status === 'invoiced'}
-                className="w-full h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-500/20"
-              >
-                <Mail size={20} /> Envoyer par Email
-              </Button>
+              {quote.profiles?.is_pro && (
+                <Button
+                  onClick={() => setIsEmailModalOpen(true)}
+                  disabled={quote.status === 'paid' || quote.status === 'invoiced'}
+                  className="w-full h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-500/20"
+                >
+                  <Mail size={20} /> Envoyer par Email
+                </Button>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <Button

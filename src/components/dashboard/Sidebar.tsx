@@ -53,6 +53,9 @@ export function Sidebar({ isPro }: SidebarProps) {
 
       <nav className="flex-1 space-y-1">
         {navigation.map((item) => {
+          // Hide E-mails for non-pro users
+          if (item.name === 'E-mails' && !isPro) return null
+
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
             <Link

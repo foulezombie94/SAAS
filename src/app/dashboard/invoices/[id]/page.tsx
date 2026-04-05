@@ -20,9 +20,21 @@ export default async function InvoiceDetailPage({
     notFound()
   }
 
+  // 2. Fetch the Artisan's Profile to check for Pro status
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', invoice.user_id)
+    .single()
+
+  const invoiceWithProfile = {
+    ...invoice,
+    profiles: profile || undefined
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <InvoiceClient invoice={invoice} />
+      <InvoiceClient invoice={invoiceWithProfile} />
     </div>
   )
 }

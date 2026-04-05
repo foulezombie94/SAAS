@@ -263,6 +263,12 @@ export default function Home() {
                   <li className="flex items-center gap-3 text-sm">
                     <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Signature électronique incluse
                   </li>
+                  <li className="flex items-center gap-3 text-sm">
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Paiements en ligne
+                  </li>
+                  <li className="flex items-center gap-3 text-sm opacity-40">
+                    <span className="material-symbols-outlined text-white/40">close</span> Envoi d'email intégré
+                  </li>
                 </ul>
                 <button 
                   onClick={handleFreeAction}
@@ -304,6 +310,9 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-3 text-sm font-semibold">
                     <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Signature électronique
+                  </li>
+                  <li className="flex items-center gap-3 text-sm font-semibold">
+                    <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Envoi d'email avec SMTP
                   </li>
                 </ul>
                 <button 

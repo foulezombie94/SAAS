@@ -39,6 +39,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Profil artisan introuvable' }, { status: 404 })
     }
 
+    if (!profile.is_pro) {
+      return NextResponse.json({ 
+        error: 'L\'envoi d\'emails est une fonctionnalité Pro. Veuillez mettre à jour votre abonnement.' 
+      }, { status: 403 })
+    }
+
     if (!profile.smtp_host || !profile.smtp_user || !profile.smtp_pass) {
       return NextResponse.json({ 
         error: 'Configuration SMTP manquante. Veuillez configurer vos paramètres email.' 

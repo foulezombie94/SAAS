@@ -11,7 +11,15 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', user.id)
+      .single()
 
+    if (!profile?.is_pro) {
+      return NextResponse.json({ error: 'Fonctionnalité réservée aux comptes Pro' }, { status: 403 })
+    }
     const body = await request.json()
     const { action, config } = body
 
@@ -103,11 +111,15 @@ export async function GET() {
 
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from')
+      .select('smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, is_pro')
       .eq('id', user.id)
       .single()
 
     if (error) throw error
+    
+    if (!profile?.is_pro) {
+      return NextResponse.json({ error: 'Fonctionnalité réservée aux comptes Pro' }, { status: 403 })
+    }
 
     // Decrypt password for display if needed (though masked by UI)
     if (profile?.smtp_pass) {
