@@ -28,27 +28,27 @@ export async function POST(req: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        const connectedAccountId = (event as any).account
-        console.log(`[STRIPE WEBHOOK] Event: ${event.type} | Mode: ${event.livemode ? 'LIVE' : 'TEST'} | Account: ${connectedAccountId || 'Platform'}`)
+        const supabase = createAdminClient()
         
+        const userId = session.client_reference_id || session.metadata?.userId
+        const planType = session.metadata?.plan || (session.amount_total === 2200 ? 'monthly' : 'yearly')
         const factureId = session.metadata?.facture_id
         const quoteId = session.metadata?.quoteId || session.metadata?.devisId
-        const userId = session.metadata?.userId || session.client_reference_id
 
-        console.log(`Webhook received - User: ${userId}, Facture: ${factureId}, Quote: ${quoteId}, Account: ${connectedAccountId || 'Platform'}`)
+        // DEBUG LOG (Casting to any to avoid TS errors if table is not in Database type)
+        await (supabase as any).from('webhook_logs').insert({
+          event_type: event.type,
+          payload: { session_id: session.id, userId, planType, metadata: session.metadata }
+        })
 
-        const supabase = createAdminClient()
+        const connectedAccountId = (event as any).account
+        console.log(`[STRIPE WEBHOOK] Event: ${event.type} | User: ${userId} | Mode: ${event.livemode ? 'LIVE' : 'TEST'}`)
 
-        // 1. If it's a subscription or a specific PRO purchase
+        // 1. Upgrade user to PRO if it's a subscription or pro plan purchase
         if (userId && (session.mode === 'subscription' || session.metadata?.type === 'pro_plan' || session.metadata?.plan)) {
           console.log(`Upgrading user ${userId} to PRO...`)
           
-          let planType = session.metadata?.plan
-          if (!planType) {
-            planType = session.amount_total === 2200 ? 'monthly' : 'yearly'
-          }
-          
-          await supabase
+          const { error: updateError } = await supabase
             .from('profiles')
             .update({ 
               is_pro: true, 
@@ -57,8 +57,17 @@ export async function POST(req: Request) {
               updated_at: new Date().toISOString()
             })
             .eq('id', userId)
-          
-          console.log(`User ${userId} is now PRO with plan ${planType}`)
+
+          if (updateError) {
+            console.error('Database update error:', updateError)
+            await (supabase as any).from('webhook_logs').insert({
+              event_type: 'db_error',
+              error: updateError.message,
+              payload: { userId, updateError }
+            })
+          } else {
+            console.log(`User ${userId} successfully upgraded to PRO.`)
+          }
         }
 
         // 2. Original Quote/Invoice Payment Logic
