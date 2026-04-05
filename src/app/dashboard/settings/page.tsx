@@ -109,7 +109,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-0 pb-10">
+    <div className="space-y-0 pb-0">
       {/* Header Section - Even more compact */}
       <section className="pt-0 mb-2">
         <div className="flex items-center gap-3">
