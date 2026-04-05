@@ -169,16 +169,21 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          annual_revenue: string | null
           bank_name: string | null
           bic: string | null
           company_name: string | null
           email: string
+          first_name: string | null
           full_name: string | null
           iban: string | null
           id: string
           is_pro: boolean | null
+          last_name: string | null
+          num_contacts: string | null
           phone: string | null
           plan: string | null
+          preferred_language: string | null
           siret: string | null
           smtp_from: string | null
           smtp_host: string | null
@@ -186,21 +191,28 @@ export type Database = {
           smtp_port: number | null
           smtp_user: string | null
           stripe_account_id: string | null
+          stripe_charges_enabled: boolean | null
           stripe_customer_id: string | null
+          stripe_details_submitted: boolean | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
+          annual_revenue?: string | null
           bank_name?: string | null
           bic?: string | null
           company_name?: string | null
           email: string
+          first_name?: string | null
           full_name?: string | null
           iban?: string | null
           id: string
           is_pro?: boolean | null
+          last_name?: string | null
+          num_contacts?: string | null
           phone?: string | null
           plan?: string | null
+          preferred_language?: string | null
           siret?: string | null
           smtp_from?: string | null
           smtp_host?: string | null
@@ -208,21 +220,28 @@ export type Database = {
           smtp_port?: number | null
           smtp_user?: string | null
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
           stripe_customer_id?: string | null
+          stripe_details_submitted?: boolean | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
+          annual_revenue?: string | null
           bank_name?: string | null
           bic?: string | null
           company_name?: string | null
           email?: string
+          first_name?: string | null
           full_name?: string | null
           iban?: string | null
           id?: string
           is_pro?: boolean | null
+          last_name?: string | null
+          num_contacts?: string | null
           phone?: string | null
           plan?: string | null
+          preferred_language?: string | null
           siret?: string | null
           smtp_from?: string | null
           smtp_host?: string | null
@@ -230,7 +249,9 @@ export type Database = {
           smtp_port?: number | null
           smtp_user?: string | null
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
           stripe_customer_id?: string | null
+          stripe_details_submitted?: boolean | null
           updated_at?: string | null
         }
         Relationships: []

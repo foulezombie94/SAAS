@@ -32,6 +32,8 @@ export interface Profile {
   id: string
   company_name: string | null
   full_name: string | null
+  first_name: string | null
+  last_name: string | null
   email: string
   address: string | null
   phone: string | null
@@ -46,6 +48,13 @@ export interface Profile {
   smtp_pass?: string | null
   smtp_from?: string | null
   stripe_account_id?: string | null
+  stripe_details_submitted?: boolean | null
+  stripe_charges_enabled?: boolean | null
+  is_pro?: boolean | null
+  plan?: string | null
+  num_contacts?: string | null
+  annual_revenue?: string | null
+  preferred_language?: string | null
 }
 
 export interface Quote {

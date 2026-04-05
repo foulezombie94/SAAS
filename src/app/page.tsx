@@ -1,9 +1,12 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Home() {
   const [isYearly, setIsYearly] = useState(true);
@@ -20,7 +23,7 @@ export default function Home() {
 
   const handleProAction = async () => {
     if (!user) {
-      router.push(`/login?signup=true&redirect=/dashboard`);
+      router.push(`/signup?redirect=/dashboard`);
       return;
     }
 
@@ -37,7 +40,7 @@ export default function Home() {
       if (url) window.location.href = url;
     } catch (err) {
       console.error(err);
-      alert('Erreur lors du lancement du paiement. Vérifiez votre configuration Stripe.');
+      toast.error('Erreur lors du lancement du paiement. Vérifiez votre configuration Stripe.');
     } finally {
       setLoading(false);
     }
@@ -47,7 +50,7 @@ export default function Home() {
     if (user) {
       router.push('/dashboard');
     } else {
-      router.push('/login?signup=true');
+      router.push('/signup');
     }
   };
   return (
@@ -70,7 +73,10 @@ export default function Home() {
                 Créez vos devis en 2 minutes, soyez payé plus vite. Le seul outil conçu pour les artisans, par des experts du bâtiment.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-tertiary-fixed-dim text-on-tertiary-fixed px-8 py-4 text-lg font-bold rounded-md shadow-lg transition-all hover:bg-tertiary hover:text-on-tertiary">
+                <button 
+                  onClick={handleFreeAction}
+                  className="bg-tertiary-fixed-dim text-on-tertiary-fixed px-8 py-4 text-lg font-bold rounded-md shadow-lg transition-all hover:bg-tertiary hover:text-on-tertiary"
+                >
                   Commencer Gratuitement
                 </button>
                 <button className="border-2 border-primary text-primary px-8 py-4 text-lg font-bold rounded-md hover:bg-surface-container-low transition-all">
@@ -249,13 +255,13 @@ export default function Home() {
                 </div>
                 <ul className="space-y-4 mb-10 flex-grow">
                   <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> 3 devis & factures / mois
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> 3 devis & 3 factures maximum
                   </li>
                   <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Gestion de 3 clients
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Gestion de 3 clients maximum
                   </li>
                   <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Signature électronique
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Signature électronique incluse
                   </li>
                 </ul>
                 <button 
@@ -322,7 +328,10 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-primary mb-6">Rejoignez plus de 500 artisans qui ont choisi la simplicité.</h2>
             <p className="text-lg text-on-surface-variant mb-12">Libérez-vous de la paperasse administrative et concentrez-vous sur ce que vous faites de mieux : votre métier.</p>
             <div className="inline-flex flex-col items-center gap-6">
-              <button className="bg-primary text-on-primary px-12 py-5 text-xl font-bold rounded-md shadow-2xl hover:bg-primary-container transition-all scale-100 hover:scale-105 active:scale-95">
+              <button 
+                onClick={handleFreeAction}
+                className="bg-primary text-on-primary px-12 py-5 text-xl font-bold rounded-md shadow-2xl hover:bg-primary-container transition-all scale-100 hover:scale-105 active:scale-95"
+              >
                 Commencer mon essai gratuit
               </button>
               <p className="text-sm font-medium text-on-surface-variant/70 flex items-center gap-2">

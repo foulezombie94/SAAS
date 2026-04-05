@@ -337,7 +337,7 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
                   <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">Accord contractuel validé le {new Date().toLocaleDateString()}</p>
                   
                   {/* NEW: Payment button directly on the invoice */}
-                  {currentQuote.status !== 'paid' && (
+                  {currentQuote.status !== 'paid' && currentQuote.profiles?.stripe_charges_enabled && (
                     <Button 
                       onClick={handlePayment}
                       disabled={isPaying}

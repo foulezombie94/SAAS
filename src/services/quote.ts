@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { checkLimits } from '@/lib/limits'
 
 export interface QuoteItemInput {
   description: string
@@ -31,6 +32,12 @@ export async function createQuote(input: CreateQuoteInput) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Utilisateur non authentifié')
+
+  // Check limits using central utility
+  const limitStatus = await checkLimits('quotes')
+  if (!limitStatus.allowed) {
+    throw new Error('Limite de 3 devis atteinte pour la version gratuite. Passez à la Pro pour un accès illimité !')
+  }
 
   // 1. Create Quote
   const { data: quote, error: quoteError } = await supabase

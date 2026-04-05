@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Quote, QuoteItem } from '@/types/dashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -713,6 +714,14 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               >
                 <CreditCard size={20} /> Activer Paiement
               </Button>
+
+              {!quote.profiles?.stripe_charges_enabled && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-2">Paiement par carte inactif</p>
+                  <p className="text-[9px] font-bold text-amber-500/70 mb-3 uppercase leading-relaxed">Votre compte Stripe n'est pas encore prêt à recevoir des paiements.</p>
+                  <Link href="/dashboard/settings" className="text-[9px] font-black text-amber-500 underline uppercase tracking-widest">Finaliser la configuration</Link>
+                </div>
+              )}
 
               {quote.status === 'accepted' && (
                 <Button

@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClient } from '@/utils/supabase/server'
+import { checkLimits } from '@/lib/limits'
 
 export interface CreateClientInput {
   name: string
@@ -12,6 +13,12 @@ export async function addClient(input: CreateClientInput) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) throw new Error('Non autorisé')
+
+  // Check limits using central utility
+  const limitStatus = await checkLimits('clients')
+  if (!limitStatus.allowed) {
+    throw new Error('Limite de 3 clients atteinte pour la version gratuite. Passez à la version Pro pour un accès illimité !')
+  }
 
   const { data, error } = await supabase
     .from('clients')

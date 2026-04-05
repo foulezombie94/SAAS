@@ -9,10 +9,11 @@ function cn(...inputs: ClassValue[]) {
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
+  icon?: React.ReactNode
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, error, ...props }, ref) => {
+  ({ className, type, label, error, icon, ...props }, ref) => {
     return (
       <div className="flex flex-col gap-2 w-full">
         {label && (
@@ -20,16 +21,24 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
-          type={type}
-          className={cn(
-            'input-field',
-            error && 'border-error ring-1 ring-error',
-            className
+        <div className="relative flex items-center group">
+          {icon && (
+            <div className="absolute left-3 pointer-events-none transition-colors group-focus-within:text-primary">
+              {icon}
+            </div>
           )}
-          ref={ref}
-          {...props}
-        />
+          <input
+            type={type}
+            className={cn(
+              'input-field',
+              icon && 'pl-10',
+              error && 'border-error ring-1 ring-error',
+              className
+            )}
+            ref={ref}
+            {...props}
+          />
+        </div>
         {error && <span className="text-sm text-error">{error}</span>}
       </div>
     )

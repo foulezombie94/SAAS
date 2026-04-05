@@ -14,10 +14,15 @@ import { RefreshCw, Mail } from 'lucide-react'
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Partial<Profile>>({
     company_name: '',
+    first_name: '',
+    last_name: '',
     address: '',
     phone: '',
     siret: '',
     email: '',
+    num_contacts: '',
+    annual_revenue: '',
+    preferred_language: 'fr',
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -51,9 +56,14 @@ export default function SettingsPage() {
     try {
       await updateProfile({
         company_name: profile.company_name || '',
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
         siret: profile.siret || '',
         address: profile.address || '',
         phone: profile.phone || '',
+        num_contacts: profile.num_contacts || '',
+        annual_revenue: profile.annual_revenue || '',
+        preferred_language: profile.preferred_language || 'fr',
       })
       toast.success('Paramètres enregistrés avec succès')
     } catch (err: any) {
@@ -137,6 +147,26 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             
             <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Prénom</label>
+              <input 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
+                type="text" 
+                value={profile.first_name || ''}
+                onChange={(e) => setProfile({...profile, first_name: e.target.value})}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nom</label>
+              <input 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
+                type="text" 
+                value={profile.last_name || ''}
+                onChange={(e) => setProfile({...profile, last_name: e.target.value})}
+              />
+            </div>
+
+            <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nom de l'Entreprise</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
@@ -186,6 +216,49 @@ export default function SettingsPage() {
                 disabled
                 title="L'adresse email principale est liée à votre compte Auth."
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nombre de contacts</label>
+              <select 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
+                value={profile.num_contacts || ''}
+                onChange={(e) => setProfile({...profile, num_contacts: e.target.value})}
+              >
+                <option value="">Sélectionnez...</option>
+                <option value="0-50">0 à 50</option>
+                <option value="51-200">51 à 200</option>
+                <option value="201-500">201 à 500</option>
+                <option value="500+">Plus de 500</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">CA Annuel estimé</label>
+              <select 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
+                value={profile.annual_revenue || ''}
+                onChange={(e) => setProfile({...profile, annual_revenue: e.target.value})}
+              >
+                <option value="">Sélectionnez...</option>
+                <option value="< 50k">&lt; 50 000 €</option>
+                <option value="50k-100k">50k - 100 000 €</option>
+                <option value="100k-250k">100k - 250 000 €</option>
+                <option value="250k+">Plus de 250 000 €</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Langue préférée</label>
+              <select 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
+                value={profile.preferred_language || 'fr'}
+                onChange={(e) => setProfile({...profile, preferred_language: e.target.value})}
+              >
+                <option value="fr">Français (France)</option>
+                <option value="en">English (US)</option>
+                <option value="es">Español</option>
+              </select>
             </div>
           </div>
         </div>

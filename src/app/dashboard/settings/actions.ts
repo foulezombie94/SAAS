@@ -21,15 +21,19 @@ export async function getProfile(): Promise<Profile | null> {
     return null
   }
 
-  return data as Profile
+  return data as unknown as Profile
 }
 
 export async function updateProfile(formData: {
   company_name: string
+  first_name?: string
+  last_name?: string
   siret: string
   address: string
   phone: string
-  // Add other fields you might need in `profiles` based on your DB schema. We'll update core ones for now.
+  num_contacts?: string
+  annual_revenue?: string
+  preferred_language?: string
 }) {
   const supabase = createClient()
   const { data: { user } } = await (await supabase).auth.getUser()
@@ -39,9 +43,15 @@ export async function updateProfile(formData: {
     .from('profiles')
     .update({
       company_name: formData.company_name,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      full_name: `${formData.first_name || ''} ${formData.last_name || ''}`.trim(),
       siret: formData.siret,
       address: formData.address,
       phone: formData.phone,
+      num_contacts: formData.num_contacts,
+      annual_revenue: formData.annual_revenue,
+      preferred_language: formData.preferred_language,
     })
     .eq('id', user.id)
 
@@ -54,7 +64,7 @@ export async function updateProfile(formData: {
   return { success: true }
 }
 
-export async function createStripeOnboardingLink() {
+export async function createStripeAccount() {
   const supabase = createClient()
   const { data: { user } } = await (await supabase).auth.getUser()
   if (!user) throw new Error('Non authentifié')
@@ -62,33 +72,39 @@ export async function createStripeOnboardingLink() {
   const profile = await getProfile()
   if (!profile) throw new Error('Profil non trouvé')
 
-  let accountId = profile.stripe_account_id
+  if (profile.stripe_account_id) return profile.stripe_account_id
 
-  // 1. Create a Stripe account if they don't have one
-  if (!accountId) {
-    const account = await stripe.accounts.create({
-      type: 'express',
-      country: 'FR', // Default to France for now, can be dynamic
-      email: user.email,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      business_type: 'individual',
-      metadata: {
-        userId: user.id,
-      },
-    })
-    accountId = account.id
+  const account = await stripe.accounts.create({
+    type: 'express',
+    country: 'FR',
+    email: user.email,
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true },
+    },
+    business_type: 'individual',
+    metadata: {
+      userId: user.id,
+    },
+  })
 
-    // Store the accountId in the profile
-    const { error } = await (await supabase)
-      .from('profiles')
-      .update({ stripe_account_id: accountId })
-      .eq('id', user.id)
+  // Store the accountId in the profile
+  const { error } = await (await supabase)
+    .from('profiles')
+    .update({ stripe_account_id: account.id })
+    .eq('id', user.id)
 
-    if (error) throw error
-  }
+  if (error) throw error
+
+  return account.id
+}
+
+export async function createStripeOnboardingLink() {
+  const supabase = createClient()
+  const { data: { user } } = await (await supabase).auth.getUser()
+  if (!user) throw new Error('Non authentifié')
+
+  const accountId = await createStripeAccount()
 
   // 2. Create an account link for onboarding
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -125,6 +141,20 @@ export async function getStripeAccountStatus() {
 
   try {
     const account = await stripe.accounts.retrieve(profile.stripe_account_id)
+    
+    // Sync to DB
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({
+          stripe_details_submitted: account.details_submitted,
+          stripe_charges_enabled: account.charges_enabled
+        })
+        .eq('id', user.id)
+    }
+
     return {
       isReady: account.details_submitted && account.charges_enabled,
       detailsSubmitted: account.details_submitted,

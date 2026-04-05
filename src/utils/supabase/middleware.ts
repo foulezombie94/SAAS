@@ -39,16 +39,34 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // REDIRECTION INTELLIGENTE: Si connecté et sur la page d'accueil, go Dashboard
-  if (user && request.nextUrl.pathname === '/') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    const redirectRes = NextResponse.redirect(url)
-    // TRANSFÉRER LES COOKIES: Crucial pour ne pas perdre la session pendant le saut
-    response.cookies.getAll().forEach((cookie) => {
-      const { name, value, ...options } = cookie
-      redirectRes.cookies.set(name, value, options)
-    })
-    return redirectRes
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
+
+    const isOnboardingPath = request.nextUrl.pathname.startsWith('/onboarding')
+    const isDashboardPath = request.nextUrl.pathname.startsWith('/dashboard')
+
+    // If no plan, force onboarding (unless already on onboarding path)
+    if (!profile?.plan && !isOnboardingPath && isDashboardPath) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding/transition'
+      return NextResponse.redirect(url)
+    }
+
+    // If on home page and logged in, go to dashboard (or onboarding)
+    if (request.nextUrl.pathname === '/') {
+      const url = request.nextUrl.clone()
+      url.pathname = profile?.plan ? '/dashboard' : '/onboarding/transition'
+      const redirectRes = NextResponse.redirect(url)
+      response.cookies.getAll().forEach((cookie) => {
+        const { name, value, ...options } = cookie
+        redirectRes.cookies.set(name, value, options)
+      })
+      return redirectRes
+    }
   }
 
   return response
