@@ -37,7 +37,7 @@ export default function StripeConnectOnboarding() {
       }
       
       // 2. Get onboarding link
-      const result = await createStripeOnboardingLink()
+      const result = await createStripeOnboardingLink('/onboarding/stripe-connect')
       if (result.url) {
         window.location.href = result.url
       } else {

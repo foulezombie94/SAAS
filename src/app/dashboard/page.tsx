@@ -14,13 +14,19 @@ import {
   ExternalLink
 } from 'lucide-react'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ onboarding?: string }>
+}) {
+  const { onboarding } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single()
   const isPro = profile?.is_pro || false
 
+  // ... (rest of the data fetching)
   const { data: quotes } = await supabase.from('quotes').select('*, clients(*)').order('created_at', { ascending: false })
   const { data: invoices } = await supabase.from('invoices').select('*, clients(*)').order('created_at', { ascending: false })
 
@@ -32,6 +38,28 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {onboarding === 'success' && (
+        <div className="bg-primary p-6 rounded-2xl text-white shadow-xl shadow-primary/20 relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-700">
+           <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-4 -translate-y-4">
+              <CheckCircle2 size={120} />
+           </div>
+           <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                 <CheckCircle2 size={32} />
+              </div>
+              <div className="text-center md:text-left">
+                 <h3 className="text-2xl font-black tracking-tighter uppercase mb-1">C'est parti ! Votre compte est prêt.</h3>
+                 <p className="text-primary-container font-bold text-sm">Félicitations, vous avez finalisé votre configuration. Vous pouvez maintenant créer vos premiers devis et factures.</p>
+              </div>
+              <div className="md:ml-auto">
+                 <Link href="/dashboard/quotes/new">
+                    <Button variant="outline" className="bg-white text-primary border-none hover:bg-primary-container font-black uppercase tracking-widest text-[10px] h-12 px-8">Créer mon 1er devis</Button>
+                 </Link>
+              </div>
+           </div>
+        </div>
+      )}
+
       {/* Welcome Header */}
       <section className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="space-y-0.5">

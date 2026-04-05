@@ -99,7 +99,7 @@ export async function createStripeAccount() {
   return account.id
 }
 
-export async function createStripeOnboardingLink() {
+export async function createStripeOnboardingLink(returnPath?: string) {
   const supabase = createClient()
   const { data: { user } } = await (await supabase).auth.getUser()
   if (!user) throw new Error('Non authentifié')
@@ -108,11 +108,12 @@ export async function createStripeOnboardingLink() {
 
   // 2. Create an account link for onboarding
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const basePath = returnPath || '/dashboard/settings'
   
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${origin}/dashboard/settings?stripe=refresh`,
-    return_url: `${origin}/dashboard/settings?stripe=success`,
+    refresh_url: `${origin}${basePath}?stripe=refresh`,
+    return_url: `${origin}${basePath}?stripe=success`,
     type: 'account_onboarding',
   })
 
