@@ -21,15 +21,6 @@ export async function createQuoteAction(rawData: unknown) {
     return { success: false, error: 'Utilisateur non connecté' }
   }
 
-  // Fetch the secure sequential quote number from Postgres
-  const { data: generatedNumber, error: numError } = await supabase.rpc('get_next_quote_number', {
-    p_user_id: user.id
-  });
-
-  if (numError || !generatedNumber) {
-    return { success: false, error: 'Erreur lors de la génération du numéro de devis' };
-  }
-
   // Double check des limites (sécurité serveur absolue)
   const limitStatus = await getUsageLimits('quotes')
   if (!limitStatus.allowed) {
@@ -44,7 +35,6 @@ export async function createQuoteAction(rawData: unknown) {
       .insert({
         user_id: user.id,
         client_id: data.client_id, // NOT NULL garanti par la BDD et Zod
-        number: generatedNumber,
         status: data.status,
         total_ht: data.total_ht,
         tax_rate: data.tax_rate,
