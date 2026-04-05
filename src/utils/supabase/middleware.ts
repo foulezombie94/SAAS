@@ -17,24 +17,19 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // 1. Update the request so the server logic Sees the new cookies
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-
-          // 2. Update the response so the browser Stores the new cookies
-          response = NextResponse.next({
-            request,
-          })
-          
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value, options }) => {
+            // 1. On met à jour la requête pour que les composants serveur voient les cookies
+            request.cookies.set(name, value)
+            // 2. On met à jour la réponse pour que le navigateur stocke les cookies
             response.cookies.set(name, value, {
               ...options,
-              maxAge: 60 * 60 * 24 * 30, // 30 days
+              maxAge: 60 * 60 * 24 * 30, // 30 jours
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax',
               path: '/',
             })
-          )
+          })
         },
       },
     }
