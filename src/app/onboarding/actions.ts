@@ -69,7 +69,7 @@ export async function createSubscriptionSession(priceId: string) {
 
     const parsedResult = priceIdSchema.safeParse(priceId);
     if (!parsedResult.success) {
-      return { data: null, error: parsedResult.error.errors[0]?.message };
+      return { data: null, error: parsedResult.error.issues[0]?.message || 'Prix invalide' };
     }
 
     const planType = STRIPE_PLANS[priceId]; // 'monthly' | 'yearly'
