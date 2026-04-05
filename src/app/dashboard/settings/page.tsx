@@ -222,92 +222,79 @@ export default function SettingsPage() {
 
         {/* Instructions & Help */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-tertiary-container text-on-tertiary-container rounded-3xl p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <ShieldCheck className="text-secondary" size={24} />
-              <h2 className="text-lg font-black tracking-tight uppercase">Sécurité & Spam</h2>
+          <div className="bg-tertiary-container text-on-tertiary-container rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <ShieldCheck className="text-secondary" size={20} />
+              <h2 className="text-base font-black tracking-tight uppercase">Sécurité & Spam</h2>
             </div>
 
-            <div className="space-y-6">
-              <div className="p-5 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40">
-                <h3 className="text-sm font-black uppercase mb-3 flex items-center gap-2">
-                  <AlertCircle size={16} /> Gmail / Outlook
+            <div className="space-y-4">
+              <div className="p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40">
+                <h3 className="text-[12px] font-black uppercase mb-2 flex items-center gap-2">
+                  <AlertCircle size={14} /> Gmail / Outlook
                 </h3>
-                <p className="text-xs leading-relaxed font-bold text-on-tertiary-container/80">
+                <p className="text-[10px] leading-relaxed font-bold text-on-tertiary-container/80">
                   Gmail et Outlook bloquent souvent les connexions SMTP directes. Vous devez obligatoirement :
                 </p>
-                <ol className="mt-3 space-y-2 text-xs font-bold list-decimal list-inside text-on-tertiary-container/90">
+                <ol className="mt-2 space-y-1 text-[10px] font-bold list-decimal list-inside text-on-tertiary-container/90">
                   <li>Activer la validation en deux étapes.</li>
                   <li>Créer un <strong>"Mot de passe d'application"</strong>.</li>
                   <li>Utiliser ce mot de passe unique à la place de votre mot de passe habituel.</li>
                 </ol>
-                <div className="mt-4 pt-4 border-t border-white/20">
+                
+                {/* Repositioned Video Guide directly under Gmail/Outlook instructions */}
+                <div className="mt-4 rounded-xl overflow-hidden shadow-lg border-2 border-white/20 bg-slate-900 aspect-video relative group ring-1 ring-black/5">
+                  <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    controls
+                    className="w-full h-full object-cover"
+                  >
+                    <source src="/videos/EXPLICATION MDP GOOGLE.MP4.mp4" type="video/mp4" />
+                    Votre navigateur ne supporte pas la lecture de vidéos.
+                  </video>
+                </div>
+                
+                <div className="mt-3 flex items-center justify-between">
                   <a 
                     href="https://support.google.com/accounts/answer/185833" 
                     target="_blank" 
-                    className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest hover:underline"
+                    className="flex items-center gap-2 text-primary font-black uppercase text-[9px] tracking-widest hover:underline"
                   >
-                    Aide Gmail <ExternalLink size={12} />
+                    Aide Gmail <ExternalLink size={10} />
                   </a>
+                  <p className="text-[9px] font-bold text-on-tertiary-container/60 italic">Guide Vidéo </p>
                 </div>
               </div>
 
-              <div className="p-5 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40">
-                <h3 className="text-sm font-black uppercase mb-3 flex items-center gap-2">
-                  <CheckCircle2 size={16} /> Éviter les Spams
+              <div className="p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40">
+                <h3 className="text-[12px] font-black uppercase mb-2 flex items-center gap-2">
+                  <CheckCircle2 size={14} /> Éviter les Spams
                 </h3>
-                <p className="text-xs leading-relaxed font-bold text-on-tertiary-container/80">
-                  Pour garantir que vos devis arrivent directement en boîte de réception :
-                </p>
-                <ul className="mt-3 space-y-2 text-xs font-bold list-disc list-inside text-on-tertiary-container/90">
-                  <li>Les emails envoyés via votre propre serveur sont mieux notés.</li>
-                  <li>Vérifiez vos enregistrements <strong>SPF et DKIM</strong> sur votre domaine.</li>
-                  <li>Évitez les noms d'objets tout en majuscules (ex: DEVIS IMPORTANT).</li>
+                <ul className="space-y-1 text-[10px] font-bold list-disc list-inside text-on-tertiary-container/90">
+                  <li>Vérifiez vos enregistrements <strong>SPF et DKIM</strong>.</li>
+                  <li>Évitez les objets tout en majuscules.</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          <div className="p-8 border border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
-            <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <HelpCircle size={18} /> Données de base (Défaut)
+          <div className="p-6 border border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+            <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <HelpCircle size={16} /> Données de base (Défaut)
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between group">
-                <span className="text-[11px] font-bold text-slate-400">Pour Outlook :</span>
-                <span className="text-[11px] font-black text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-100 group-hover:border-primary transition-all">smtp-mail.outlook.com (587)</span>
+                <span className="text-[10px] font-bold text-slate-400">Outlook :</span>
+                <span className="text-[10px] font-black text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-100 group-hover:border-primary transition-all">smtp-mail.outlook.com (587)</span>
               </div>
               <div className="flex items-center justify-between group">
-                <span className="text-[11px] font-bold text-slate-400">Pour Gmail :</span>
-                <span className="text-[11px] font-black text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-100 group-hover:border-primary transition-all">smtp.gmail.com (465)</span>
+                <span className="text-[10px] font-bold text-slate-400">Gmail :</span>
+                <span className="text-[10px] font-black text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-100 group-hover:border-primary transition-all">smtp.gmail.com (465)</span>
               </div>
             </div>
-          </div>
-
-          {/* Help Video Section */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm overflow-hidden">
-            <h3 className="text-sm font-black text-[#00236f] uppercase tracking-widest mb-4 flex items-center gap-2">
-              <HelpCircle size={18} className="text-primary" /> Guide Vidéo : Mot de passe Google
-            </h3>
-            <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-50 bg-slate-900 aspect-video relative group">
-              <video 
-                autoPlay 
-                loop 
-                muted 
-                playsInline 
-                controls
-                className="w-full h-full object-cover"
-              >
-                <source src="/videos/google_app_password.mp4" type="video/mp4" />
-                Votre navigateur ne supporte pas la lecture de vidéos.
-              </video>
-              <div className="absolute top-4 right-4 p-2 bg-primary/90 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <HelpCircle size={16} />
-              </div>
-            </div>
-            <p className="mt-4 text-[10px] font-bold text-slate-400 italic text-center">
-              Suivez ces étapes pour sécuriser votre compte et autoriser l'envoi d'emails.
-            </p>
           </div>
         </div>
       </div>

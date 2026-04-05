@@ -69,8 +69,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true })
       } catch (err: any) {
         console.error('SMTP Test Error:', err)
+        
+        let errorMessage = 'Échec de la connexion SMTP.'
+        if (err.code === 'EAUTH') {
+          errorMessage = 'Erreur d\'authentification : Vérifiez votre email et mot de passe (ou utilisez un mot de passe d\'application).'
+        } else if (err.code === 'ESOCKET' || err.code === 'ETIMEDOUT') {
+          errorMessage = 'Erreur de connexion : Le serveur est injoignable ou le port est incorrect.'
+        } else if (err.message) {
+          errorMessage = `Erreur SMTP : ${err.message}`
+        }
+
         return NextResponse.json({ 
-          error: 'Échec de la connexion SMTP. Veuillez vérifier vos paramètres.' 
+          error: errorMessage 
         }, { status: 400 })
       }
     }
