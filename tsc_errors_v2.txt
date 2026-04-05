@@ -1,1 +1,0 @@
-﻿src/app/dashboard/layout.tsx(24,26): error TS2339: Property 'is_pro' does not exist on type '{ id: string; first_name: string | null; last_name: string | null; company_name: string | null; email: string; }'.

@@ -50,7 +50,7 @@ export default async function DashboardPage({
                  <CheckCircle2 size={32} />
               </div>
               <div className="text-center md:text-left">
-                 <h3 className="text-2xl font-black tracking-tighter uppercase mb-1">C'est parti ! Votre compte est prêt.</h3>
+                 <h3 className="text-2xl font-black tracking-tighter uppercase mb-1">C&apos;est parti ! Votre compte est prêt.</h3>
                  <p className="text-primary-container font-bold text-sm">Félicitations, vous avez finalisé votre configuration. Vous pouvez maintenant créer vos premiers devis et factures.</p>
               </div>
               <div className="md:ml-auto">
@@ -66,7 +66,7 @@ export default async function DashboardPage({
       <section className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="space-y-0.5">
           <h2 className="text-2xl font-black tracking-tighter text-primary leading-none uppercase">Bonjour, {user?.email?.split('@')[0]}</h2>
-          <p className="text-on-surface-variant font-bold text-sm">Voici l'état actuel de votre activité pour ce mois.</p>
+          <p className="text-on-surface-variant font-bold text-sm">Voici l&apos;état actuel de votre activité pour ce mois.</p>
         </div>
 
       </section>
@@ -179,7 +179,7 @@ export default async function DashboardPage({
             <HelpCircle className="text-slate-300" size={24} />
             <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest px-2">Besoin d&apos;aide ?</p>
             <Link href="#" className="text-primary font-black text-[10px] flex items-center justify-center gap-2 uppercase tracking-widest hover:underline decoration-2">
-              Centre d'Aide
+              Centre d&apos;Aide
               <ExternalLink size={12} />
             </Link>
           </div>
