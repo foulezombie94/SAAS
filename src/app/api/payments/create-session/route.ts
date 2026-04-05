@@ -4,37 +4,37 @@ import { createAdminClient } from '@/utils/supabase/admin'
 
 export async function POST(req: Request) {
   try {
-    const { quoteId } = await req.json()
+    const { invoiceId } = await req.json()
     
     // Use origin from headers or fallback to env for the redirect URL
     const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || ''
     
-    if (!quoteId) {
-      return NextResponse.json({ error: 'Quote ID is required' }, { status: 400 })
+    if (!invoiceId) {
+      return NextResponse.json({ error: 'Invoice ID is required' }, { status: 400 })
     }
 
     // We use the Admin client here because the client is public (unauthenticated)
-    // The quoteId (UUID) acts as the secret token.
+    // The invoiceId (UUID) acts as the secret token.
     const supabase = createAdminClient()
 
-    const { data: quote, error } = await supabase
-      .from('quotes')
+    const { data: invoice, error } = await supabase
+      .from('invoices')
       .select('*, clients(name, email)')
-      .eq('id', quoteId)
+      .eq('id', invoiceId)
       .single()
 
-    if (error || !quote) {
-      console.error('Database error or quote not found:', error)
-      return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
+    if (error || !invoice) {
+      console.error('Database error or invoice not found:', error)
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
-    // Prevent paying for already paid or rejected quotes
-    if (quote.status === 'paid') {
-      return NextResponse.json({ error: 'Quote is already paid' }, { status: 400 })
+    // Prevent paying for already paid invoices
+    if (invoice.status === 'paid') {
+      return NextResponse.json({ error: 'Invoice is already paid' }, { status: 400 })
     }
 
-    const customerEmail = quote.clients?.email || undefined
-
+    const customerEmail = invoice.clients?.email || undefined
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'link', 'sepa_debit'],
       line_items: [
@@ -42,21 +42,23 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `Réglage Devis #${quote.number}`,
+              name: `Réglage Facture #${invoice.number}`,
               description: `ArtisanFlow - Prestation de services professionnelle`,
             },
-            unit_amount: Math.round((quote.total_ttc || 0) * 100),
+            unit_amount: Math.round((invoice.total_ttc || 0) * 100),
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      // Redirect back to the public shared page
-      success_url: `${origin}/share/quotes/${quote.id}?payment=success`,
-      cancel_url: `${origin}/share/quotes/${quote.id}?payment=canceled`,
+      // Redirect back to the public shared page (where the quote is shown)
+      // Since invoice is linked to quote, we redirect back to quote page for consistent UX
+      success_url: `${origin}/share/quotes/${invoice.quote_id}?payment=success`,
+      cancel_url: `${origin}/share/quotes/${invoice.quote_id}?payment=canceled`,
       customer_email: customerEmail,
       metadata: {
-        quoteId: quote.id,
+        facture_id: invoice.id,
+        quoteId: invoice.quote_id || '',
       },
     })
 

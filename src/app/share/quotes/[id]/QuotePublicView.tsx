@@ -41,6 +41,7 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
   const searchParams = useSearchParams()
 
   const [showSuccess, setShowSuccess] = useState(false)
+  const [invoiceId, setInvoiceId] = useState<string | null>(null)
 
   const fetchLatestQuote = async () => {
     const supabase = createClient()
@@ -71,7 +72,21 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
     } else if (paymentStatus === 'canceled') {
       toast.error("Le paiement a été annulé.")
     }
-  }, [searchParams])
+
+    // NEW: If quote is already accepted but not paid, find the invoice
+    if (quote.status === 'accepted' || quote.status === 'invoiced') {
+       const findInvoice = async () => {
+          const supabase = createClient()
+          const { data } = await supabase
+            .from('invoices')
+            .select('id')
+            .eq('quote_id', quote.id)
+            .single()
+          if (data) setInvoiceId(data.id)
+       }
+       findInvoice()
+    }
+  }, [searchParams, quote.id, quote.status])
 
   // Real-time synchronization
   useEffect(() => {
@@ -133,8 +148,9 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
 
       if (!response.ok) throw new Error("Erreur serveur")
       
-      const { signatureUrl } = await response.json()
+      const { signatureUrl, invoiceId: newInvoiceId } = await response.json()
       setSignature(signatureUrl)
+      if (newInvoiceId) setInvoiceId(newInvoiceId)
       setIsSigning(false)
       setIsDone(true)
       toast.success("Devis signé avec succès !")
@@ -144,12 +160,17 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
   }
 
   const handlePayment = async () => {
+    if (!invoiceId) {
+      toast.error("Facture non trouvée. Veuillez réessayer ou contacter l'artisan.")
+      return
+    }
+
     setIsPaying(true)
     try {
       const response = await fetch('/api/payments/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quoteId: quote.id })
+        body: JSON.stringify({ invoiceId })
       })
       const data = await response.json()
       if (data.url) {
