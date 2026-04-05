@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { verifyProAccess, ensurePro } from '@/lib/pro-gate'
 import { createAdminClient } from '@/utils/supabase/admin'
 
 export async function POST(req: Request) {
@@ -12,17 +13,21 @@ export async function POST(req: Request) {
 
     // 1. Handle Public Signature (Distance)
     if (isPublic && signatureDataUrl) {
-      // 1. Create Invoice and Items
-      const { data: quoteItems } = await adminSupabase
-        .from('quote_items')
-        .select('*')
-        .eq('quote_id', quoteId)
+      // 1. Fetch Quote and Items in parallel for maximum speed ⚡
+      const [itemsRes, quoteRes] = await Promise.all([
+        adminSupabase
+          .from('quote_items')
+          .select('id, description, quantity, unit_price, total_price, tax_rate')
+          .eq('quote_id', quoteId),
+        adminSupabase
+          .from('quotes')
+          .select('id, user_id, client_id, total_ht, tax_rate, total_ttc')
+          .eq('id', quoteId)
+          .single()
+      ])
 
-      const { data: fullQuote } = await adminSupabase
-        .from('quotes')
-        .select('*')
-        .eq('id', quoteId)
-        .single()
+      const { data: quoteItems } = itemsRes
+      const { data: fullQuote } = quoteRes
 
       if (!fullQuote) throw new Error('Quote details not found');
 
@@ -148,15 +153,22 @@ export async function POST(req: Request) {
 
     if (updateError) throw updateError
 
-    const { data: quoteItems } = await supabase.from('quote_items').select('*').eq('quote_id', quoteId);
-    const { data: fullQuote } = await supabase.from('quotes').select('*').eq('id', quoteId).single();
+    const [itemsRes, quoteRes] = await Promise.all([
+      supabase.from('quote_items').select('id, description, quantity, unit_price, total_price, tax_rate').eq('quote_id', quoteId),
+      supabase.from('quotes').select('id, client_id, total_ht, tax_rate, total_ttc').eq('id', quoteId).single()
+    ])
+    const { data: quoteItems } = itemsRes;
+    const { data: fullQuote } = quoteRes;
 
     if (!fullQuote || !fullQuote.client_id) {
       return NextResponse.json({ success: true }) // Accept without invoice if client missing or not found
     }
 
     const year = new Date().getFullYear();
-    const { count } = await supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
+    const { count } = await supabase
+      .from('invoices')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
     const nextNumber = (count || 0) + 1;
     const invoiceNumber = `FAC-${year}-${nextNumber.toString().padStart(4, '0')}`;
 

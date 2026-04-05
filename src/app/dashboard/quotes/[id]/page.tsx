@@ -8,23 +8,25 @@ export default async function QuoteViewPage({ params }: { params: Promise<{ id: 
   const supabase = await createClient()
   const { id } = await params
 
-  // 1. Fetch Quote, Client and Items (Optimized Projection)
-  const { data: quote, error } = await supabase
-    .from('quotes')
-    .select(`
-      id, number, client_id, status, total_ht, total_ttc, signature_url, stripe_session_id, user_id, created_at, updated_at, payment_method, payment_details,
-      clients (id, name, email, phone, address, postal_code, city, country),
-      quote_items (id, description, quantity, unit_price, total_price, tax_rate)
-    `)
-    .eq('id', id)
-    .single()
+  // 1. Fetch Quote and Profile in parallel for maximum speed ⚡
+  const [quoteRes, profile] = await Promise.all([
+    supabase
+      .from('quotes')
+      .select(`
+        id, number, client_id, status, total_ht, total_ttc, signature_url, stripe_session_id, user_id, created_at, updated_at, payment_method, payment_details,
+        clients (id, name, email, phone, address, postal_code, city, country),
+        quote_items (id, description, quantity, unit_price, total_price, tax_rate)
+      `)
+      .eq('id', id)
+      .single(),
+    getUserProfile()
+  ])
+
+  const { data: quote, error } = quoteRes
 
   if (error || !quote) {
     return notFound()
   }
-
-  // 2. Fetch the Artisan's Profile separately (Optimized Projection via Cache)
-  const profile = await getUserProfile()
 
   // 3. Assemble the full data object
   const fullQuote: Quote = {

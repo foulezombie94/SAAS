@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { verifyProAccess } from '@/lib/pro-gate'
 import { sendEmail } from '@/lib/nodemailer'
 import { decrypt } from '@/lib/encryption'
 import { rateLimit } from '@/lib/rate-limit'
@@ -11,6 +12,12 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
+    // 0. ENSURE PRO (Protection Server-Side)
+    const { isPro } = await verifyProAccess()
+    if (!isPro) {
+      return NextResponse.json({ error: 'Forfait Pro requis pour l\'envoi d\'emails' }, { status: 403 })
     }
 
     const { quoteId, subject, message } = await req.json()

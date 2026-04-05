@@ -32,7 +32,10 @@ export async function addClient(input: CreateClientInput) {
 
 export async function getClients() {
   const supabase = await createSupabaseClient()
-  const { data, error } = await supabase.from('clients').select('*').order('name')
+  const { data, error } = await supabase
+    .from('clients')
+    .select('id, name, email, phone, city')
+    .order('name')
   
   if (error) throw error
   return data

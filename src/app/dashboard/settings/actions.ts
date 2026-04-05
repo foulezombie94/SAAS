@@ -10,18 +10,38 @@ export async function getProfile(): Promise<Profile | null> {
   const { data: { user } } = await (await supabase).auth.getUser()
   if (!user) return null
 
+  // SÉCURITÉ : On exclut explicitement les champs sensibles du flux général 🛡️
   const { data, error } = await (await supabase)
     .from('profiles')
-    .select('*')
+    .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language')
     .eq('id', user.id)
     .single()
 
   if (error || !data) {
-    console.error('Error fetching profile:', error)
+    console.error('Error fetching profile:', error?.message)
     return null
   }
 
   return data as unknown as Profile
+}
+
+/**
+ * Récupère les données sensibles (SMTP/Banque) uniquement pour les pages de configuration.
+ * L'accès est protégé par la session utilisateur.
+ */
+export async function getSensitiveProfileData() {
+  const supabase = createClient()
+  const { data: { user } } = await (await supabase).auth.getUser()
+  if (!user) throw new Error('Non authentifié')
+
+  const { data, error } = await (await supabase)
+    .from('profiles')
+    .select('smtp_host, smtp_port, smtp_user, smtp_from, iban, bic, bank_name')
+    .eq('id', user.id)
+    .single()
+
+  if (error) throw error
+  return data
 }
 
 export async function updateProfile(formData: {
