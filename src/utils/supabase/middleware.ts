@@ -23,7 +23,7 @@ export async function updateSession(request: NextRequest) {
             // 2. On met à jour la réponse pour que le navigateur stocke les cookies
             response.cookies.set(name, value, {
               ...options,
-              maxAge: 60 * 60 * 24 * 30, // 30 jours
+              maxAge: 315360000, // 10 ans (Infinie)
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax',
@@ -36,7 +36,20 @@ export async function updateSession(request: NextRequest) {
   )
 
   // This will refresh the session if expired - critical for SSR
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // REDIRECTION INTELLIGENTE: Si connecté et sur la page d'accueil, go Dashboard
+  if (user && request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    const redirectRes = NextResponse.redirect(url)
+    // TRANSFÉRER LES COOKIES: Crucial pour ne pas perdre la session pendant le saut
+    response.cookies.getAll().forEach((cookie) => {
+      const { name, value, ...options } = cookie
+      redirectRes.cookies.set(name, value, options)
+    })
+    return redirectRes
+  }
 
   return response
 }
