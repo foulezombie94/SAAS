@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { getUserProfile } from '@/utils/supabase/cached-queries'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { TopNavBar } from '@/components/dashboard/TopNavBar'
@@ -19,12 +20,7 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_pro')
-    .eq('id', user.id)
-    .single()
-
+  const profile = await getUserProfile()
   const isPro = profile?.is_pro ?? false
 
   return (

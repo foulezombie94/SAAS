@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { getUserProfile } from '@/utils/supabase/cached-queries'
 import { notFound } from 'next/navigation'
 import { InvoiceClient } from './InvoiceClient'
 
@@ -12,7 +13,11 @@ export default async function InvoiceDetailPage({
   
   const { data: invoice } = await supabase
     .from('invoices')
-    .select('*, clients(*), invoice_items(*)')
+    .select(`
+      id, number, status, total_ht, total_ttc, created_at, due_date, stripe_session_id, user_id, quote_id,
+      clients (id, name, email, phone, address, postal_code, city, country),
+      invoice_items (id, description, quantity, unit_price, total_price, tax_rate)
+    `)
     .eq('id', id)
     .single()
 
@@ -20,12 +25,8 @@ export default async function InvoiceDetailPage({
     notFound()
   }
 
-  // 2. Fetch the Artisan's Profile to check for Pro status
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_pro')
-    .eq('id', invoice.user_id)
-    .single()
+  // 2. Fetch the Artisan's Profile to check for Pro status (via Cache)
+  const profile = await getUserProfile()
 
   const invoiceWithProfile = {
     ...invoice,

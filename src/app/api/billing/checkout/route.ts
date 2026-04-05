@@ -32,8 +32,8 @@ export async function POST(req: Request) {
       mode: 'subscription',
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/#pricing`,
+      ...(user.email ? { customer_email: user.email } : {}),
       client_reference_id: user.id,
-      customer_email: user.email,
       metadata: {
         type: 'pro_plan',
         userId: user.id,
@@ -47,6 +47,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     console.error('Stripe Billing Error:', err)
-    return NextResponse.json({ error: 'Erreur lors de la création de la session de paiement' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Erreur lors de la création de la session de paiement' }, { status: 500 })
   }
 }
+

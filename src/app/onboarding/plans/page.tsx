@@ -21,7 +21,10 @@ export default function PlansPage() {
     setIsLoading(true)
     setSelectedPlan('free')
     try {
-      await setFreePlan()
+      const response = await setFreePlan()
+      if (response?.error) {
+        throw new Error(response.error)
+      }
       toast.success('Bienvenue sur le plan Gratuit !')
       router.push('/dashboard?onboarding=complete')
     } catch (err: any) {
@@ -38,9 +41,12 @@ export default function PlansPage() {
       if (!priceId) {
         throw new Error('Les identifiants de prix ne sont pas configurés')
       }
-      const { url } = await createSubscriptionSession(priceId)
-      if (url) {
-        window.location.href = url
+      const response = await createSubscriptionSession(priceId)
+      if (response?.error) {
+        throw new Error(response.error)
+      }
+      if (response?.data?.url) {
+        window.location.href = response.data.url
       }
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de l’initialisation du paiement')

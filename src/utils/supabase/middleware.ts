@@ -67,6 +67,18 @@ export async function updateSession(request: NextRequest) {
       })
       return redirectRes
     }
+  } else {
+    // PROTECT ROUTES: If NOT logged in and trying to access protected areas
+    const isProtectedPath = 
+      request.nextUrl.pathname.startsWith('/dashboard') || 
+      request.nextUrl.pathname.startsWith('/onboarding') ||
+      (request.nextUrl.pathname.startsWith('/api') && !request.nextUrl.pathname.startsWith('/api/webhooks'))
+
+    if (isProtectedPath) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
   }
 
   return response
