@@ -51,8 +51,11 @@ export async function POST(req: Request) {
       }, { status: 400 })
     }
 
-    // 2. Generate Links
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://artisanflow.app'
+    // 2. Generate Links (Dynamic detection for local/prod testing)
+    const host = req.headers.get('host')
+    const protocol = host?.includes('localhost') ? 'http' : 'https'
+    const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_SITE_URL || 'https://artisanflow.app')
+    
     const shareUrl = `${baseUrl}/share/quotes/${quote.id}`
     const paymentUrl = shareUrl // The share page has the payment button
 
