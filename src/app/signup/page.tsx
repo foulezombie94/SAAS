@@ -1,6 +1,4 @@
-import { signup } from '../login/actions'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { SignupForm } from '@/components/auth/SignupForm'
 import { Card } from '@/components/ui/Card'
 import { HardHat, CheckCircle2, ShieldCheck, Zap } from 'lucide-react'
 import Link from 'next/link'
@@ -83,39 +81,7 @@ export default function SignupPage({
             <p className="text-on-surface-variant font-medium">Rejoignez la communauté d'artisans qui gagnent du temps.</p>
           </div>
 
-          <form className="flex flex-col gap-6">
-            <div className="space-y-4">
-              <Input
-                name="full_name"
-                label="Nom Complet / Nom de l'entreprise"
-                placeholder="Ex: Jean Dupont (Plomberie Dupont)"
-                required
-              />
-              <Input
-                name="email"
-                label="Email Professionnel"
-                placeholder="nom@entreprise.fr"
-                required
-                type="email"
-              />
-              <Input
-                type="password"
-                name="password"
-                label="Mot de passe"
-                placeholder="Min. 8 caractères"
-                required
-              />
-            </div>
-
-            {searchParams?.error && (
-              <div className="p-4 bg-error-container text-on-error-container rounded-md text-sm font-bold border border-error/10">
-                {searchParams.error}
-              </div>
-            )}
-
-            <Button className="w-full py-4 text-lg font-black mt-2" formAction={signup}>
-              Commencer gratuitement
-            </Button>
+          <SignupForm />
 
             <div className="mt-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-2 justify-center">
               <span className="text-on-surface-variant text-sm font-medium">Déjà inscrit ?</span>
@@ -123,7 +89,7 @@ export default function SignupPage({
                 Se connecter
               </Link>
             </div>
-          </form>
+
 
           <div className="mt-16 pt-8 border-t border-outline-variant/30 text-center">
             <p className="text-[0.6875rem] uppercase tracking-widest text-on-surface-variant/50 font-bold">
