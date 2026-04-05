@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/utils/supabase/admin'
 import type Stripe from 'stripe'
@@ -76,6 +77,9 @@ export async function POST(req: Request) {
 
           if (updateError) {
             console.error('[WEBHOOK] Profile update error:', updateError.message)
+          } else {
+            // 🚀 REVALIDATION INSTANTANÉE (GRADE 3)
+            revalidatePath('/dashboard', 'layout')
           }
         }
 
@@ -120,7 +124,7 @@ export async function POST(req: Request) {
         if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           
-          await supabase
+          const { data: profile } = await supabase
             .from('profiles')
             .update({ 
               is_pro: true,
@@ -128,6 +132,12 @@ export async function POST(req: Request) {
               updated_at: new Date().toISOString()
             })
             .eq('stripe_customer_id', invoice.customer as string)
+            .select('id')
+            .single()
+
+          if (profile) {
+            revalidatePath('/dashboard', 'layout')
+          }
         }
         break
       }
@@ -137,7 +147,7 @@ export async function POST(req: Request) {
         
         const isCanceled = subscription.status === 'canceled' || subscription.status === 'unpaid'
         
-        await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .update({ 
             is_pro: !isCanceled,
@@ -145,6 +155,12 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString()
           })
           .eq('stripe_customer_id', subscription.customer as string)
+          .select('id')
+          .single()
+
+        if (profile) {
+          revalidatePath('/dashboard', 'layout')
+        }
         break
       }
 
@@ -152,7 +168,7 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription
         
         // RETOUR AU PLAN FREE
-        await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .update({ 
             is_pro: false, 
@@ -160,6 +176,12 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString()
           })
           .eq('stripe_customer_id', subscription.customer as string)
+          .select('id')
+          .single()
+
+        if (profile) {
+          revalidatePath('/dashboard', 'layout')
+        }
         break
       }
 

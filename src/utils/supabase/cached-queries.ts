@@ -72,7 +72,7 @@ export async function getUserProfile() {
     },
     ['user-profile', user.id],
     {
-      revalidate: 300,
+      revalidate: 60, // 🏎️ Reduced for dev-responsive manual DB changes
       tags: [`profile-${user.id}`]
     }
   )()
