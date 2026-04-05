@@ -56,6 +56,7 @@ export async function createSubscriptionSession(priceId: string) {
     customer_email: user.email,
     metadata: {
       userId: user.id,
+      plan: priceId.includes('TItuQARr68RGKO6aVLwW0u5') ? 'monthly' : 'yearly' // Helper for test mode or more robustly:
     },
   })
 

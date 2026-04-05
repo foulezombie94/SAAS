@@ -33,17 +33,20 @@ export async function POST(req: Request) {
         
         const factureId = session.metadata?.facture_id
         const quoteId = session.metadata?.quoteId || session.metadata?.devisId
-        const userId = session.client_reference_id
+        const userId = session.metadata?.userId || session.client_reference_id
 
         console.log(`Webhook received - User: ${userId}, Facture: ${factureId}, Quote: ${quoteId}, Account: ${connectedAccountId || 'Platform'}`)
 
         const supabase = createAdminClient()
 
         // 1. If it's a subscription or a specific PRO purchase
-        if (userId && (session.mode === 'subscription' || session.metadata?.type === 'pro_plan')) {
+        if (userId && (session.mode === 'subscription' || session.metadata?.type === 'pro_plan' || session.metadata?.plan)) {
           console.log(`Upgrading user ${userId} to PRO...`)
           
-          const planType = session.metadata?.plan || (session.amount_total === 2200 ? 'monthly' : 'yearly')
+          let planType = session.metadata?.plan
+          if (!planType) {
+            planType = session.amount_total === 2200 ? 'monthly' : 'yearly'
+          }
           
           await supabase
             .from('profiles')
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
             })
             .eq('id', userId)
           
-          console.log(`User ${userId} is now PRO`)
+          console.log(`User ${userId} is now PRO with plan ${planType}`)
         }
 
         // 2. Original Quote/Invoice Payment Logic
