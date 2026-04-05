@@ -58,3 +58,9 @@ export async function signup(prevState: any, formData: FormData) {
 
   redirect('/login?message=' + encodeURIComponent('Vérifiez votre boîte mail pour confirmer votre inscription !'))
 }
+
+export async function signOut() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect('/')
+}

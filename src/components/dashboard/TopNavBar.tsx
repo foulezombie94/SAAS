@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight } from 'lucide-react'
+import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { useNotifications } from '@/components/providers/NotificationProvider'
+import { signOut } from '@/app/login/actions'
 
 interface TopNavBarProps {
   userEmail?: string
@@ -14,6 +15,10 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
   const { unreadCount, notifications, markAllAsRead, clearAllNotifications } = useNotifications()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -135,13 +140,22 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
           )}
         </div>
         
-        <div className="flex items-center gap-3 pl-2 group cursor-pointer relative">
+        <div className="flex items-center gap-3 pl-2 relative border-l border-slate-200/20 ml-2">
           <div className="text-right hidden sm:block">
              <p className="text-xs font-black text-primary uppercase tracking-tighter">Artisan Connecté</p>
              <p className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]">{userEmail}</p>
           </div>
-          <button className="p-1 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors">
+          <button className="p-1 text-slate-300 dark:text-slate-500">
             <User size={32} />
+          </button>
+          
+          <button 
+            onClick={handleSignOut}
+            className="flex flex-col items-center gap-0.5 p-2 ml-2 group transition-all rounded-xl hover:bg-error/5"
+            title="Se déconnecter"
+          >
+            <LogOut size={20} className="text-slate-300 group-hover:text-error group-hover:translate-x-0.5 transition-all" />
+            <span className="text-[8px] font-black text-slate-300 group-hover:text-error uppercase tracking-widest">Déconnexion</span>
           </button>
         </div>
       </div>
