@@ -249,6 +249,9 @@ export type Database = {
           total_ttc: number | null
           user_id: string
           valid_until: string | null
+          payment_method: string | null
+          payment_details: Json | null
+          updated_at: string | null
         }
         Insert: {
           client_id?: string | null
@@ -263,6 +266,9 @@ export type Database = {
           total_ttc?: number | null
           user_id: string
           valid_until?: string | null
+          payment_method?: string | null
+          payment_details?: Json | null
+          updated_at?: string | null
         }
         Update: {
           client_id?: string | null
@@ -277,6 +283,9 @@ export type Database = {
           total_ttc?: number | null
           user_id?: string
           valid_until?: string | null
+          payment_method?: string | null
+          payment_details?: Json | null
+          updated_at?: string | null
         }
         Relationships: [
           {
