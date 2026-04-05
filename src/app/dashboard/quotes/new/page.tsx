@@ -26,6 +26,7 @@ import {
   Send
 } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface QuoteItem {
   id: string
@@ -105,7 +106,7 @@ export default function NewQuotePage() {
   }
 
   const handleSubmit = async (status: 'draft' | 'sent') => {
-    if (!selectedClientId) return alert('Veuillez sélectionner un client')
+    if (!selectedClientId) return toast.error('Veuillez sélectionner un client')
     setLoading(true)
 
     try {
@@ -135,14 +136,18 @@ export default function NewQuotePage() {
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          total_price: item.total
+          total_price: item.total, // HT
+          tax_rate: taxRate,
+          total_ht: item.total,
+          total_ttc: item.total * (1 + taxRate / 100)
         })))
 
       if (iError) throw iError
 
+      toast.success(status === 'draft' ? "Brouillon enregistré" : "Devis envoyé au client !")
       router.push('/dashboard')
     } catch (e: any) {
-      alert(e.message)
+      toast.error(e.message)
     } finally {
       setLoading(false)
     }
