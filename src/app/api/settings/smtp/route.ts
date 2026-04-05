@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { createTransporter } from '@/lib/nodemailer'
+import { encrypt, decrypt } from '@/lib/encryption'
 
 export async function POST(request: Request) {
   try {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
           smtp_host: config.host,
           smtp_port: parseInt(config.port),
           smtp_user: config.user,
-          smtp_pass: config.pass,
+          smtp_pass: encrypt(config.pass), // Security fix: Encrypt before save
           smtp_from: config.from || user.email
         })
         .eq('id', user.id)
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
       } catch (err: any) {
         console.error('SMTP Test Error:', err)
         return NextResponse.json({ 
-          error: 'Échec de la connexion : ' + (err.message || 'Erreur inconnue') 
+          error: 'Échec de la connexion SMTP. Veuillez vérifier vos paramètres.' 
         }, { status: 400 })
       }
     }
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Action non reconnue' }, { status: 400 })
   } catch (err: any) {
     console.error('SMTP API Error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: "Une erreur est survenue lors de l'enregistrement." }, { status: 500 })
   }
 }
 
@@ -98,8 +99,13 @@ export async function GET() {
 
     if (error) throw error
 
+    // Decrypt password for display if needed (though masked by UI)
+    if (profile?.smtp_pass) {
+      profile.smtp_pass = decrypt(profile.smtp_pass)
+    }
+
     return NextResponse.json(profile)
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: "Impossible de récupérer la configuration." }, { status: 500 })
   }
 }

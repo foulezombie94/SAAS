@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { sendEmail } from '@/lib/nodemailer'
+import { decrypt } from '@/lib/encryption'
 
 export async function POST(req: Request) {
   try {
@@ -106,17 +107,22 @@ export async function POST(req: Request) {
       host: profile.smtp_host,
       port: profile.smtp_port || 465,
       user: profile.smtp_user,
-      pass: profile.smtp_pass,
+      pass: decrypt(profile.smtp_pass), // Security fix: Decrypt before use
       from: profile.smtp_from || user.email || ''
     }
 
-    await sendEmail(
-      smtpConfig,
-      quote.clients.email,
-      subject || `Devis ${quote.number} - ${profile.company_name}`,
-      htmlEmail,
-      `${message}\n\nConsulter le devis ici : ${shareUrl}\n\nPayer en ligne : ${paymentUrl}`
-    )
+    try {
+      await sendEmail(
+        smtpConfig,
+        quote.clients.email,
+        subject || `Devis ${quote.number} - ${profile.company_name}`,
+        htmlEmail,
+        `${message}\n\nConsulter le devis ici : ${shareUrl}\n\nPayer en ligne : ${paymentUrl}`
+      )
+    } catch (sendError) {
+      console.error('Nodemailer Error:', sendError)
+      return NextResponse.json({ error: "Échec de l'envoi de l'email via votre serveur SMTP." }, { status: 500 })
+    }
 
     // 5. Update Status
     if (quote.status === 'draft') {
@@ -129,6 +135,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
   } catch (err: any) {
     console.error('Send Email API Error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: "Une erreur interne est survenue." }, { status: 500 })
   }
 }

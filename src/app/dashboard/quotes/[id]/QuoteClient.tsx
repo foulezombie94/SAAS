@@ -82,7 +82,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
     try {
       const canvas = await html2canvas(printElement, {
-        scale: 4, // Ultra-high resolution for professional feel
+        scale: 2, // Optimized for high-quality A4 without crashing mobile RAM
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff'
@@ -163,9 +163,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       // 1. Storage Fix (Faille 1): Convert DataURL to Blob
       const response = await fetch(dataUrl)
       const blob = await response.blob()
-      const fileName = `signature_${quote.id}_${Date.now()}.png`
-
-      // 2. Upload to Supabase Storage
+      // 2. Upload to Supabase Storage - High Security path
+      const fileName = `${quote.user_id}/${quote.id}_${Date.now()}.png`
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('signatures')
         .upload(fileName, blob, { contentType: 'image/png' })
@@ -262,6 +261,17 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       setIsSendingEmail(false)
     }
   }
+
+  // Real-time synchronization for the email modal message
+  React.useEffect(() => {
+    if (isEmailModalOpen) {
+      setEmailForm(prev => ({
+        ...prev,
+        subject: `Votre Devis ${currentQuote.number} - ${currentQuote.profiles?.company_name || 'ArtisanFlow'}`,
+        message: `Bonjour ${currentQuote.clients?.name || 'Client'},\n\nVeuillez trouver ci-joint notre proposition commerciale concernant votre projet.\n\nVous pouvez consulter, signer et payer ce devis directement en ligne via le bouton sécurisé ci-dessous.\n\nRestant à votre disposition pour toute question.`
+      }))
+    }
+  }, [isEmailModalOpen, currentQuote.clients?.name, currentQuote.number, currentQuote.profiles?.company_name])
 
   return (
     <div className="flex flex-col gap-10 pb-32">
