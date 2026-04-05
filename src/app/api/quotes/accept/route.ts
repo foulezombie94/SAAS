@@ -26,6 +26,23 @@ export async function POST(req: Request) {
 
       if (!fullQuote) throw new Error('Quote details not found');
 
+      // NEW: Restore signature upload logic
+      const res = await fetch(signatureDataUrl)
+      const blob = await res.blob()
+      const fileName = `remote_sig_${quoteId}_${Date.now()}.png`
+      
+      const { error: uploadError } = await adminSupabase.storage
+        .from('signatures')
+        .upload(fileName, blob, { contentType: 'image/png' })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = adminSupabase.storage
+        .from('signatures')
+        .getPublicUrl(fileName)
+      
+      finalSignatureUrl = publicUrl
+
       // Generate Invoice Number
       const year = new Date().getFullYear();
       const { count } = await adminSupabase

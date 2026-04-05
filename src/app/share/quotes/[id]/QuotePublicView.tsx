@@ -332,6 +332,22 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
                   </div>
                   <img src={signature} alt="Client Signature" className="h-24 object-contain mix-blend-multiply opacity-80 relative z-10" />
                   <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">Accord contractuel validé le {new Date().toLocaleDateString()}</p>
+                  
+                  {/* NEW: Payment button directly on the invoice */}
+                  {currentQuote.status !== 'paid' && (
+                    <Button 
+                      onClick={handlePayment}
+                      disabled={isPaying}
+                      className="mt-6 w-full h-14 rounded-xl bg-[#002878] hover:bg-[#083696] text-white font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-95"
+                    >
+                      {isPaying ? (
+                        <Loader2 className="animate-spin" size={18} />
+                      ) : (
+                        <CreditCard size={18} />
+                      )}
+                      Régler par Carte Bancaire
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100 flex items-center gap-4 text-orange-700">
@@ -544,21 +560,7 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
           <Download size={20} /> Télécharger
         </Button>
 
-        {/* Bouton de Paiement (si pas encore payé) */}
-        {currentQuote.status !== 'paid' && (
-          <Button 
-            onClick={handlePayment}
-            disabled={isPaying}
-            className="h-16 px-10 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-xl shadow-emerald-900/10"
-          >
-            {isPaying ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <CreditCard size={20} />
-            )}
-            Payer par Carte
-          </Button>
-        )}
+        {/* Payment Button Removed from here as requested */}
 
         {isDone || signature || currentQuote.status === 'paid' ? (
           <div className="h-16 px-10 bg-green-500/10 border border-green-200 text-green-600 rounded-2xl flex items-center gap-3 font-black uppercase tracking-widest text-xs animate-in zoom-in duration-300">
