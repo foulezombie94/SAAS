@@ -213,7 +213,7 @@ export default function Home() {
                     <div className="bg-amber-100 text-amber-900 px-4 py-2 rounded-xl border-2 border-amber-500/20 shadow-sm animate-pulse-slow">
                       <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Paiement Annuel</p>
                       <p className="text-2xl font-black tracking-tighter">199.99€/an</p>
-                      <p className="text-[10px] font-bold text-amber-600 bg-white/50 px-2 py-0.5 rounded-full mt-1 inline-block uppercase">ÉCONOMISEZ 20% 🔥</p>
+                      <p className="text-[10px] font-bold text-amber-600 bg-white/50 px-2 py-0.5 rounded-full mt-1 inline-block uppercase">ÉCONOMISEZ 24% 🔥</p>
                     </div>
                   </div>
                 </div>
