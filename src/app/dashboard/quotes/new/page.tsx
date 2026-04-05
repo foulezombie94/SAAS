@@ -38,7 +38,7 @@ interface QuoteItem {
 interface Client {
   id: string
   name: string
-  email?: string
+  email: string | null
 }
 
 export default function NewQuotePage() {
@@ -110,10 +110,12 @@ export default function NewQuotePage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Utilisateur non connecté')
+
       const { data: quote, error: qError } = await supabase
         .from('quotes')
         .insert({
-          user_id: user?.id,
+          user_id: user.id, // Now safe as we checked above
           client_id: selectedClientId,
           number,
           status,
