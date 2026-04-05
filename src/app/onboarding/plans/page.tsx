@@ -55,12 +55,12 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-12 md:pt-20 pb-0 min-h-screen">
+    <div className="max-w-7xl mx-auto px-6 pt-4 md:pt-8 pb-0">
       {/* Google Material Symbols Link (Required for the provided HTML style) */}
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       
       {/* BREADCRUMBS */}
-      <div className="max-w-xl mx-auto mb-16 px-4">
+      <div className="max-w-xl mx-auto mb-8 px-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col items-center gap-2 flex-1">
             <div className="h-1 w-full bg-primary rounded-full"></div>
@@ -83,7 +83,7 @@ export default function PlansPage() {
         </div>
       </div>
 
-      <div className="text-center mb-16">
+      <div className="text-center mb-10">
         <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-primary mb-6">Propulsez votre activité.</h1>
         <p className="text-lg text-secondary max-w-2xl mx-auto leading-relaxed">Simplifiez votre gestion administrative et concentrez-vous sur ce que vous faites de mieux : bâtir.</p>
         
