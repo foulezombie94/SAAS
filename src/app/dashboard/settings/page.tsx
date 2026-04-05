@@ -123,105 +123,9 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Main Configuration Form */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-50">
-              <Mail className="text-primary" size={20} />
-              <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">Configuration SMTP</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Serveur SMTP (Hôte)</label>
-                <div className="relative group">
-                  <Server className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="email.votredomaine.com"
-                    value={config.host}
-                    onChange={(e) => setConfig({...config, host: e.target.value})}
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-primary transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Port</label>
-                <input 
-                  type="number" 
-                  placeholder="465"
-                  value={config.port}
-                  onChange={(e) => setConfig({...config, port: e.target.value})}
-                  className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-primary transition-all"
-                />
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Email / Utilisateur</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                  <input 
-                    type="email" 
-                    placeholder="contact@votredomaine.fr"
-                    value={config.user}
-                    onChange={(e) => setConfig({...config, user: e.target.value})}
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-primary transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Mot de passe (ou mdp d'application)</label>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                  <input 
-                    type="password" 
-                    placeholder="••••••••••••"
-                    value={config.pass}
-                    onChange={(e) => setConfig({...config, pass: e.target.value})}
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-primary transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Nom d'expéditeur affiché</label>
-                <input 
-                  type="text" 
-                  placeholder="Jean Dupont Électricité"
-                  value={config.from}
-                  onChange={(e) => setConfig({...config, from: e.target.value})}
-                  className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-primary transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 mt-10">
-              <button 
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex-1 flex items-center justify-center gap-3 bg-[#00236f] text-white py-4 rounded-xl font-bold uppercase tracking-wider text-[12px] shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-              >
-                {isSaving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
-                Enregistrer
-              </button>
-              <button 
-                onClick={handleTest}
-                disabled={isTesting}
-                className="flex-1 flex items-center justify-center gap-3 bg-white border-2 border-[#00236f] text-[#00236f] py-4 rounded-xl font-bold uppercase tracking-wider text-[12px] hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50"
-              >
-                {isTesting ? <RefreshCw className="animate-spin" size={18} /> : <Send size={18} />}
-                Tester la connexion
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Instructions & Help */}
-        <div className="lg:col-span-5 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Instructions & Help - Moved up */}
+        <div className="lg:col-span-5 space-y-6 lg:order-2">
           <div className="bg-[#f8fafc] border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
             <div className="p-8 pb-4">
               <div className="flex items-center gap-3 mb-6">
@@ -293,6 +197,101 @@ export default function SettingsPage() {
                   <p className="text-[10px] font-black text-white">smtp.gmail.com (465)</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Main Configuration Form - Moved down logically but using order-1 on desktop if needed */}
+        <div className="lg:col-span-7 space-y-6 lg:order-1">
+          <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 text-slate-800">
+            <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-50">
+              <Mail className="text-[#00236f]" size={20} />
+              <h2 className="text-lg font-black tracking-tight uppercase">Configuration SMTP</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Serveur SMTP (Hôte)</label>
+                <div className="relative group">
+                  <Server className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00236f] transition-colors" size={18} />
+                  <input 
+                    type="text" 
+                    placeholder="email.votredomaine.com"
+                    value={config.host}
+                    onChange={(e) => setConfig({...config, host: e.target.value})}
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-[#00236f] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Port</label>
+                <input 
+                  type="number" 
+                  placeholder="465"
+                  value={config.port}
+                  onChange={(e) => setConfig({...config, port: e.target.value})}
+                  className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-[#00236f] transition-all"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Email / Utilisateur</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00236f] transition-colors" size={18} />
+                  <input 
+                    type="email" 
+                    placeholder="contact@votredomaine.fr"
+                    value={config.user}
+                    onChange={(e) => setConfig({...config, user: e.target.value})}
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-[#00236f] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Mot de passe (ou mdp d'application)</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00236f] transition-colors" size={18} />
+                  <input 
+                    type="password" 
+                    placeholder="••••••••••••"
+                    value={config.pass}
+                    onChange={(e) => setConfig({...config, pass: e.target.value})}
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-[#00236f] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Nom d'expéditeur affiché</label>
+                <input 
+                  type="text" 
+                  placeholder="Jean Dupont Électricité"
+                  value={config.from}
+                  onChange={(e) => setConfig({...config, from: e.target.value})}
+                  className="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:bg-white focus:border-[#00236f] transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 mt-10">
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex-1 flex items-center justify-center gap-3 bg-[#00236f] text-white py-4 rounded-xl font-bold uppercase tracking-wider text-[12px] shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isSaving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
+                Enregistrer
+              </button>
+              <button 
+                onClick={handleTest}
+                disabled={isTesting}
+                className="flex-1 flex items-center justify-center gap-3 bg-white border-2 border-[#00236f] text-[#00236f] py-4 rounded-xl font-bold uppercase tracking-wider text-[12px] hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isTesting ? <RefreshCw className="animate-spin" size={18} /> : <Send size={18} />}
+                Tester la connexion
+              </button>
             </div>
           </div>
         </div>
