@@ -146,7 +146,10 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
         })
       })
 
-      if (!response.ok) throw new Error("Erreur serveur")
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Erreur serveur")
+      }
       
       const { signatureUrl, invoiceId: newInvoiceId } = await response.json()
       setSignature(signatureUrl)
