@@ -28,44 +28,24 @@ export async function createQuoteAction(rawData: unknown) {
   }
 
   try {
-    // 3. Insertion stricte dans Supabase
-    // Zod garantit que data.client_id n'est pas null, etc.
-    const { data: quote, error: qError } = await supabase
-      .from('quotes')
-      .insert({
-        user_id: user.id,
-        client_id: data.client_id, // NOT NULL garanti par la BDD et Zod
-        status: data.status,
-        total_ht: data.total_ht,
-        tax_rate: data.tax_rate,
-        total_ttc: data.total_ttc,
-        payment_details: data.payment_details,
-        payment_method: data.payment_method,
-        valid_until: data.valid_until
-      })
-      .select()
-      .single()
+    // 3. Insertion Atomique Stricte (Devis + Prestations) via RPC
+    const { data: quote, error: rpcError } = await supabase.rpc('create_quote_with_items_v2', {
+      p_user_id: user.id,
+      p_client_id: data.client_id,
+      p_status: data.status,
+      p_total_ht: data.total_ht,
+      p_tax_rate: data.tax_rate,
+      p_total_ttc: data.total_ttc,
+      p_items: data.items,
+      p_payment_details: data.payment_details || undefined,
+      p_payment_method: data.payment_method || undefined,
+      p_valid_until: data.valid_until || undefined
+    });
 
-    if (qError) throw new Error(qError.message)
-
-    // Insertion des prestations (items)
-    const { error: iError } = await supabase
-      .from('quote_items')
-      .insert(data.items.map(item => ({
-        quote_id: quote.id,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
-        tax_rate: item.tax_rate,
-        total_ht: item.total_ht,
-        total_ttc: item.total_ttc
-      })))
-
-    if (iError) throw new Error(iError.message)
+    if (rpcError) throw new Error(rpcError.message)
 
     return { success: true, quote }
   } catch (err: any) {
-    return { success: false, error: err.message || 'Erreur lors de la création du devis' }
+    return { success: false, error: err.message || 'Erreur lors de la création atomique du devis' }
   }
 }
