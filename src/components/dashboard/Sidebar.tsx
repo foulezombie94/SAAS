@@ -9,6 +9,7 @@ import {
   FileText, 
   Receipt, 
   Settings,
+  Mail,
   PlusCircle,
   ShieldCheck,
   LucideIcon
@@ -32,6 +33,7 @@ const navigation: NavItem[] = [
   { name: 'Clients', href: '/dashboard/clients', icon: Users },
   { name: 'Devis', href: '/dashboard/quotes', icon: FileText },
   { name: 'Factures', href: '/dashboard/invoices', icon: Receipt },
+  { name: 'E-mails', href: '/dashboard/settings', icon: Mail },
   { name: 'Paramètres', href: '/dashboard/settings', icon: Settings },
 ]
 
