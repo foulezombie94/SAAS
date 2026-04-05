@@ -68,7 +68,6 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           const isAccepted = payload.new.status === 'accepted' && payload.old.status !== 'accepted'
 
           if (isPaid || isAccepted) {
-            console.log('Notification event received:', payload.new.status)
             
             setUnreadCount(prev => prev + 1)
             
@@ -98,7 +97,6 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
         }
       )
       .subscribe((status) => {
-        console.log(`Notification Channel status for ${userId}:`, status)
       })
 
     return () => {

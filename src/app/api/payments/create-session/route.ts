@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/utils/supabase/admin'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   try {
@@ -11,6 +12,13 @@ export async function POST(req: Request) {
     
     if (!invoiceId) {
       return NextResponse.json({ error: 'Invoice ID is required' }, { status: 400 })
+    }
+
+    // 0. RATE LIMITING (5 requests per minute per IP)
+    const ip = req.headers.get('x-forwarded-for') || 'anonymous'
+    const limit = rateLimit(`public-payment-${ip}`, 5, 60000)
+    if (!limit.success) {
+      return NextResponse.json({ error: limit.message }, { status: 429 })
     }
 
     // We use the Admin client here because the client is public (unauthenticated)
@@ -24,7 +32,7 @@ export async function POST(req: Request) {
       .single()
 
     if (error || !invoice) {
-      console.error('Database error or invoice not found:', error)
+      console.error('Invoice search error:', error?.message)
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
@@ -72,7 +80,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
-    console.error('Stripe Session Error:', err)
+    console.error('Stripe Session Error:', err?.message)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

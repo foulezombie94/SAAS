@@ -26,7 +26,6 @@ export async function POST(req: Request) {
 
       if (!fullQuote) throw new Error('Quote details not found');
 
-      console.log(`[API/Accept] Processing signature for quote: ${quoteId}`);
       
       // NEW: Robust Buffer-based signature upload
       const base64Data = signatureDataUrl.split(',')[1];
@@ -51,7 +50,6 @@ export async function POST(req: Request) {
         .getPublicUrl(fileName)
       
       finalSignatureUrl = publicUrl;
-      console.log(`[API/Accept] Signature uploaded: ${finalSignatureUrl}`);
 
       // Generate Invoice Number
       const year = new Date().getFullYear();
@@ -62,7 +60,6 @@ export async function POST(req: Request) {
       
       const nextNumber = (count || 0) + 1;
       const invoiceNumber = `FAC-${year}-${nextNumber.toString().padStart(4, '0')}`;
-      console.log(`[API/Accept] Generating invoice: ${invoiceNumber}`);
 
       if (!fullQuote.client_id) throw new Error('Un client doit être associé au devis pour générer une facture');
 
@@ -87,7 +84,6 @@ export async function POST(req: Request) {
         throw new Error(`Échec de création de la facture: ${iError.message}`);
       }
 
-      console.log(`[API/Accept] Invoice created: ${invoice.id}`);
 
       if (quoteItems && quoteItems.length > 0) {
         const invoiceItems = quoteItems.map((item: any) => ({
@@ -118,7 +114,6 @@ export async function POST(req: Request) {
         throw new Error(`Échec de la mise à jour du devis: ${qUpdateError.message}`);
       }
 
-      console.log(`[API/Accept] Success! Quote accepted and invoiced.`);
       return NextResponse.json({ success: true, signatureUrl: finalSignatureUrl, invoiceId: invoice.id })
     }
 

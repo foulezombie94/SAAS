@@ -1,40 +1,57 @@
 import crypto from 'crypto'
 
 const ALGORITHM = 'aes-256-gcm'
-const IV_LENGTH = 16
-// WARNING: This key should be in your environment variables for real production security.
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'artisan-flow-secure-encryption-key-v1' 
+const IV_LENGTH_GCM = 12 // Standard GCM IV length
+// Legacy length for backward compatibility was 16
+
+// Check for missing key - CRITICAL SECURITY
+if (!process.env.ENCRYPTION_KEY) {
+  throw new Error('FATAL: ENCRYPTION_KEY environment variable is not set. Security standards require a private key for SMTP credentials.')
+}
+
+// Derive a 32-byte key from the environment string using SHA-256
+// This ensures we always have a strong, 32-byte key regardless of the env string length.
+const ENCRYPTION_KEY = crypto.createHash('sha256').update(process.env.ENCRYPTION_KEY).digest()
 
 export function encrypt(text: string): string {
-  const iv = crypto.randomBytes(IV_LENGTH)
-  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY.padEnd(32).slice(0, 32)), iv)
+  if (!text) return ''
+  const iv = crypto.randomBytes(IV_LENGTH_GCM)
+  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv)
   
   let encrypted = cipher.update(text, 'utf8', 'hex')
   encrypted += cipher.final('hex')
   
   const authTag = cipher.getAuthTag().toString('hex')
   
-  // Format: iv:authTag:encryptedData
+  // Format: iv:authTag:encrypted
   return `${iv.toString('hex')}:${authTag}:${encrypted}`
 }
 
-export function decrypt(text: string): string {
+export function decrypt(encryptedText: string): string {
   try {
-    const [ivHex, authTagHex, encryptedData] = text.split(':')
-    if (!ivHex || !authTagHex || !encryptedData) return text // Return as is if not encrypted format
+    if (!encryptedText || !encryptedText.includes(':')) {
+      return encryptedText // Fallback for legacy plain text
+    }
+    
+    const parts = encryptedText.split(':')
+    if (parts.length < 3) return encryptedText
+
+    const [ivHex, authTagHex, encrypted] = parts
     
     const iv = Buffer.from(ivHex, 'hex')
     const authTag = Buffer.from(authTagHex, 'hex')
-    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY.padEnd(32).slice(0, 32)), iv)
+    
+    // crypto.createDecipheriv detects IV length automatically
+    const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, iv)
     
     decipher.setAuthTag(authTag)
     
-    let decrypted = decipher.update(encryptedData, 'hex', 'utf8')
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8')
     decrypted += decipher.final('utf8')
     
     return decrypted
   } catch (err) {
-    console.error('Decryption failed:', err)
-    return text // Return original if decryption fails (e.g. migrating from plain text)
+    // Silent fail for decryption gracefully (returns input)
+    return encryptedText
   }
 }

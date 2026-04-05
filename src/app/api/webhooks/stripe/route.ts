@@ -29,7 +29,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
   }
 
-  console.log(`[STRIPE WEBHOOK] Event type: ${event.type}`)
 
   try {
     switch (event.type) {
@@ -50,7 +49,6 @@ export async function POST(req: Request) {
 
         // A. ACTIVATION PRO
         if (userId && (session.mode === 'subscription' || session.metadata?.plan)) {
-          console.log(`[WEBHOOK] Activating PRO for User: ${userId}`)
           
           let subscriptionData = {}
           if (session.subscription) {
@@ -77,7 +75,7 @@ export async function POST(req: Request) {
             .eq('id', userId)
 
           if (updateError) {
-            console.error('[WEBHOOK] Profile update error:', updateError)
+            console.error('[WEBHOOK] Profile update error:', updateError.message)
           }
         }
 
@@ -121,7 +119,6 @@ export async function POST(req: Request) {
 
         if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-          console.log(`[WEBHOOK] Renewal processed for subscription: ${subscription.id}`)
           
           await supabase
             .from('profiles')
@@ -137,7 +134,6 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
-        console.log(`[WEBHOOK] Subscription updated: ${subscription.id}`)
         
         const isCanceled = subscription.status === 'canceled' || subscription.status === 'unpaid'
         
@@ -154,7 +150,6 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
-        console.log(`[WEBHOOK] Subscription deleted: ${subscription.id}`)
         
         // RETOUR AU PLAN FREE
         await supabase
@@ -170,7 +165,6 @@ export async function POST(req: Request) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        console.log(`[WEBHOOK] Payment failed for CUSTOMER: ${invoice.customer}`)
         await (supabase as any).from('webhook_logs').insert({
           event_type: 'invoice.payment_failed',
           payload: { customer: invoice.customer, invoice_id: invoice.id }
@@ -179,12 +173,11 @@ export async function POST(req: Request) {
       }
 
       default:
-        console.log(`Unhandled event type ${event.type}`)
     }
 
     return NextResponse.json({ received: true })
   } catch (err: any) {
-    console.error('[STRIPE WEBHOOK] Fatal processing error:', err)
+    console.error('[STRIPE WEBHOOK] Fatal processing error:', err?.message)
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
   }
 }

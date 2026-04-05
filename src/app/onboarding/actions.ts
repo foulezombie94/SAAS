@@ -6,6 +6,7 @@ import { getStripeAccountStatus as getStatusAction } from '@/app/dashboard/setti
 import { stripe } from '@/lib/stripe'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function checkStripeConnection() {
   try {
@@ -51,10 +52,21 @@ export async function setFreePlan() {
 
 export async function createSubscriptionSession(priceId: string) {
   try {
-    // 1. Mapping objet de configuration (adieu les magics strings)
     const STRIPE_PLANS: Record<string, string> = {
       [process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '']: 'monthly',
       [process.env.STRIPE_PRO_YEARLY_PRICE_ID || '']: 'yearly'
+    }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { data: null, error: 'Utilisateur non identifié' }
+    }
+
+    // 0. RATE LIMITING (5 requests per minute per user)
+    const limit = rateLimit(`stripe-onboarding-${user.id}`, 5, 60000)
+    if (!limit.success) {
+      return { data: null, error: limit.message }
     }
 
     // 4. Sécurité des entrées (Zod) pour protéger l'injection d'IDs arbitraires
@@ -73,12 +85,6 @@ export async function createSubscriptionSession(priceId: string) {
     }
 
     const planType = STRIPE_PLANS[priceId]; // 'monthly' | 'yearly'
-
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return { data: null, error: 'Utilisateur non identifié' }
-    }
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -103,7 +109,7 @@ export async function createSubscriptionSession(priceId: string) {
 
     return { data: { url: session.url }, error: null }
   } catch (error: any) {
-    console.error('Erreur Stripe Create Session:', error)
+    console.error('Erreur Stripe Create Session:', error.message)
     return { data: null, error: error.message || 'Une erreur est survenue lors de l’initialisation du paiement Stripe.' }
   }
 }

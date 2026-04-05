@@ -23,12 +23,17 @@ export default async function DashboardPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single()
-  const isPro = profile?.is_pro || false
 
-  // ... (rest of the data fetching)
-  const { data: quotes } = await supabase.from('quotes').select('*, clients(*)').order('created_at', { ascending: false })
-  const { data: invoices } = await supabase.from('invoices').select('*, clients(*)').order('created_at', { ascending: false })
+  // Fetch everything in parallel for maximum speed
+  const [profileRes, quotesRes, invoicesRes] = await Promise.all([
+    supabase.from('profiles').select('is_pro').eq('id', user.id).single(),
+    supabase.from('quotes').select('id, number, status, total_ttc, created_at, clients(name)').order('created_at', { ascending: false }).limit(10),
+    supabase.from('invoices').select('status, total_ttc').eq('user_id', user.id)
+  ])
+
+  const isPro = profileRes.data?.is_pro || false
+  const quotes = quotesRes.data
+  const invoices = invoicesRes.data
 
   const stats = {
     revenue: quotes?.reduce((acc, q) => acc + (q.status === 'accepted' || q.status === 'invoiced' ? Number(q.total_ttc) : 0), 0) || 0,

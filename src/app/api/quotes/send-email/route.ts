@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { sendEmail } from '@/lib/nodemailer'
 import { decrypt } from '@/lib/encryption'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   try {
@@ -14,26 +15,37 @@ export async function POST(req: Request) {
 
     const { quoteId, subject, message } = await req.json()
 
+    // 0. RATE LIMITING (3 requests per minute per user)
+    const limit = rateLimit(`send-email-${user.id}`, 3, 60000)
+    if (!limit.success) {
+      return NextResponse.json({ error: limit.message }, { status: 429 })
+    }
+
     if (!quoteId) {
       return NextResponse.json({ error: 'ID du devis manquant' }, { status: 400 })
     }
 
-    // 1. Fetch Quote, Client and Artisan Profile
-    const { data: quote, error: qError } = await supabase
-      .from('quotes')
-      .select('*, clients(*)')
-      .eq('id', quoteId)
-      .single()
+    // 1. Fetch Quote, Client and Artisan Profile in PARALLEL for speed
+    const [quoteRes, profileRes] = await Promise.all([
+      supabase
+        .from('quotes')
+        .select('id, user_id, number, status, total_ttc, client_id, clients(name, email)')
+        .eq('id', quoteId)
+        .eq('user_id', user.id) // IDOR PROTECTION
+        .single(),
+      supabase
+        .from('profiles')
+        .select('id, company_name, is_pro, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from')
+        .eq('id', user.id)
+        .single()
+    ])
+
+    const { data: quote, error: qError } = quoteRes
+    const { data: profile, error: pError } = profileRes
 
     if (qError || !quote) {
       return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 })
     }
-
-    const { data: profile, error: pError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
 
     if (pError || !profile) {
       return NextResponse.json({ error: 'Profil artisan introuvable' }, { status: 404 })
@@ -139,6 +151,7 @@ export async function POST(req: Request) {
         .from('quotes')
         .update({ status: 'sent' })
         .eq('id', quoteId)
+        .eq('user_id', user.id) // DOUBLE BELT
     }
 
     return NextResponse.json({ success: true })
