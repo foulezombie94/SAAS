@@ -109,21 +109,21 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-10 pb-20">
-      {/* Header Section */}
-      <section>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-            <Settings size={24} />
+    <div className="space-y-2 pb-10">
+      {/* Header Section - Compact */}
+      <section className="pt-2 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-slate-50 text-[#00236f] rounded-xl border border-slate-100 shadow-sm">
+            <Settings size={20} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-[#00236f] tracking-tight">PARAMÈTRES</h1>
-            <p className="text-slate-500 font-bold text-[11px] uppercase tracking-widest">Configuration de votre compte artisan</p>
+            <h1 className="text-2xl font-black text-[#00236f] tracking-tight leading-none mb-1">PARAMÈTRES</h1>
+            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-widest">Configuration de votre compte artisan</p>
           </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Instructions & Help - Moved up */}
         <div className="lg:col-span-5 space-y-6 lg:order-2">
           <div className="bg-[#f8fafc] border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
