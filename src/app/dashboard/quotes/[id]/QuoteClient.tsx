@@ -24,7 +24,9 @@ import {
   ArrowRight,
   Printer,
   Table as TableIcon,
-  Share2
+  Share2,
+  Mail,
+  X
 } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -43,6 +45,12 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   const [isPaying, setIsPaying] = useState(false)
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false)
   const [signature, setSignature] = useState<string | null>(quote.signature_url || null)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [emailForm, setEmailForm] = useState({
+    subject: `Votre Devis ${quote.number} - ${quote.profiles?.company_name || 'ArtisanFlow'}`,
+    message: `Bonjour ${quote.clients?.name},\n\nVeuillez trouver ci-joint notre proposition commerciale concernant votre projet.\n\nVous pouvez consulter, signer et payer ce devis directement en ligne via le bouton sécurisé ci-dessous.\n\nRestant à votre disposition pour toute question.`
+  })
   const quoteRef = useRef<HTMLDivElement>(null)
 
   // Real-time synchronization for the artisan
@@ -223,6 +231,35 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       toast.error("Échec génération facture : " + e.message)
     } finally {
       setIsGeneratingInvoice(false)
+    }
+  }
+
+  const handleSendEmail = async () => {
+    setIsSendingEmail(true)
+    const toastId = toast.loading("Envoi de l'email en cours...")
+    try {
+      const response = await fetch('/api/quotes/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quoteId: quote.id,
+          subject: emailForm.subject,
+          message: emailForm.message
+        })
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Erreur d'envoi")
+
+      toast.success("Email envoyé avec succès !", { id: toastId })
+      setIsEmailModalOpen(false)
+      if (currentQuote.status === 'draft') {
+        setCurrentQuote(prev => ({ ...prev, status: 'sent' }))
+      }
+    } catch (e: any) {
+      toast.error(e.message, { id: toastId })
+    } finally {
+      setIsSendingEmail(false)
     }
   }
 
@@ -408,6 +445,82 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             onSave={handleSaveSignature}
             onCancel={() => setIsSigning(false)}
           />
+        </div>
+      )}
+
+      {isEmailModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-primary p-8 text-white flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/10 rounded-2xl">
+                  <Mail size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black uppercase tracking-tight">Envoyer Devis</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Expédition via SMTP sécurisé</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsEmailModalOpen(false)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-10 space-y-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Destinataire</label>
+                <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  <User size={18} className="text-slate-400" />
+                  <span className="font-black text-primary uppercase">{quote.clients?.name}</span>
+                  <span className="text-slate-400 font-bold ml-auto text-xs">{quote.clients?.email || 'Pas d\'email renseigné'}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sujet de l'email</label>
+                <input 
+                  type="text"
+                  value={emailForm.subject}
+                  onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Contenu du message</label>
+                <textarea 
+                  rows={6}
+                  value={emailForm.message}
+                  onChange={(e) => setEmailForm({...emailForm, message: e.target.value})}
+                  className="w-full p-6 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all resize-none"
+                />
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic pt-2">
+                  * Les liens de consultation et de paiement seront ajoutés automatiquement.
+                </p>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button 
+                  onClick={() => setIsEmailModalOpen(false)}
+                  variant="outline"
+                  className="flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-[11px] border-slate-100"
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={handleSendEmail}
+                  isLoading={isSendingEmail}
+                  disabled={!quote.clients?.email || isSendingEmail}
+                  className="flex-[2] h-16 rounded-2xl font-black uppercase tracking-widest text-[11px] gap-3 bg-primary text-white shadow-lg shadow-primary/20"
+                >
+                  <Send size={18} /> Envoyer Maintenant
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -600,6 +713,14 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                   <Receipt size={20} /> Clôturer & Facturer
                 </Button>
               )}
+
+              <Button
+                onClick={() => setIsEmailModalOpen(true)}
+                disabled={quote.status === 'paid' || quote.status === 'invoiced'}
+                className="w-full h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-500/20"
+              >
+                <Mail size={20} /> Envoyer par Email
+              </Button>
 
               <div className="grid grid-cols-2 gap-4">
                 <Button
