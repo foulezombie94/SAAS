@@ -32,7 +32,7 @@ export default async function DashboardLayout({
         <TopNavBar userEmail={user.email} />
 
         {/* Content Canvas */}
-        <main className="flex-1 p-6 md:p-10 overflow-y-auto bg-white pb-32 md:pb-12">
+        <main className="flex-1 p-6 md:p-10 overflow-y-auto bg-white pb-24 md:pb-2">
           <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {children}
           </div>
