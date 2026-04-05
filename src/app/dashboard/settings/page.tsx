@@ -109,23 +109,23 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-2 pb-10">
-      {/* Header Section - Compact */}
-      <section className="pt-2 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="p-2.5 bg-slate-50 text-[#00236f] rounded-xl border border-slate-100 shadow-sm">
-            <Settings size={20} />
+    <div className="space-y-0 pb-10">
+      {/* Header Section - Even more compact */}
+      <section className="pt-0 mb-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-slate-50 text-[#00236f] rounded-lg border border-slate-100 shadow-sm">
+            <Settings size={18} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-[#00236f] tracking-tight leading-none mb-1">PARAMÈTRES</h1>
-            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-widest">Configuration de votre compte artisan</p>
+            <h1 className="text-xl font-black text-[#00236f] tracking-tight leading-none mb-0.5">PARAMÈTRES</h1>
+            <p className="text-slate-400 font-bold text-[8px] uppercase tracking-widest">Configuration de votre compte artisan</p>
           </div>
         </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Instructions & Help - Moved up */}
-        <div className="lg:col-span-5 space-y-6 lg:order-2">
+        {/* Instructions & Help */}
+        <div className="lg:col-span-5">
           <div className="bg-[#f8fafc] border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
             <div className="p-8 pb-4">
               <div className="flex items-center gap-3 mb-6">
@@ -201,8 +201,8 @@ export default function SettingsPage() {
           </div>
         </div>
         
-        {/* Main Configuration Form - Moved down logically but using order-1 on desktop if needed */}
-        <div className="lg:col-span-7 space-y-6 lg:order-1">
+        {/* Main Configuration Form */}
+        <div className="lg:col-span-7">
           <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 text-slate-800">
             <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-50">
               <Mail className="text-[#00236f]" size={20} />
