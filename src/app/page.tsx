@@ -1,11 +1,55 @@
-"use client";
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const [isYearly, setIsYearly] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
+  const handleProAction = async () => {
+    if (!user) {
+      router.push(`/login?signup=true&redirect=/dashboard`);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: isYearly ? 'yearly' : 'monthly' })
+      });
+
+      const { url, error } = await res.json();
+      if (error) throw new Error(error);
+      if (url) window.location.href = url;
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors du lancement du paiement. Vérifiez votre configuration Stripe.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFreeAction = () => {
+    if (user) {
+      router.push('/dashboard');
+    } else {
+      router.push('/login?signup=true');
+    }
+  };
   return (
     <div className="bg-surface text-on-surface selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed border-t-2 border-transparent">
       {/* Vercel Rebuild Trigger - Fix 404 Case Sensitivity & Versions */}
@@ -171,9 +215,26 @@ export default function Home() {
         <section id="pricing" className="py-24 bg-primary text-on-primary relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-16">
+            <div className="text-center mb-12">
               <h2 className="text-4xl font-extrabold tracking-tighter mb-4">Une tarification transparente</h2>
               <p className="text-on-primary-container text-lg">Choisissez le plan adapté à la taille de votre entreprise.</p>
+              
+              {/* Toggle Mensuel / Annuel */}
+              <div className="mt-10 flex items-center justify-center gap-6">
+                <span className={`text-sm font-bold uppercase tracking-widest ${!isYearly ? 'text-white' : 'text-white/40'}`}>Mensuel</span>
+                <button 
+                  onClick={() => setIsYearly(!isYearly)}
+                  className="w-16 h-8 bg-white/10 border border-white/20 rounded-full relative flex items-center transition-all px-1"
+                >
+                  <div className={`w-6 h-6 bg-tertiary-fixed-dim rounded-full shadow-lg transition-all transform ${isYearly ? 'translate-x-8' : 'translate-x-0'}`} />
+                </button>
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-bold uppercase tracking-widest ${isYearly ? 'text-white' : 'text-white/40'}`}>Annuel</span>
+                  <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full animate-bounce-subtle">
+                    -24% 🔥
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* Pricing Card 1 */}
@@ -197,7 +258,12 @@ export default function Home() {
                     <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Signature électronique
                   </li>
                 </ul>
-                <button className="w-full py-4 border border-white/30 rounded-md font-bold hover:bg-white/10 transition-all">S'inscrire</button>
+                <button 
+                  onClick={handleFreeAction}
+                  className="w-full py-4 border border-white/30 rounded-md font-bold hover:bg-white/10 transition-all"
+                >
+                  {user ? 'Aller au Dashboard' : "S'inscrire"}
+                </button>
               </div>
               {/* Pricing Card 2 (Featured) */}
               <div className="bg-surface-container-lowest text-on-surface rounded-xl p-10 shadow-2xl ring-4 ring-tertiary-fixed-dim flex flex-col h-full transform scale-105 z-20 relative">
@@ -205,16 +271,19 @@ export default function Home() {
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-2 text-primary">Pro</h3>
                   <p className="text-on-surface-variant text-sm">Pour les artisans actifs</p>
-                  <div className="mt-6 flex flex-col items-start gap-2">
-                    <div className="flex items-baseline text-primary">
-                      <span className="text-5xl font-black">22€</span>
-                      <span className="ml-2 text-on-surface-variant font-bold">/mois</span>
-                    </div>
-                    <div className="bg-amber-100 text-amber-900 px-4 py-2 rounded-xl border-2 border-amber-500/20 shadow-sm animate-pulse-slow">
-                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Paiement Annuel</p>
-                      <p className="text-2xl font-black tracking-tighter">199.99€/an</p>
-                      <p className="text-[10px] font-bold text-amber-600 bg-white/50 px-2 py-0.5 rounded-full mt-1 inline-block uppercase">ÉCONOMISEZ 24% 🔥</p>
-                    </div>
+                  <div className="mt-6 flex flex-col items-start gap-2 h-[120px] justify-center">
+                    {!isYearly ? (
+                      <div className="flex items-baseline text-primary">
+                        <span className="text-5xl font-black">22€</span>
+                        <span className="ml-2 text-on-surface-variant font-bold">/mois</span>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-100 text-amber-900 px-4 py-4 rounded-xl border-2 border-amber-500/20 shadow-sm animate-pulse-slow w-full">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Paiement Annuel</p>
+                        <p className="text-3xl font-black tracking-tighter">199.99€/an</p>
+                        <p className="text-[10px] font-bold text-amber-600 bg-white/50 px-2 py-0.5 rounded-full mt-1 inline-block uppercase tracking-tighter">ÉCONOMISEZ 24% 🔥</p>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <ul className="space-y-4 mb-10 flex-grow">
@@ -231,7 +300,17 @@ export default function Home() {
                     <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Signature électronique
                   </li>
                 </ul>
-                <button className="w-full py-4 bg-tertiary-fixed-dim text-on-tertiary-fixed rounded-md font-black shadow-md hover:opacity-90 transition-all active:scale-95">Essayer Pro</button>
+                <button 
+                  onClick={() => handleProAction()}
+                  disabled={loading}
+                  className="w-full py-4 bg-tertiary-fixed-dim text-on-tertiary-fixed rounded-md font-black shadow-md hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <span className="w-5 h-5 border-2 border-on-tertiary-fixed border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <span>Essayer Pro</span>
+                  )}
+                </button>
               </div>
             </div>
           </div>

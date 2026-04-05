@@ -43,11 +43,13 @@ export async function POST(req: Request) {
         if (userId && (session.mode === 'subscription' || session.metadata?.type === 'pro_plan')) {
           console.log(`Upgrading user ${userId} to PRO...`)
           
+          const planType = session.metadata?.plan || (session.amount_total === 2200 ? 'monthly' : 'yearly')
+          
           await supabase
             .from('profiles')
             .update({ 
               is_pro: true, 
-              plan: session.amount_total === 2200 ? 'monthly' : 'yearly',
+              plan: planType,
               stripe_customer_id: session.customer as string,
               updated_at: new Date().toISOString()
             })
