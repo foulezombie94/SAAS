@@ -124,85 +124,26 @@ export default function SettingsPage() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Instructions & Help */}
-        <div className="lg:col-span-5">
-          <div className="bg-[#f8fafc] border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
-            <div className="p-8 pb-4">
-              <div className="flex items-center gap-3 mb-6">
-                <ShieldCheck className="text-[#00236f]" size={20} />
-                <h2 className="text-[13px] font-black tracking-widest uppercase text-slate-700">Sécurité & Spam</h2>
-              </div>
-
-              {/* Important Alert Box - Peach/Orange style */}
-              <div className="mb-8 p-5 bg-[#ffe4bc] border-l-4 border-[#5c4008] rounded-r-xl shadow-sm">
-                <p className="text-[12px] font-black text-[#5c4008] mb-1">Important :</p>
-                <p className="text-[11px] leading-relaxed font-bold text-[#5c4008]/80">
-                  Assurez-vous que votre serveur SMTP supporte le protocole STARTTLS/SSL pour garantir la confidentialité de vos échanges client.
-                </p>
-              </div>
-
-              <div className="space-y-6 mb-8">
-                <div>
-                  <h3 className="text-[13px] font-black text-slate-700 mb-5">Aide Gmail / Outlook</h3>
-                  <div className="space-y-5">
-                    <div className="flex gap-4">
-                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">1</div>
-                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Activez la validation en deux étapes sur votre compte email.</p>
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">2</div>
-                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Générez un "Mot de passe d'application" spécifique pour ArtisanFlow.</p>
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">3</div>
-                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Utilisez ce code unique dans le champ "Mot de passe" ci-contre.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Video Preview with Styled Overlay */}
-                <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 aspect-video group">
-                  <video 
-                    autoPlay 
-                    loop 
-                    muted 
-                    playsInline 
-                    controls
-                    className="w-full h-full object-cover"
-                  >
-                    <source src="/videos/EXPLICATION MDP GOOGLE.MP4.mp4" type="video/mp4" />
-                  </video>
-                  <div className="absolute bottom-4 left-4">
-                    <div className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-lg border border-slate-100">
-                      <p className="text-[9px] font-black text-[#00236f] uppercase tracking-wider">Tutoriel vidéo disponible</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Left Column: Configuration & Defaults */}
+        <div className="lg:col-span-7 space-y-4">
+          {/* Données de base (Défaut) - Moved here and styled as a standalone banner */}
+          <div className="bg-[#5c4008] p-4 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <HelpCircle className="text-[#ffe4bc]" size={14} />
+              <p className="text-[10px] font-black text-[#ffe4bc] uppercase tracking-widest">Données de base (Défaut)</p>
             </div>
-
-            {/* Bottom Status/Defaults Banner - Brown style */}
-            <div className="bg-[#5c4008] p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <HelpCircle className="text-[#ffe4bc]" size={16} />
-                <p className="text-[11px] font-black text-[#ffe4bc] uppercase tracking-widest">Données de base (Défaut)</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[8px] font-bold text-[#ffe4bc]/60 uppercase mb-0.5">Pour Outlook :</p>
+                <p className="text-[9px] font-black text-white">smtp-mail.outlook.com (587)</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[9px] font-bold text-[#ffe4bc]/60 uppercase mb-1">Pour Outlook :</p>
-                  <p className="text-[10px] font-black text-white">smtp-mail.outlook.com (587)</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-bold text-[#ffe4bc]/60 uppercase mb-1">Pour Gmail :</p>
-                  <p className="text-[10px] font-black text-white">smtp.gmail.com (465)</p>
-                </div>
+              <div>
+                <p className="text-[8px] font-bold text-[#ffe4bc]/60 uppercase mb-0.5">Pour Gmail :</p>
+                <p className="text-[9px] font-black text-white">smtp.gmail.com (465)</p>
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Main Configuration Form */}
-        <div className="lg:col-span-7">
+
           <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 text-slate-800">
             <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-50">
               <Mail className="text-[#00236f]" size={20} />
@@ -292,6 +233,65 @@ export default function SettingsPage() {
                 {isTesting ? <RefreshCw className="animate-spin" size={18} /> : <Send size={18} />}
                 Tester la connexion
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Instructions & Help */}
+        <div className="lg:col-span-5">
+          <div className="bg-[#f8fafc] border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+            <div className="p-8 pb-4">
+              <div className="flex items-center gap-3 mb-6">
+                <ShieldCheck className="text-[#00236f]" size={20} />
+                <h2 className="text-[13px] font-black tracking-widest uppercase text-slate-700">Sécurité & Spam</h2>
+              </div>
+
+              {/* Important Alert Box - Peach/Orange style */}
+              <div className="mb-8 p-5 bg-[#ffe4bc] border-l-4 border-[#5c4008] rounded-r-xl shadow-sm">
+                <p className="text-[12px] font-black text-[#5c4008] mb-1">Important :</p>
+                <p className="text-[11px] leading-relaxed font-bold text-[#5c4008]/80">
+                  Assurez-vous que votre serveur SMTP supporte le protocole STARTTLS/SSL pour garantir la confidentialité de vos échanges client.
+                </p>
+              </div>
+
+              <div className="space-y-6 mb-8">
+                <div>
+                  <h3 className="text-[13px] font-black text-slate-700 mb-5">Aide Gmail / Outlook</h3>
+                  <div className="space-y-5">
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">1</div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Activez la validation en deux étapes sur votre compte email.</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">2</div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Générez un "Mot de passe d'application" spécifique pour ArtisanFlow.</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">3</div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Utilisez ce code unique dans le champ "Mot de passe" ci-contre.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Preview with Styled Overlay */}
+                <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 aspect-video group">
+                  <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    controls
+                    className="w-full h-full object-cover"
+                  >
+                    <source src="/videos/EXPLICATION MDP GOOGLE.MP4.mp4" type="video/mp4" />
+                  </video>
+                  <div className="absolute bottom-4 left-4">
+                    <div className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-lg border border-slate-100">
+                      <p className="text-[9px] font-black text-[#00236f] uppercase tracking-wider">Tutoriel vidéo disponible</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
