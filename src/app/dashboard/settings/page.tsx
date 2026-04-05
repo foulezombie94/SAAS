@@ -203,7 +203,7 @@ export default function SettingsPage() {
               <button 
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex-1 flex items-center justify-center gap-3 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-3 bg-[#00236f] text-white py-4 rounded-xl font-bold uppercase tracking-wider text-[12px] shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
               >
                 {isSaving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
                 Enregistrer
@@ -211,7 +211,7 @@ export default function SettingsPage() {
               <button 
                 onClick={handleTest}
                 disabled={isTesting}
-                className="flex-1 flex items-center justify-center gap-3 bg-white border-2 border-slate-100 text-slate-700 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-3 bg-white border-2 border-[#00236f] text-[#00236f] py-4 rounded-xl font-bold uppercase tracking-wider text-[12px] hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50"
               >
                 {isTesting ? <RefreshCw className="animate-spin" size={18} /> : <Send size={18} />}
                 Tester la connexion
@@ -222,28 +222,42 @@ export default function SettingsPage() {
 
         {/* Instructions & Help */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-tertiary-container text-on-tertiary-container rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <ShieldCheck className="text-secondary" size={20} />
-              <h2 className="text-base font-black tracking-tight uppercase">Sécurité & Spam</h2>
-            </div>
+          <div className="bg-[#f8fafc] border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+            <div className="p-8 pb-4">
+              <div className="flex items-center gap-3 mb-6">
+                <ShieldCheck className="text-[#00236f]" size={20} />
+                <h2 className="text-[13px] font-black tracking-widest uppercase text-slate-700">Sécurité & Spam</h2>
+              </div>
 
-            <div className="space-y-4">
-              <div className="p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40">
-                <h3 className="text-[12px] font-black uppercase mb-2 flex items-center gap-2">
-                  <AlertCircle size={14} /> Gmail / Outlook
-                </h3>
-                <p className="text-[10px] leading-relaxed font-bold text-on-tertiary-container/80">
-                  Gmail et Outlook bloquent souvent les connexions SMTP directes. Vous devez obligatoirement :
+              {/* Important Alert Box - Peach/Orange style */}
+              <div className="mb-8 p-5 bg-[#ffe4bc] border-l-4 border-[#5c4008] rounded-r-xl shadow-sm">
+                <p className="text-[12px] font-black text-[#5c4008] mb-1">Important :</p>
+                <p className="text-[11px] leading-relaxed font-bold text-[#5c4008]/80">
+                  Assurez-vous que votre serveur SMTP supporte le protocole STARTTLS/SSL pour garantir la confidentialité de vos échanges client.
                 </p>
-                <ol className="mt-2 space-y-1 text-[10px] font-bold list-decimal list-inside text-on-tertiary-container/90">
-                  <li>Activer la validation en deux étapes.</li>
-                  <li>Créer un <strong>"Mot de passe d'application"</strong>.</li>
-                  <li>Utiliser ce mot de passe unique à la place de votre mot de passe habituel.</li>
-                </ol>
-                
-                {/* Repositioned Video Guide directly under Gmail/Outlook instructions */}
-                <div className="mt-4 rounded-xl overflow-hidden shadow-lg border-2 border-white/20 bg-slate-900 aspect-video relative group ring-1 ring-black/5">
+              </div>
+
+              <div className="space-y-6 mb-8">
+                <div>
+                  <h3 className="text-[13px] font-black text-slate-700 mb-5">Aide Gmail / Outlook</h3>
+                  <div className="space-y-5">
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">1</div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Activez la validation en deux étapes sur votre compte email.</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">2</div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Générez un "Mot de passe d'application" spécifique pour ArtisanFlow.</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#00236f] text-white rounded-full flex items-center justify-center text-[11px] font-black">3</div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-tight">Utilisez ce code unique dans le champ "Mot de passe" ci-contre.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Preview with Styled Overlay */}
+                <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 aspect-video group">
                   <video 
                     autoPlay 
                     loop 
@@ -253,46 +267,31 @@ export default function SettingsPage() {
                     className="w-full h-full object-cover"
                   >
                     <source src="/videos/EXPLICATION MDP GOOGLE.MP4.mp4" type="video/mp4" />
-                    Votre navigateur ne supporte pas la lecture de vidéos.
                   </video>
+                  <div className="absolute bottom-4 left-4">
+                    <div className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-lg border border-slate-100">
+                      <p className="text-[9px] font-black text-[#00236f] uppercase tracking-wider">Tutoriel vidéo disponible</p>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="mt-3 flex items-center justify-between">
-                  <a 
-                    href="https://support.google.com/accounts/answer/185833" 
-                    target="_blank" 
-                    className="flex items-center gap-2 text-primary font-black uppercase text-[9px] tracking-widest hover:underline"
-                  >
-                    Aide Gmail <ExternalLink size={10} />
-                  </a>
-                  <p className="text-[9px] font-bold text-on-tertiary-container/60 italic">Guide Vidéo </p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40">
-                <h3 className="text-[12px] font-black uppercase mb-2 flex items-center gap-2">
-                  <CheckCircle2 size={14} /> Éviter les Spams
-                </h3>
-                <ul className="space-y-1 text-[10px] font-bold list-disc list-inside text-on-tertiary-container/90">
-                  <li>Vérifiez vos enregistrements <strong>SPF et DKIM</strong>.</li>
-                  <li>Évitez les objets tout en majuscules.</li>
-                </ul>
               </div>
             </div>
-          </div>
 
-          <div className="p-6 border border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
-            <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <HelpCircle size={16} /> Données de base (Défaut)
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between group">
-                <span className="text-[10px] font-bold text-slate-400">Outlook :</span>
-                <span className="text-[10px] font-black text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-100 group-hover:border-primary transition-all">smtp-mail.outlook.com (587)</span>
+            {/* Bottom Status/Defaults Banner - Brown style */}
+            <div className="bg-[#5c4008] p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <HelpCircle className="text-[#ffe4bc]" size={16} />
+                <p className="text-[11px] font-black text-[#ffe4bc] uppercase tracking-widest">Données de base (Défaut)</p>
               </div>
-              <div className="flex items-center justify-between group">
-                <span className="text-[10px] font-bold text-slate-400">Gmail :</span>
-                <span className="text-[10px] font-black text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-100 group-hover:border-primary transition-all">smtp.gmail.com (465)</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[9px] font-bold text-[#ffe4bc]/60 uppercase mb-1">Pour Outlook :</p>
+                  <p className="text-[10px] font-black text-white">smtp-mail.outlook.com (587)</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold text-[#ffe4bc]/60 uppercase mb-1">Pour Gmail :</p>
+                  <p className="text-[10px] font-black text-white">smtp.gmail.com (465)</p>
+                </div>
               </div>
             </div>
           </div>
