@@ -45,6 +45,7 @@ export interface Profile {
   smtp_user?: string | null
   smtp_pass?: string | null
   smtp_from?: string | null
+  stripe_account_id?: string | null
 }
 
 export interface Quote {

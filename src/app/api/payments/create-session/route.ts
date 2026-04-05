@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     const { data: invoice, error } = await supabase
       .from('invoices')
-      .select('*, clients(name, email)')
+      .select('*, clients(name, email), profiles(stripe_account_id)')
       .eq('id', invoiceId)
       .single()
 
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
     }
 
     const customerEmail = invoice.clients?.email || undefined
+    const stripeAccountId = (invoice as any).profiles?.stripe_account_id
     
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'link', 'sepa_debit'],
@@ -59,7 +60,14 @@ export async function POST(req: Request) {
       metadata: {
         facture_id: invoice.id,
         quoteId: invoice.quote_id || '',
+        devisId: invoice.quote_id || '',
       },
+      payment_intent_data: stripeAccountId ? {
+        application_fee_amount: 0,
+        transfer_data: {
+          destination: stripeAccountId,
+        },
+      } : undefined,
     })
 
     return NextResponse.json({ url: session.url })

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { getProfile, updateProfile } from './actions'
+import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe } from './actions'
 import { Profile } from '@/types/dashboard'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -21,6 +21,7 @@ export default function SettingsPage() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -62,6 +63,35 @@ export default function SettingsPage() {
     loadProfile()
   }
 
+  const handleConnectStripe = async () => {
+    setIsConnecting(true)
+    try {
+      const { url } = await createStripeOnboardingLink()
+      if (url) {
+        window.location.href = url
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la connexion Stripe')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
+  const handleDisconnectStripe = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir déconnecter votre compte Stripe ? Vos clients ne pourront plus payer par carte.')) return
+    
+    setIsConnecting(true)
+    try {
+      await disconnectStripe()
+      toast.success('Compte Stripe déconnecté')
+      loadProfile()
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la déconnexion')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center flex-col items-center min-h-[500px]">
@@ -100,20 +130,6 @@ export default function SettingsPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            <div className="space-y-4 md:col-span-2 flex items-center gap-6">
-              <div className="relative group">
-                <div className="w-24 h-24 rounded-lg bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden">
-                  <span className="material-symbols-outlined text-3xl text-slate-400">add_a_photo</span>
-                </div>
-                <button className="absolute -bottom-2 -right-2 bg-[#00236f] text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="material-symbols-outlined text-sm">edit</span>
-                </button>
-              </div>
-              <div>
-                <h5 className="text-sm font-bold">Logo de l'Entreprise</h5>
-                <p className="text-xs text-slate-500">Recommandé : PNG ou SVG carré. Max 2MB.</p>
-              </div>
-            </div>
             
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nom de l'Entreprise</label>
@@ -263,23 +279,47 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h5 className="font-bold text-sm text-slate-900">Paiements Stripe</h5>
-                <p className="text-xs text-slate-500">API Connectée</p>
+                <p className="text-xs text-slate-500">{profile.stripe_account_id ? 'Compte Connecté' : 'API Non configurée'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-green-600 font-bold text-xs uppercase tracking-widest">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              Live
-            </div>
+            {profile.stripe_account_id ? (
+              <div className="flex items-center gap-2 text-green-600 font-bold text-xs uppercase tracking-widest">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                Activé
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest">
+                <span className="w-2 h-2 bg-slate-300 rounded-full"></span>
+                Inactif
+              </div>
+            )}
           </div>
           
           <p className="text-sm text-slate-600 leading-relaxed">
-            Acceptez les paiements par carte bancaire en toute sécurité directement sur vos devis et factures. Les fonds sont versés sur votre compte IBAN.
+            {profile.stripe_account_id 
+              ? "Vos paiements sont gérés via votre compte Stripe Connect. Les fonds sont versés directement sur votre compte bancaire."
+              : "Connectez votre compte Stripe pour accepter les paiements par carte bancaire. Les fonds seront versés directement sur votre compte."}
           </p>
           
-          <button className="mt-auto h-14 bg-slate-200 text-slate-800 font-black rounded-lg hover:bg-slate-300 transition-colors flex items-center justify-center gap-3">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
-            GÉRER STRIPE
-          </button>
+          {profile.stripe_account_id ? (
+            <button 
+              onClick={handleDisconnectStripe}
+              disabled={isConnecting}
+              className="mt-auto h-14 bg-red-50 text-red-700 font-black rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">link_off</span>}
+              DÉCONNECTER STRIPE
+            </button>
+          ) : (
+            <button 
+              onClick={handleConnectStripe}
+              disabled={isConnecting}
+              className="mt-auto h-14 bg-[#635BFF] text-white font-black rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
+            >
+              {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">add_link</span>}
+              CONNECTER MON COMPTE STRIPE
+            </button>
+          )}
         </div>
       </div>
 

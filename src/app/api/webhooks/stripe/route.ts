@@ -28,13 +28,14 @@ export async function POST(req: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        console.log(`[STRIPE WEBHOOK] Event: ${event.type} | Mode: ${event.livemode ? 'LIVE' : 'TEST'}`)
+        const connectedAccountId = (event as any).account
+        console.log(`[STRIPE WEBHOOK] Event: ${event.type} | Mode: ${event.livemode ? 'LIVE' : 'TEST'} | Account: ${connectedAccountId || 'Platform'}`)
         
         const factureId = session.metadata?.facture_id
-        const quoteId = session.metadata?.quoteId
+        const quoteId = session.metadata?.quoteId || session.metadata?.devisId
         const userId = session.client_reference_id
 
-        console.log(`Webhook received - User: ${userId}, Facture: ${factureId}, Quote: ${quoteId}`)
+        console.log(`Webhook received - User: ${userId}, Facture: ${factureId}, Quote: ${quoteId}, Account: ${connectedAccountId || 'Platform'}`)
 
         const supabase = createAdminClient()
 
@@ -61,6 +62,8 @@ export async function POST(req: Request) {
           let method = 'card' 
           const sessionWithExpansion = await stripe.checkout.sessions.retrieve(session.id, {
             expand: ['payment_intent.payment_method']
+          }, {
+            stripeAccount: connectedAccountId || undefined
           })
           
           const paymentIntent = sessionWithExpansion.payment_intent as any
@@ -82,11 +85,13 @@ export async function POST(req: Request) {
             await supabase.from('quotes').update({ 
               status: 'paid',
               payment_method: method,
+              paid_at: new Date().toISOString(),
               payment_details: { 
                  stripe_session_id: session.id,
                  payment_intent_id: session.payment_intent as string,
                  completed_at: new Date().toISOString(),
-                 facture_id: factureId || null
+                 facture_id: factureId || null,
+                 transfer_id: (session as any).payment_intent?.transfer_data?.destination || null
               },
               updated_at: new Date().toISOString()
             }).eq('id', quoteId)
