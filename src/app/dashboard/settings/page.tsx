@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe } from './actions'
+import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe, getStripeAccountStatus } from './actions'
 import { Profile } from '@/types/dashboard'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [stripeStatus, setStripeStatus] = useState<{ isReady: boolean; exists: boolean; detailsSubmitted?: boolean }>({ isReady: false, exists: false })
 
   useEffect(() => {
     loadProfile()
@@ -32,6 +33,10 @@ export default function SettingsPage() {
       const data = await getProfile()
       if (data) {
         setProfile(data)
+        if (data.stripe_account_id) {
+          const status = await getStripeAccountStatus()
+          setStripeStatus(status)
+        }
       }
     } catch (err) {
       console.error(err)
@@ -279,47 +284,71 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h5 className="font-bold text-sm text-slate-900">Paiements Stripe</h5>
-                <p className="text-xs text-slate-500">{profile.stripe_account_id ? 'Compte Connecté' : 'API Non configurée'}</p>
+                <p className="text-xs text-slate-500">
+                  {!stripeStatus.exists ? 'API Non configurée' : (stripeStatus.isReady ? 'Compte Connecté' : 'Configuration incomplète')}
+                </p>
               </div>
             </div>
-            {profile.stripe_account_id ? (
-              <div className="flex items-center gap-2 text-green-600 font-bold text-xs uppercase tracking-widest">
+            {!stripeStatus.exists ? (
+              <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                <span className="w-2 h-2 bg-slate-300 rounded-full"></span>
+                Inactif
+              </div>
+            ) : stripeStatus.isReady ? (
+              <div className="flex items-center gap-2 text-green-600 font-bold text-[10px] uppercase tracking-widest">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 Activé
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest">
-                <span className="w-2 h-2 bg-slate-300 rounded-full"></span>
-                Inactif
+              <div className="flex items-center gap-2 text-amber-600 font-bold text-[10px] uppercase tracking-widest">
+                <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                Incomplet
               </div>
             )}
           </div>
           
           <p className="text-sm text-slate-600 leading-relaxed">
-            {profile.stripe_account_id 
-              ? "Vos paiements sont gérés via votre compte Stripe Connect. Les fonds sont versés directement sur votre compte bancaire."
-              : "Connectez votre compte Stripe pour accepter les paiements par carte bancaire. Les fonds seront versés directement sur votre compte."}
+            {!stripeStatus.exists 
+              ? "Connectez votre compte Stripe pour accepter les paiements par carte bancaire. Les fonds seront versés directement sur votre compte."
+              : stripeStatus.isReady 
+                ? "Vos paiements sont gérés via votre compte Stripe Connect. Les fonds sont versés directement sur votre compte bancaire."
+                : "Votre compte Stripe est créé mais n'est pas encore prêt à recevoir des fonds. Terminez la configuration sur Stripe."}
           </p>
           
-          {profile.stripe_account_id ? (
-            <button 
-              onClick={handleDisconnectStripe}
-              disabled={isConnecting}
-              className="mt-auto h-14 bg-red-50 text-red-700 font-black rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
-            >
-              {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">link_off</span>}
-              DÉCONNECTER STRIPE
-            </button>
-          ) : (
-            <button 
-              onClick={handleConnectStripe}
-              disabled={isConnecting}
-              className="mt-auto h-14 bg-[#635BFF] text-white font-black rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
-            >
-              {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">add_link</span>}
-              CONNECTER MON COMPTE STRIPE
-            </button>
-          )}
+          <div className="mt-auto flex flex-col gap-3">
+            {!stripeStatus.isReady && stripeStatus.exists && (
+              <button 
+                onClick={handleConnectStripe}
+                disabled={isConnecting}
+                className="h-14 bg-amber-100 text-amber-900 font-black rounded-lg hover:bg-amber-200 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+              >
+                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">pending_actions</span>}
+                TERMINER LA CONFIGURATION
+              </button>
+            )}
+
+            {!stripeStatus.exists && (
+              <button 
+                onClick={handleConnectStripe}
+                disabled={isConnecting}
+                className="h-14 bg-[#635BFF] text-white font-black rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
+              >
+                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">add_link</span>}
+                CONNECTER MON COMPTE STRIPE
+              </button>
+            )}
+
+            {stripeStatus.exists && (
+              <button 
+                onClick={handleDisconnectStripe}
+                disabled={isConnecting}
+                className="h-14 bg-red-50 text-red-700 font-black rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 text-xs"
+              >
+                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined text-sm">link_off</span>}
+                DÉCONNECTER LE COMPTE STRIPE
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

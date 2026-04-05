@@ -118,3 +118,22 @@ export async function disconnectStripe() {
   revalidatePath('/dashboard/settings')
   return { success: true }
 }
+
+export async function getStripeAccountStatus() {
+  const profile = await getProfile()
+  if (!profile?.stripe_account_id) return { isReady: false, exists: false }
+
+  try {
+    const account = await stripe.accounts.retrieve(profile.stripe_account_id)
+    return {
+      isReady: account.details_submitted && account.charges_enabled,
+      detailsSubmitted: account.details_submitted,
+      chargesEnabled: account.charges_enabled,
+      exists: true,
+      accountId: profile.stripe_account_id
+    }
+  } catch (err) {
+    console.error('Error retrieving Stripe account:', err)
+    return { isReady: false, exists: false }
+  }
+}
