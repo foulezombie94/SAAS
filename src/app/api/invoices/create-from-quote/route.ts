@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
+import { checkLimits } from '@/lib/limits'
 
 export async function POST(req: Request) {
   const supabase = await createClient()
@@ -8,6 +9,15 @@ export async function POST(req: Request) {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Check limits
+    const status = await checkLimits('invoices')
+    if (!status.allowed) {
+      return NextResponse.json({ 
+        error: 'Limite de 3 factures atteinte. Passez en PRO pour continuer !',
+        limitReached: true 
+      }, { status: 403 })
+    }
 
     // 1. Fetch Quote and Items with Strict Ownership Check
     const { data: quote, error: qError } = await supabase

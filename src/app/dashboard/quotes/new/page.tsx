@@ -42,10 +42,15 @@ interface Client {
   email: string | null
 }
 
+import { getUsageLimits } from '@/app/dashboard/actions'
+import { LimitBanner } from '@/components/ui/LimitBanner'
+
 export default function NewQuotePage() {
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const [checkingLimits, setCheckingLimits] = useState(true)
+  const [limitStatus, setLimitStatus] = useState({ allowed: true, count: 0, isPro: false })
   const [clients, setClients] = useState<Client[]>([])
   const [selectedClientId, setSelectedClientId] = useState('')
   const [number, setNumber] = useState('D-XXXX-XXX')
@@ -63,11 +68,17 @@ export default function NewQuotePage() {
        const { data: { user } } = await supabase.auth.getUser()
        if (!user) return
 
-       const { data: clientsData } = await supabase.from('clients').select('id, name, email').eq('user_id', user.id)
-       if (clientsData) setClients(clientsData)
+       // Check limits
+       const status = await getUsageLimits('quotes')
+       setLimitStatus(status)
+       setCheckingLimits(false)
 
-       // Mock number if RPC fails or not yet implemented properly
-       setNumber(`DEV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`)
+       if (status.allowed) {
+         const { data: clientsData } = await supabase.from('clients').select('id, name, email').eq('user_id', user.id)
+         if (clientsData) setClients(clientsData)
+
+         setNumber(`DEV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`)
+       }
     }
     init()
   }, [])
@@ -113,6 +124,10 @@ export default function NewQuotePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Utilisateur non connecté')
 
+      // Double check limits on submit for security
+      const limitStatus = await getUsageLimits('quotes')
+      if (!limitStatus.allowed) throw new Error("Limite de 3 devis atteinte. Passez en PRO pour continuer !")
+
       const { data: quote, error: qError } = await supabase
         .from('quotes')
         .insert({
@@ -151,6 +166,29 @@ export default function NewQuotePage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingLimits) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader className="animate-spin text-primary" size={40} />
+        <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] animate-pulse">Vérification de votre compte...</p>
+      </div>
+    )
+  }
+
+  if (!limitStatus.allowed) {
+    return (
+      <div className="flex flex-col gap-10">
+        <div>
+          <Link href="/dashboard" className="flex items-center gap-2 text-[0.6875rem] font-black uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors mb-2">
+            <ChevronLeft size={14} /> Retour au Dashboard
+          </Link>
+          <h1 className="text-4xl font-black text-primary tracking-tighter uppercase leading-none italic">Accès limité</h1>
+        </div>
+        <LimitBanner type="devis" count={limitStatus.count} />
+      </div>
+    )
   }
 
   return (

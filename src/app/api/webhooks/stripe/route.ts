@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/utils/supabase/admin'
+import type Stripe from 'stripe'
 
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
@@ -26,63 +27,59 @@ export async function POST(req: Request) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as any
+        const session = event.data.object as Stripe.Checkout.Session
         console.log(`[STRIPE WEBHOOK] Event: ${event.type} | Mode: ${event.livemode ? 'LIVE' : 'TEST'}`)
         
         const factureId = session.metadata?.facture_id
         const quoteId = session.metadata?.quoteId
+        const userId = session.client_reference_id
 
-        console.log(`Webhook received - Facture: ${factureId}, Quote: ${quoteId}`)
-
-        if (!factureId) {
-          console.warn("Facture ID manquant dans la session metadata !");
-          // Fallback to old system if quoteId exists but no factureId
-          if (!quoteId) {
-            console.error('No ID found in session metadata');
-            break;
-          }
-        }
+        console.log(`Webhook received - User: ${userId}, Facture: ${factureId}, Quote: ${quoteId}`)
 
         const supabase = createAdminClient()
 
-        // 1. Identify the payment method type
-        // Checkout session might only show the types allowed, we need the specific one used.
-        let method = 'card' // Default
-        const sessionWithExpansion = await stripe.checkout.sessions.retrieve(session.id, {
-           expand: ['payment_intent.payment_method']
-        })
-        
-        const paymentIntent = sessionWithExpansion.payment_intent as any
-        const methodType = paymentIntent?.payment_method?.type
-        
-        if (methodType === 'sepa_debit' || methodType === 'customer_balance' || methodType === 'bank_transfer') {
-           method = 'virement'
+        // 1. If it's a subscription or a specific PRO purchase
+        if (userId && (session.mode === 'subscription' || session.metadata?.type === 'pro_plan')) {
+          console.log(`Upgrading user ${userId} to PRO...`)
+          
+          await supabase
+            .from('profiles')
+            .update({ 
+              is_pro: true, 
+              plan: session.amount_total === 2200 ? 'monthly' : 'yearly',
+              stripe_customer_id: session.customer as string,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+          
+          console.log(`User ${userId} is now PRO`)
         }
 
-        // 2. Update status in Database
-        // We update the invoice (if any) and the quote
-        
-        if (factureId) {
-          const { error: invError } = await supabase
-            .from('invoices')
-            .update({ 
+        // 2. Original Quote/Invoice Payment Logic
+        if (factureId || quoteId) {
+          // Identify the payment method type
+          let method = 'card' 
+          const sessionWithExpansion = await stripe.checkout.sessions.retrieve(session.id, {
+            expand: ['payment_intent.payment_method']
+          })
+          
+          const paymentIntent = sessionWithExpansion.payment_intent as any
+          const methodType = paymentIntent?.payment_method?.type
+          
+          if (methodType === 'sepa_debit' || methodType === 'customer_balance' || methodType === 'bank_transfer') {
+            method = 'virement'
+          }
+
+          if (factureId) {
+            await supabase.from('invoices').update({ 
                status: 'paid',
                stripe_session_id: session.id,
                updated_at: new Date().toISOString()
-            })
-            .eq('id', factureId)
-          
-          if (invError) {
-             console.error(`Failed to update invoice ${factureId}:`, invError)
-          } else {
-             console.log(`Invoice ${factureId} marked as PAID`)
+            }).eq('id', factureId)
           }
-        }
 
-        if (quoteId) {
-          const { error: quoteError } = await supabase
-            .from('quotes')
-            .update({ 
+          if (quoteId) {
+            await supabase.from('quotes').update({ 
               status: 'paid',
               payment_method: method,
               payment_details: { 
@@ -92,15 +89,27 @@ export async function POST(req: Request) {
                  facture_id: factureId || null
               },
               updated_at: new Date().toISOString()
-            })
-            .eq('id', quoteId)
-          
-          if (quoteError) {
-            console.error(`Failed to update quote ${quoteId}:`, quoteError)
-          } else {
-            console.log(`Quote ${quoteId} marked as PAID`)
+            }).eq('id', quoteId)
           }
         }
+        break
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription
+        const supabase = createAdminClient()
+        
+        console.log(`Subscription deleted for customer ${subscription.customer}`)
+        
+        await supabase
+          .from('profiles')
+          .update({ 
+            is_pro: false, 
+            plan: 'free',
+            updated_at: new Date().toISOString()
+          })
+          .eq('stripe_customer_id', subscription.customer as string)
+        
         break
       }
 

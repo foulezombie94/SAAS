@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react'
+import { getUsageLimits } from '@/app/dashboard/actions'
+import { LimitBanner } from '@/components/ui/LimitBanner'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
@@ -26,6 +28,8 @@ export default function NewClientPage() {
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const [checkingLimits, setCheckingLimits] = useState(true)
+  const [limitStatus, setLimitStatus] = useState({ allowed: true, count: 0, isPro: false })
   const [sameAsBilling, setSameAsBilling] = useState(false)
 
   // Form State
@@ -51,6 +55,15 @@ export default function NewClientPage() {
     }
   }, [sameAsBilling, formData.address, formData.city, formData.postal_code])
 
+  useEffect(() => {
+    async function check() {
+      const status = await getUsageLimits('clients')
+      setLimitStatus(status)
+      setCheckingLimits(false)
+    }
+    check()
+  }, [])
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -65,6 +78,10 @@ export default function NewClientPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Non authentifié")
+
+      // Limit check
+      const ls = await getUsageLimits('clients')
+      if (!ls.allowed) throw new Error("Limite de 3 clients atteinte. Passez en PRO !")
 
       const { error } = await supabase
         .from('clients')
@@ -91,6 +108,31 @@ export default function NewClientPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingLimits) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader className="animate-spin text-[#00236f]" size={40} />
+        <p className="text-[10px] font-black text-[#00236f] uppercase tracking-[0.2em] animate-pulse text-center">Vérification de vos quotas...</p>
+      </div>
+    )
+  }
+
+  if (!limitStatus.allowed) {
+    return (
+      <div className="flex flex-col gap-8 max-w-7xl mx-auto">
+        <header className="flex items-center gap-6 px-2">
+          <Link href="/dashboard/clients">
+             <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors border border-slate-100 bg-white shadow-sm">
+               <ArrowLeft className="text-[#00236f]" size={20} />
+             </button>
+          </Link>
+          <h1 className="text-3xl font-black text-[#00236f] tracking-tighter uppercase leading-none italic">Quota Atteint</h1>
+        </header>
+        <LimitBanner type="clients" count={limitStatus.count} />
+      </div>
+    )
   }
 
   return (

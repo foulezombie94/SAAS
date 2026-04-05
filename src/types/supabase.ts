@@ -176,13 +176,16 @@ export type Database = {
           full_name: string | null
           iban: string | null
           id: string
+          is_pro: boolean | null
           phone: string | null
+          plan: string | null
           siret: string | null
           smtp_from: string | null
           smtp_host: string | null
           smtp_pass: string | null
           smtp_port: number | null
           smtp_user: string | null
+          stripe_customer_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -194,13 +197,16 @@ export type Database = {
           full_name?: string | null
           iban?: string | null
           id: string
+          is_pro?: boolean | null
           phone?: string | null
+          plan?: string | null
           siret?: string | null
           smtp_from?: string | null
           smtp_host?: string | null
           smtp_pass?: string | null
           smtp_port?: number | null
           smtp_user?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -212,13 +218,16 @@ export type Database = {
           full_name?: string | null
           iban?: string | null
           id?: string
+          is_pro?: boolean | null
           phone?: string | null
+          plan?: string | null
           siret?: string | null
           smtp_from?: string | null
           smtp_host?: string | null
           smtp_pass?: string | null
           smtp_port?: number | null
           smtp_user?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
