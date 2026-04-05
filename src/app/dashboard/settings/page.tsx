@@ -271,14 +271,14 @@ export default function SettingsPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-blue-200">Niveau Actuel</p>
-                  <h4 className="text-2xl font-black tracking-tight">Plan Pro</h4>
+                  <h4 className="text-2xl font-black tracking-tight">{profile.is_pro ? 'Plan Pro' : 'Plan Gratuit'}</h4>
                 </div>
                 <span className="material-symbols-outlined text-4xl opacity-50 text-amber-300">workspace_premium</span>
               </div>
               <ul className="space-y-3">
                 <li className="flex items-center gap-2 text-sm">
                   <span className="material-symbols-outlined text-sm text-green-400">check_circle</span>
-                  Devis & Factures Illimités
+                  {profile.is_pro ? 'Devis & Factures Illimités' : 'Limite de 3 Devis / Factures'}
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <span className="material-symbols-outlined text-sm text-green-400">check_circle</span>
@@ -286,14 +286,23 @@ export default function SettingsPage() {
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <span className="material-symbols-outlined text-sm text-green-400">check_circle</span>
-                  Support Email Prioritaire
+                  {profile.is_pro ? 'Signatures électroniques illimitées' : 'Support Standard'}
                 </li>
               </ul>
             </div>
             <div className="mt-8 space-y-3">
-              <button className="w-full h-12 bg-white text-[#00236f] font-bold rounded-lg hover:scale-[0.98] transition-transform">
-                Gérer la Facturation
-              </button>
+              {profile.is_pro ? (
+                <button className="w-full h-12 bg-white text-[#00236f] font-bold rounded-lg hover:scale-[0.98] transition-transform">
+                  Gérer la Facturation
+                </button>
+              ) : (
+                <Link href="/onboarding/plans" className="block">
+                  <button className="w-full h-12 bg-amber-400 text-blue-900 font-bold rounded-lg hover:bg-amber-300 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-400/20 active:scale-95">
+                    <span className="material-symbols-outlined text-sm">rocket_launch</span>
+                    PASSER AU PLAN PRO
+                  </button>
+                </Link>
+              )}
             </div>
           </div>
           

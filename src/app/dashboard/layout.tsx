@@ -19,12 +19,20 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', user.id)
+    .single()
+
+  const isPro = profile?.is_pro ?? false
+
   return (
     <NotificationProvider userId={user.id}>
       <div className="flex min-h-screen bg-white">
       <Toaster position="top-right" expand={false} richColors />
       {/* Sidebar - Desktop */}
-      <Sidebar />
+      <Sidebar isPro={isPro} />
 
       {/* Main Content Area */}
       <div className="flex-1 md:ml-60 flex flex-col min-h-screen relative">

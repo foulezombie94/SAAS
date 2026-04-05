@@ -37,7 +37,11 @@ const navigation: NavItem[] = [
   { name: 'E-mails', href: '/dashboard/settings/email', icon: Mail },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isPro: boolean
+}
+
+export function Sidebar({ isPro }: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -75,10 +79,22 @@ export function Sidebar() {
             <span className="font-black uppercase tracking-widest text-[9px]">Créer un Devis</span>
           </Button>
         </Link>
-          <div className="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+        
+        {isPro ? (
+          <div className="flex items-center gap-3 p-3 text-[#00236f] font-black text-[10px] uppercase tracking-widest bg-blue-50/50 rounded-xl border border-blue-100/50">
             <ShieldCheck size={16} className="text-primary" />
-            Abonnement Pro
+            Plan Pro Actif
           </div>
+        ) : (
+          <Link href="/onboarding/plans">
+            <div className="flex items-center gap-3 p-3 text-slate-500 hover:text-primary hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest rounded-xl group">
+              <div className="w-4 h-4 rounded-full border-2 border-slate-200 group-hover:border-primary flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-slate-200 group-hover:bg-primary rounded-full" />
+              </div>
+              Abonnement Gratuit
+            </div>
+          </Link>
+        )}
       </div>
     </aside>
   )
