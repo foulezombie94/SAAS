@@ -10,7 +10,7 @@ export default function Home() {
     <div className="bg-surface text-on-surface selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed border-t-2 border-transparent">
       {/* Vercel Rebuild Trigger - Fix 404 Case Sensitivity & Versions */}
       <Navbar />
-      
+
       <main className="pt-24 overflow-hidden">
         {/* Hero Section */}
         <section className="relative px-6 py-16 md:py-32 max-w-7xl mx-auto">
@@ -39,16 +39,16 @@ export default function Home() {
               <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-tertiary-fixed-dim rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
               <div className="relative grid grid-cols-12 gap-4">
                 <div className="col-span-8 transform -rotate-2 hover:rotate-0 transition-transform duration-500 shadow-2xl rounded-xl overflow-hidden border-4 border-white bg-white">
-                  <img 
-                    className="w-full aspect-video object-cover" 
-                    alt="ArtisanFlow Dashboard" 
+                  <img
+                    className="w-full aspect-video object-cover"
+                    alt="ArtisanFlow Dashboard"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuDahAP1wYn6P3n8SiLC7Z7uTTBWaBv84g4dSmuGjgpwj-J85Zd_VR3MqUDKRMesMKGSQRtcnxpnxcEJ8_1bMCLRGbWxwlomqyu7N_7JBP5xWILvxMfWiudm3WZuZ_G9GYTpLP1JvfvGzfZRKMh7XExc5D3UgCuNugNlA5z0r8E-voW9izDrp8Fp6TXla5s8Homu3mT7iJlQnWtnT8T51gzbjm_QWQ8ZB1k4gJaJbL5wx5T8CWzHAvAQGLI5WsmpGAd9tlJPFsl7uZf3"
                   />
                 </div>
                 <div className="col-span-7 col-start-5 -mt-20 transform rotate-3 hover:rotate-0 transition-transform duration-500 shadow-2xl rounded-xl overflow-hidden border-4 border-white bg-white">
-                  <img 
-                    className="w-full aspect-video object-cover" 
-                    alt="Quote Editor" 
+                  <img
+                    className="w-full aspect-video object-cover"
+                    alt="Quote Editor"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN9b0liy9NIMDIIW7dYzHKoEnRpmFX12JsUi_mJ_5J_TnWQijgedQY1Qd45IzEeI_atXlVANfDrpewOrjtUXEEEIIsGWj9WGwqn1M4FUIxYkrCS_csHG2xy3ILXpA7FFuOnIYv3vMMKD-OtzgghLv0PRFWQKW99PnbfYg6H8Wfr4OASHBYdIq6IbLZ-R7vr8fHmXh_Zhx9To_0HEUlby4TgTAOnZTem3SQifHWFcOqmwS_1HCJPxropZki1o4gAkrMdi-JwYJR5B86"
                   />
                 </div>
@@ -106,9 +106,9 @@ export default function Home() {
           {/* Feature 1 */}
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="bg-surface-container-high rounded-2xl p-4 lg:-ml-12 shadow-inner">
-              <img 
-                className="rounded-xl shadow-2xl w-full" 
-                alt="Gestion Simplifiée" 
+              <img
+                className="rounded-xl shadow-2xl w-full"
+                alt="Gestion Simplifiée"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4WpURYRd53hpo17HoHHLohi_WhDNDzNnxEdkwkoPD3qWl92A0HOW13m5iAHOHoYT-2NMu73tHhj8uUkRNSI4rNZjf8dmiZA4nw1EONPNgBqECtC2QH2ne4DBimZEr6jxUoh15hdPsBXCtiR1yfkP0DsXqQogsIOZ8Z7V_gJ-ZkDizPqanX5h6eBfvekItMI7KXrSZ_qbRSw03Lf1DINpdYMxlYUdRzes1brMLn0h6f5CRJ6rWn32epmtF6a-SJz7Dk3B8ZRPuzt-0"
               />
             </div>
@@ -158,9 +158,9 @@ export default function Home() {
               </ul>
             </div>
             <div className="order-1 lg:order-2 bg-surface-container-high rounded-2xl p-4 lg:-mr-12 shadow-inner">
-              <img 
-                className="rounded-xl shadow-2xl w-full" 
-                alt="Trésorerie Maîtrisée" 
+              <img
+                className="rounded-xl shadow-2xl w-full"
+                alt="Trésorerie Maîtrisée"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjh3iRthvIIgBt23Y9FNq7phVrHiGDPybZbgTOVXltDrKS4ehXonnqbGvZ1PXDViMi6lN3TsLY6Lv79WhJR_95qZ5qT8J-qkqDbw1OZjUDX5_SJxy7WP3qmGHdaLnTGKyGDeQX_FIJemwjyoC8E8tJ_ROF0RhX3BxWNtNnO9-hOF-Aw1Wpuz56FALGdEnJKaHtB_PNuV0r9xTr21yEZXumhi9imgA1ndYxGfoZbdlInKlUz9EooNgz0OsNmLX8n2uSM0QpmRz_SLwJ"
               />
             </div>
@@ -188,13 +188,13 @@ export default function Home() {
                 </div>
                 <ul className="space-y-4 mb-10 flex-grow">
                   <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> 5 devis & factures / mois
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> 3 devis & factures / mois
                   </li>
                   <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Gestion de 10 clients
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Gestion de 3 clients
                   </li>
-                  <li className="flex items-center gap-3 text-sm opacity-50">
-                    <span className="material-symbols-outlined">close</span> Signature électronique
+                  <li className="flex items-center gap-3 text-sm">
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Signature électronique
                   </li>
                 </ul>
                 <button className="w-full py-4 border border-white/30 rounded-md font-bold hover:bg-white/10 transition-all">S'inscrire</button>
@@ -205,13 +205,15 @@ export default function Home() {
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-2 text-primary">Pro</h3>
                   <p className="text-on-surface-variant text-sm">Pour les artisans actifs</p>
-                  <div className="mt-4 flex flex-col items-start text-primary">
-                    <div className="flex items-baseline">
-                      <span className="text-4xl font-black">22€</span>
+                  <div className="mt-6 flex flex-col items-start gap-2">
+                    <div className="flex items-baseline text-primary">
+                      <span className="text-5xl font-black">22€</span>
                       <span className="ml-2 text-on-surface-variant font-bold">/mois</span>
                     </div>
-                    <div className="text-sm font-bold text-tertiary-fixed mt-1 border border-tertiary-fixed/30 bg-tertiary-fixed/10 px-2 py-0.5 rounded-md">
-                      ou 199.99€/an
+                    <div className="bg-amber-100 text-amber-900 px-4 py-2 rounded-xl border-2 border-amber-500/20 shadow-sm animate-pulse-slow">
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Paiement Annuel</p>
+                      <p className="text-2xl font-black tracking-tighter">199.99€/an</p>
+                      <p className="text-[10px] font-bold text-amber-600 bg-white/50 px-2 py-0.5 rounded-full mt-1 inline-block uppercase">ÉCONOMISEZ 20% 🔥</p>
                     </div>
                   </div>
                 </div>
@@ -253,9 +255,9 @@ export default function Home() {
           {/* Decorative artisan illustration */}
           <div className="mt-16 max-w-5xl mx-auto px-6">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img 
-                className="w-full h-[400px] object-cover" 
-                alt="Professional artisan at work" 
+              <img
+                className="w-full h-[400px] object-cover"
+                alt="Professional artisan at work"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1E-VpTUWPjs0D5smTQ5OXcg5FcqeE4_Si7nU1QaY0eBaJyC1SX2xNjBB_46nkj4KEnAnTzATOE-nh3xkrO9J4N5DcufEM7gidWlHiKo5juHcWKMcW5nSxufEttbNm9-XvYsCSoWwMnnHFRgJUqN4uy8Um0fzFZvomTj2Um7Hd0CqMSW-uTCnYYEX_TXRugvcp5hBxTnDy-CBllxTpDyHW-VOTUH5fkczosvxqbWjyVftA7jcHkV4x-wwvscZNMQR-xbw1E93rOIu6"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
@@ -301,7 +303,7 @@ export default function Home() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs">
-          © 2024 ArtisanFlow SARL. Made in France with precision.
+          © 2026 ArtisanFlow SARL.
         </div>
       </footer>
     </div>
