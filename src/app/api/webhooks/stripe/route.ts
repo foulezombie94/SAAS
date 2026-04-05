@@ -52,13 +52,16 @@ export async function POST(req: Request) {
         if (userId && (session.mode === 'subscription' || session.metadata?.plan)) {
           console.log(`[WEBHOOK] Activating PRO for User: ${userId}`)
           
-          // Récupérer les détails de l'abonnement si c'est une souscription
           let subscriptionData = {}
           if (session.subscription) {
-            const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+            const subscriptionId = typeof session.subscription === 'string' 
+              ? session.subscription 
+              : session.subscription.id;
+
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId)
             subscriptionData = {
-              stripe_subscription_id: subscription.id,
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              stripe_subscription_id: (subscription as any).id,
+              current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
             }
           }
 
@@ -111,17 +114,20 @@ export async function POST(req: Request) {
       }
 
       case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice
-        if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
+        const invoice = event.data.object as any
+        const subscriptionId = typeof invoice.subscription === 'string' 
+          ? invoice.subscription 
+          : invoice.subscription?.id;
+
+        if (subscriptionId) {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           console.log(`[WEBHOOK] Renewal processed for subscription: ${subscription.id}`)
           
-          // On met à jour la date d'expiration dans Supabase
           await supabase
             .from('profiles')
             .update({ 
               is_pro: true,
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
               updated_at: new Date().toISOString()
             })
             .eq('stripe_customer_id', invoice.customer as string)
@@ -133,14 +139,13 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription
         console.log(`[WEBHOOK] Subscription updated: ${subscription.id}`)
         
-        // Gérer les changements de statut ou de dates
         const isCanceled = subscription.status === 'canceled' || subscription.status === 'unpaid'
         
         await supabase
           .from('profiles')
           .update({ 
             is_pro: !isCanceled,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
             updated_at: new Date().toISOString()
           })
           .eq('stripe_customer_id', subscription.customer as string)
