@@ -98,7 +98,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "invoice_items_id_invoice_id_fkey"
+            foreignKeyName: "invoice_items_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
@@ -114,7 +114,7 @@ export type Database = {
           id: string
           number: string
           quote_id: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id: string | null
           tax_rate: number | null
           total_ht: number | null
@@ -128,7 +128,7 @@ export type Database = {
           id?: string
           number: string
           quote_id?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
           tax_rate?: number | null
           total_ht?: number | null
@@ -142,7 +142,7 @@ export type Database = {
           id?: string
           number?: string
           quote_id?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
           tax_rate?: number | null
           total_ht?: number | null
@@ -169,10 +169,11 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
-          annual_revenue: string | null
+          annual_revenue: number | null
           bank_name: string | null
           bic: string | null
           company_name: string | null
+          current_period_end: string | null
           email: string
           first_name: string | null
           full_name: string | null
@@ -180,7 +181,7 @@ export type Database = {
           id: string
           is_pro: boolean | null
           last_name: string | null
-          num_contacts: string | null
+          num_contacts: number | null
           phone: string | null
           plan: string | null
           preferred_language: string | null
@@ -194,14 +195,16 @@ export type Database = {
           stripe_charges_enabled: boolean | null
           stripe_customer_id: string | null
           stripe_details_submitted: boolean | null
+          stripe_subscription_id: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
-          annual_revenue?: string | null
+          annual_revenue?: number | null
           bank_name?: string | null
           bic?: string | null
           company_name?: string | null
+          current_period_end?: string | null
           email: string
           first_name?: string | null
           full_name?: string | null
@@ -209,7 +212,7 @@ export type Database = {
           id: string
           is_pro?: boolean | null
           last_name?: string | null
-          num_contacts?: string | null
+          num_contacts?: number | null
           phone?: string | null
           plan?: string | null
           preferred_language?: string | null
@@ -223,14 +226,16 @@ export type Database = {
           stripe_charges_enabled?: boolean | null
           stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
+          stripe_subscription_id?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
-          annual_revenue?: string | null
+          annual_revenue?: number | null
           bank_name?: string | null
           bic?: string | null
           company_name?: string | null
+          current_period_end?: string | null
           email?: string
           first_name?: string | null
           full_name?: string | null
@@ -238,7 +243,7 @@ export type Database = {
           id?: string
           is_pro?: boolean | null
           last_name?: string | null
-          num_contacts?: string | null
+          num_contacts?: number | null
           phone?: string | null
           plan?: string | null
           preferred_language?: string | null
@@ -252,6 +257,7 @@ export type Database = {
           stripe_charges_enabled?: boolean | null
           stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
+          stripe_subscription_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -309,10 +315,13 @@ export type Database = {
           created_at: string
           id: string
           number: string
+          paid_at: string | null
           payment_details: Json | null
           payment_method: string | null
+          public_token: string | null
+          public_token_expires_at: string | null
           signature_url: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id: string | null
           tax_rate: number
           total_ht: number
@@ -326,10 +335,13 @@ export type Database = {
           created_at?: string
           id?: string
           number?: string
+          paid_at?: string | null
           payment_details?: Json | null
           payment_method?: string | null
+          public_token?: string | null
+          public_token_expires_at?: string | null
           signature_url?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
           tax_rate?: number
           total_ht?: number
@@ -343,10 +355,13 @@ export type Database = {
           created_at?: string
           id?: string
           number?: string
+          paid_at?: string | null
           payment_details?: Json | null
           payment_method?: string | null
+          public_token?: string | null
+          public_token_expires_at?: string | null
           signature_url?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
           tax_rate?: number
           total_ht?: number
@@ -365,11 +380,43 @@ export type Database = {
           },
         ]
       }
+      webhook_logs: {
+        Row: {
+          created_at: string | null
+          error: string | null
+          event_type: string | null
+          id: string
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      accept_quote_v3: {
+        Args: {
+          p_public_token: string
+          p_quote_id: string
+          p_signature_url: string
+        }
+        Returns: string
+      }
       create_quote_with_items_v2:
         | {
             Args: {
@@ -401,6 +448,20 @@ export type Database = {
             }
             Returns: Json
           }
+      create_quote_with_items_v3: {
+        Args: {
+          p_client_id: string
+          p_items: Json
+          p_payment_details?: Json
+          p_payment_method?: string
+          p_status: string
+          p_tax_rate: number
+          p_total_ht: number
+          p_total_ttc: number
+          p_valid_until?: string
+        }
+        Returns: string
+      }
       get_next_quote_number: { Args: { p_user_id: string }; Returns: string }
     }
     Enums: {
@@ -411,6 +472,8 @@ export type Database = {
         | "rejected"
         | "invoiced"
         | "paid"
+        | "overdue"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -545,6 +608,8 @@ export const Constants = {
         "rejected",
         "invoiced",
         "paid",
+        "overdue",
+        "cancelled",
       ],
     },
   },

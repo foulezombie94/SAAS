@@ -1,42 +1,63 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { verifyProAccess, ensurePro } from '@/lib/pro-gate'
 import { createAdminClient } from '@/utils/supabase/admin'
+import { revalidatePath } from 'next/cache'
+
+// Basic In-Memory Rate Limiter (Better than nothing for public endpoints)
+const rateLimitMap = new Map<string, { count: number, lastReset: number }>();
+function rateLimit(ip: string, limit: number, windowMs: number) {
+  const now = Date.now();
+  const userData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
+  
+  if (now - userData.lastReset > windowMs) {
+    userData.count = 0;
+    userData.lastReset = now;
+  }
+  
+  userData.count++;
+  rateLimitMap.set(ip, userData);
+  
+  return { success: userData.count <= limit, message: 'Trop de requêtes, réessayez plus tard.' };
+}
 
 export async function POST(req: Request) {
   try {
-    const { quoteId, signatureUrl, signatureDataUrl, isPublic } = await req.json()
+    const { quoteId, publicToken, signatureUrl, signatureDataUrl } = await req.json()
+    
+    // 0. RATE LIMITING SECURE (IP detection)
+    const ip = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || 'anonymous'
+    const limit = rateLimit(`public-accept-${ip}`, 5, 60000)
+    if (!limit.success) {
+      return NextResponse.json({ error: limit.message }, { status: 429 })
+    }
+
+    // 1. VALIDATION UUID
+    if (!quoteId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(quoteId)) {
+      return NextResponse.json({ error: 'ID de devis invalide' }, { status: 400 })
+    }
+
     const supabase = await createClient()
-    const adminSupabase = createAdminClient()
 
+    // 2. SIGNATURE UPLOAD (Anti-DoS Protection 2MB + Binary Validation)
     let finalSignatureUrl = signatureUrl
+    if (signatureDataUrl) {
+      // 🛡️ SECURITY GRADE 3 : Validation du format
+      if (!signatureDataUrl.startsWith('data:image/png;base64,')) {
+        return NextResponse.json({ error: 'Format de signature invalide (PNG attendu)' }, { status: 400 })
+      }
 
-    // 1. Handle Public Signature (Distance)
-    if (isPublic && signatureDataUrl) {
-      // 1. Fetch Quote and Items in parallel for maximum speed ⚡
-      const [itemsRes, quoteRes] = await Promise.all([
-        adminSupabase
-          .from('quote_items')
-          .select('id, description, quantity, unit_price, total_price, tax_rate')
-          .eq('quote_id', quoteId),
-        adminSupabase
-          .from('quotes')
-          .select('id, user_id, client_id, total_ht, tax_rate, total_ttc')
-          .eq('id', quoteId)
-          .single()
-      ])
-
-      const { data: quoteItems } = itemsRes
-      const { data: fullQuote } = quoteRes
-
-      if (!fullQuote) throw new Error('Quote details not found');
-
-      
-      // NEW: Robust Buffer-based signature upload
       const base64Data = signatureDataUrl.split(',')[1];
-      if (!base64Data) throw new Error('Format de signature invalide');
+      if (!base64Data) throw new Error('Format de signature corrompu');
+      
       const buffer = Buffer.from(base64Data, 'base64');
-      const fileName = `remote_sig_${quoteId}_${Date.now()}.png`
+      
+      // 🛡️ ANTI-DoS
+      if (buffer.length > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Signature trop volumineuse (max 2Mo)' }, { status: 413 })
+      }
+
+      const fileName = `sig_${quoteId}_${Date.now()}.png`
+      const adminSupabase = createAdminClient()
       
       const { error: uploadError } = await adminSupabase.storage
         .from('signatures')
@@ -45,166 +66,42 @@ export async function POST(req: Request) {
           upsert: true 
         })
 
-      if (uploadError) {
-        console.error('[API/Accept] Upload error:', uploadError);
-        throw new Error(`Échec de l'envoi de la signature: ${uploadError.message}`);
-      }
+      if (uploadError) throw new Error(`Upload Error: ${uploadError.message}`);
 
       const { data: { publicUrl } } = adminSupabase.storage
         .from('signatures')
         .getPublicUrl(fileName)
       
       finalSignatureUrl = publicUrl;
-
-      // Generate Invoice Number
-      const year = new Date().getFullYear();
-      const { count } = await adminSupabase
-        .from('invoices')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', fullQuote.user_id);
-      
-      const nextNumber = (count || 0) + 1;
-      const invoiceNumber = `FAC-${year}-${nextNumber.toString().padStart(4, '0')}`;
-
-      if (!fullQuote.client_id) throw new Error('Un client doit être associé au devis pour générer une facture');
-
-      const { data: invoice, error: iError } = await adminSupabase
-        .from('invoices')
-        .insert({
-          user_id: fullQuote.user_id,
-          client_id: fullQuote.client_id as string,
-          quote_id: fullQuote.id,
-          number: invoiceNumber,
-          status: 'sent',
-          total_ht: fullQuote.total_ht,
-          tax_rate: fullQuote.tax_rate,
-          total_ttc: fullQuote.total_ttc,
-          due_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
-        })
-        .select()
-        .single()
-
-      if (iError) {
-        console.error('[API/Accept] Invoice insert error:', iError);
-        throw new Error(`Échec de création de la facture: ${iError.message}`);
-      }
-
-
-      if (quoteItems && quoteItems.length > 0) {
-        const invoiceItems = quoteItems.map((item: any) => ({
-          invoice_id: invoice.id,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total_price: item.total_price,
-          tax_rate: item.tax_rate || fullQuote.tax_rate || 20,
-          total_ht: item.total_ht || item.total_price,
-          total_ttc: item.total_ttc || (item.total_price ? item.total_price * 1.2 : 0)
-        }));
-        const { error: itemsError } = await adminSupabase.from('invoice_items').insert(invoiceItems);
-        if (itemsError) {
-          console.error('[API/Accept] Items insert error:', itemsError);
-          // Non-blocking for the flow, but good to know
-        }
-      }
-
-      // Update Quote Status via Admin
-      const { error: qUpdateError } = await adminSupabase
-        .from('quotes')
-        .update({ status: 'accepted', signature_url: finalSignatureUrl })
-        .eq('id', quoteId)
-
-      if (qUpdateError) {
-        console.error('[API/Accept] Quote update error:', qUpdateError);
-        throw new Error(`Échec de la mise à jour du devis: ${qUpdateError.message}`);
-      }
-
-      return NextResponse.json({ success: true, signatureUrl: finalSignatureUrl, invoiceId: invoice.id })
     }
 
-    // 2. Handle Dashboard Signature (Face-to-Face)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // 3. ATOMIC TRANSACTION (RPC v3 - Zero Trust Split Flow)
+    // SQL handles internal check for publicToken (Hexa 32-bytes) vs auth.uid()
+    const { data: invoiceId, error: rpcError } = await supabase.rpc('accept_quote_v3', {
+      p_quote_id: quoteId,
+      p_public_token: publicToken || 'invalid_token_placeholder', 
+      p_signature_url: finalSignatureUrl || ''
+    });
+
+    if (rpcError) {
+      // 🕵️‍♂️ SECURITY : Masking detailed RPC errors for public clients
+      console.error('[API/Accept] RPC Zero-Trust Refusal (Masked):', rpcError.message);
+      return NextResponse.json({ error: 'Accès refusé ou lien expiré' }, { status: 403 });
     }
 
-    const { data: quote, error: fetchError } = await supabase
-      .from('quotes')
-      .select('user_id, status')
-      .eq('id', quoteId)
-      .single()
+    // 🚀 Invalidation Cache Global pour le Dashboard
+    revalidatePath('/dashboard', 'layout');
 
-    if (fetchError || !quote) {
-      return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
-    }
+    return NextResponse.json({ 
+      success: true, 
+      signatureUrl: finalSignatureUrl, 
+      invoiceId 
+    })
 
-    if (quote.user_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    // Update via Supabase (Authenticated)
-    const { error: updateError } = await supabase
-      .from('quotes')
-      .update({ 
-        status: 'accepted', 
-        signature_url: finalSignatureUrl 
-      })
-      .eq('id', quoteId)
-
-    if (updateError) throw updateError
-
-    const [itemsRes, quoteRes] = await Promise.all([
-      supabase.from('quote_items').select('id, description, quantity, unit_price, total_price, tax_rate').eq('quote_id', quoteId),
-      supabase.from('quotes').select('id, client_id, total_ht, tax_rate, total_ttc').eq('id', quoteId).single()
-    ])
-    const { data: quoteItems } = itemsRes;
-    const { data: fullQuote } = quoteRes;
-
-    if (!fullQuote || !fullQuote.client_id) {
-      return NextResponse.json({ success: true }) // Accept without invoice if client missing or not found
-    }
-
-    const year = new Date().getFullYear();
-    const { count } = await supabase
-      .from('invoices')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-    const nextNumber = (count || 0) + 1;
-    const invoiceNumber = `FAC-${year}-${nextNumber.toString().padStart(4, '0')}`;
-
-    const { data: invoice } = await supabase
-      .from('invoices')
-      .insert({
-        user_id: user.id,
-        client_id: fullQuote.client_id as string,
-        quote_id: fullQuote.id,
-        number: invoiceNumber,
-        status: 'sent',
-        total_ht: fullQuote.total_ht,
-        tax_rate: fullQuote.tax_rate,
-        total_ttc: fullQuote.total_ttc,
-        due_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
-      })
-      .select()
-      .single();
-
-    if (invoice && quoteItems) {
-      const invoiceItems = quoteItems.map((item: any) => ({
-        invoice_id: invoice.id,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
-        tax_rate: item.tax_rate || fullQuote.tax_rate || 20,
-        total_ht: item.total_ht || item.total_price,
-        total_ttc: item.total_ttc || (item.total_price ? item.total_price * 1.2 : 0)
-      }));
-      await supabase.from('invoice_items').insert(invoiceItems);
-    }
-
-    return NextResponse.json({ success: true, invoiceId: invoice?.id })
   } catch (err: any) {
-    console.error('Accept Quote Error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('Critical Acceptance Failure:', err)
+    return NextResponse.json({ 
+      error: err.message || "Une erreur fatale est survenue lors de l'acceptation." 
+    }, { status: 500 })
   }
 }

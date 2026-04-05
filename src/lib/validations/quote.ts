@@ -34,7 +34,7 @@ export const QuoteItemInsertSchema = z.object({
 
 export const QuoteInsertSchema = z.object({
   client_id: z.string().uuid("L'ID client doit être un UUID valide"),
-  status: z.enum(["draft", "sent", "accepted", "rejected", "invoiced", "paid"]),
+  status: z.enum(["draft", "sent", "accepted", "rejected", "invoiced", "paid", "overdue", "cancelled"]),
   total_ht: z.number().min(0).max(10_000_000),
   tax_rate: z.number().min(0).max(100),
   total_ttc: z.number().min(0).max(15_000_000),

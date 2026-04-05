@@ -1,17 +1,17 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { Profile } from '@/types/dashboard'
 import { stripe } from '@/lib/stripe'
 
 export async function getProfile(): Promise<Profile | null> {
-  const supabase = createClient()
-  const { data: { user } } = await (await supabase).auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  // SÉCURITÉ : On exclut explicitement les champs sensibles du flux général 🛡️
-  const { data, error } = await (await supabase)
+  // SÉCURITÉ : Filtrage strict des champs identité (Grade 3) 🛡️
+  const { data, error } = await supabase
     .from('profiles')
     .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language')
     .eq('id', user.id)
@@ -30,11 +30,11 @@ export async function getProfile(): Promise<Profile | null> {
  * L'accès est protégé par la session utilisateur.
  */
 export async function getSensitiveProfileData() {
-  const supabase = createClient()
-  const { data: { user } } = await (await supabase).auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non authentifié')
 
-  const { data, error } = await (await supabase)
+  const { data, error } = await supabase
     .from('profiles')
     .select('smtp_host, smtp_port, smtp_user, smtp_from, iban, bic, bank_name')
     .eq('id', user.id)
@@ -51,8 +51,8 @@ export async function updateProfile(formData: {
   siret: string
   address: string
   phone: string
-  num_contacts?: string
-  annual_revenue?: string
+  num_contacts?: string | number
+  annual_revenue?: string | number
   preferred_language?: string
 }) {
   const supabase = createClient()
@@ -69,8 +69,8 @@ export async function updateProfile(formData: {
       siret: formData.siret,
       address: formData.address,
       phone: formData.phone,
-      num_contacts: formData.num_contacts,
-      annual_revenue: formData.annual_revenue,
+      num_contacts: formData.num_contacts ? Number(formData.num_contacts) : null,
+      annual_revenue: formData.annual_revenue ? Number(formData.annual_revenue) : null,
       preferred_language: formData.preferred_language,
     })
     .eq('id', user.id)
@@ -80,7 +80,11 @@ export async function updateProfile(formData: {
     throw new Error('Failed to update profile')
   }
 
+  // ♻️ REVALIDATION SYNCHRONISÉE (Grade 3)
   revalidatePath('/dashboard/settings')
+  // Force le rafraîchissement global du dashboard
+  revalidatePath('/dashboard')
+  
   return { success: true }
 }
 

@@ -29,9 +29,10 @@ import { createClient } from '@/utils/supabase/client'
 
 interface QuotePublicViewProps {
   quote: Quote
+  publicToken?: string
 }
 
-export function QuotePublicView({ quote }: QuotePublicViewProps) {
+export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
   const [currentQuote, setCurrentQuote] = useState<Quote>(quote)
   const [isSigning, setIsSigning] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -141,7 +142,8 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           quoteId: quote.id, 
-          signatureDataUrl: dataUrl, // API will handle storage for public users
+          publicToken: publicToken, // 🛡️ SECURITY GRADE 3
+          signatureDataUrl: dataUrl,
           isPublic: true
         })
       })

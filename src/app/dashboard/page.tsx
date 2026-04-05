@@ -1,4 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
+import { getCachedDashboardStats, getCachedRecentQuotes } from '@/utils/supabase/cached-queries'
+import { Quote } from '@/types/dashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
@@ -24,22 +26,17 @@ export default async function DashboardPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  // Fetch everything in parallel for maximum speed
-  const [profileRes, quotesRes, invoicesRes] = await Promise.all([
-    supabase.from('profiles').select('is_pro').eq('id', user.id).single(),
-    supabase.from('quotes').select('id, number, status, total_ttc, created_at, clients(name)').order('created_at', { ascending: false }).limit(10),
-    supabase.from('invoices').select('status, total_ttc').eq('user_id', user.id)
+  // 🚀 Fetch stats & activity with Intelligent Cache + Session Security (Grade 3)
+  const [stats, quotes] = await Promise.all([
+    getCachedDashboardStats(),
+    getCachedRecentQuotes()
   ])
-
-  const isPro = profileRes.data?.is_pro || false
-  const quotes = quotesRes.data
-  const invoices = invoicesRes.data
-
-  const stats = {
-    revenue: quotes?.reduce((acc, q) => acc + (q.status === 'accepted' || q.status === 'invoiced' ? Number(q.total_ttc) : 0), 0) || 0,
-    unpaid: invoices?.reduce((acc, i) => acc + (i.status !== 'paid' ? Number(i.total_ttc) : 0), 0) || 0,
-    acceptedCount: quotes?.filter(q => q.status === 'accepted').length || 0,
-  }
+  
+  // Fetch only necessary recent activity
+  const { data: invoices } = await supabase
+    .from('invoices')
+    .select('status, total_ttc')
+    .eq('user_id', user.id)
 
   return (
     <div className="space-y-6">
@@ -180,7 +177,7 @@ export default async function DashboardPage({
 
           <div className="bg-surface-container-lowest p-5 rounded-xl border-2 border-dashed border-outline-variant/30 text-center flex flex-col items-center gap-3">
             <HelpCircle className="text-slate-300" size={24} />
-            <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest px-2">Besoin d'aide ?</p>
+            <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest px-2">Besoin d&apos;aide ?</p>
             <Link href="#" className="text-primary font-black text-[10px] flex items-center justify-center gap-2 uppercase tracking-widest hover:underline decoration-2">
               Centre d'Aide
               <ExternalLink size={12} />
@@ -206,7 +203,7 @@ export default async function DashboardPage({
             <span className="text-right">Statut</span>
           </div>
           <div className="divide-y divide-slate-100/30">
-            {quotes?.slice(0, 5).map((quote) => (
+            {(quotes as Quote[] || []).slice(0, 5).map((quote) => (
               <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`} className="grid grid-cols-4 px-8 py-4 items-center hover:bg-surface-container-low/20 transition-all cursor-pointer group active:bg-surface-container-low/40">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-primary font-black text-xs group-hover:bg-primary group-hover:text-white transition-all shadow-sm">

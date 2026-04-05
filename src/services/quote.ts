@@ -11,7 +11,7 @@ export interface QuoteItemInput {
 export interface CreateQuoteInput {
   client_id: string
   number: string
-  status?: string
+  status?: 'draft' | 'sent' | 'accepted' | 'rejected' | 'invoiced' | 'paid' | 'overdue' | 'cancelled'
   total_ht: number
   tax_rate: number
   total_ttc: number
