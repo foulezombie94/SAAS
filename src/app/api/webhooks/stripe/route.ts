@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/utils/supabase/admin'
@@ -28,6 +28,7 @@ export async function POST(req: Request) {
       case 'checkout.session.completed': {
         const session = event.data.object
         const quoteId = session.metadata?.quoteId
+        console.log(`Webhook received for Quote ID: ${quoteId}`)
 
         if (!quoteId) {
           console.error('No quoteId found in session metadata')
@@ -63,6 +64,8 @@ export async function POST(req: Request) {
             }
           })
           .eq('id', quoteId)
+        
+        console.log(`Update result for ${quoteId}:`, { error: updateError })
 
         if (updateError) {
           console.error('Failed to update quote status:', updateError)

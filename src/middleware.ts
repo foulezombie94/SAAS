@@ -1,7 +1,11 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  // Always allow public share routes to bypass auth checks
+  if (request.nextUrl.pathname.startsWith('/share/')) {
+    return NextResponse.next()
+  }
   return await updateSession(request)
 }
 

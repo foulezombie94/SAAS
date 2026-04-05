@@ -42,11 +42,32 @@ export function QuotePublicView({ quote }: QuotePublicViewProps) {
 
   const [showSuccess, setShowSuccess] = useState(false)
 
+  const fetchLatestQuote = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*, clients(*), quote_items(*)')
+      .eq('id', quote.id)
+      .single()
+    
+    if (data && !error) {
+      setCurrentQuote(prev => ({ 
+        ...prev, 
+        ...(data as any as Quote),
+        // Preserve profiles as they are fetched from separate admin-only call usually
+        profiles: prev.profiles 
+      }))
+      return data
+    }
+  }
+
   useEffect(() => {
     const paymentStatus = searchParams.get('payment')
     if (paymentStatus === 'success') {
       setShowSuccess(true)
       toast.success("Paiement validé !")
+      // Force a manual re-fetch to update the 'Paid' status in the UI
+      fetchLatestQuote()
     } else if (paymentStatus === 'canceled') {
       toast.error("Le paiement a été annulé.")
     }
