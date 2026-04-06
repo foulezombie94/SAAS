@@ -72,7 +72,9 @@ export async function updateSession(request: NextRequest) {
     const isProtectedPath = 
       request.nextUrl.pathname.startsWith('/dashboard') || 
       request.nextUrl.pathname.startsWith('/onboarding') ||
-      (request.nextUrl.pathname.startsWith('/api') && !request.nextUrl.pathname.startsWith('/api/webhooks'))
+      (request.nextUrl.pathname.startsWith('/api') && 
+       !request.nextUrl.pathname.startsWith('/api/webhooks') && 
+       !request.nextUrl.pathname.startsWith('/api/revalidate-profile'))
 
     if (isProtectedPath) {
       const url = request.nextUrl.clone()
