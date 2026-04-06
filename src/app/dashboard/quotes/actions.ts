@@ -51,6 +51,15 @@ export async function createQuoteAction(rawData: unknown) {
       console.error('[createQuoteAction] RPC Error:', rpcError);
       throw new Error(rpcError.message)
     }
+
+    // 🛡️ Neutralization: ensure no public_token is created automatically
+    // We force it to NULL so it can only be generated on-demand later
+    if (quote) {
+      await supabase
+        .from('quotes')
+        .update({ public_token: null } as any)
+        .eq('id', quote as string);
+    }
     
     
     // 🚀 Cache Invalidation (Tag + Path)
