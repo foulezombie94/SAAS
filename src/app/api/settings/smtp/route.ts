@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     if (action === 'test') {
       try {
-        let testPass = config.pass
+        let testPass: string | null | undefined = config.pass
         
         // Si on demande d'utiliser le mot de passe stocké
         if (testPass === '__STORED_PASSWORD__') {
