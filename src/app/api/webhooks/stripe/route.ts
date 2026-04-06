@@ -83,7 +83,16 @@ export async function POST(req: Request) {
           if (updateError) {
             console.error('[WEBHOOK] Profile update error:', updateError.message)
           } else {
-            // 🚀 REVALIDATION INSTANTANÉE (GRADE 3)
+            // 🚀 SENIOR OPTIMIZATION (GRADE 3): Sync 'plan' to JWT metadata (Zero-DB check)
+            const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
+              app_metadata: { plan: planType }
+            })
+
+            if (authError) {
+              console.error('[WEBHOOK] JWT Metadata sync error:', authError.message)
+            }
+
+            // 🚀 REVALIDATION INSTANTANÉE
             revalidatePath('/dashboard', 'layout')
           }
         }
@@ -141,12 +150,15 @@ export async function POST(req: Request) {
             .single()
 
           if (profile) {
+            // 🚀 SENIOR OPTIMIZATION: Sync to JWT
+            await supabase.auth.admin.updateUserById(profile.id, {
+              app_metadata: { plan: 'pro' } // Simplified for recurring payments
+            })
             revalidatePath('/dashboard', 'layout')
           }
         }
         break
       }
-
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
         
@@ -164,6 +176,10 @@ export async function POST(req: Request) {
           .single()
 
         if (profile) {
+          // 🚀 SENIOR OPTIMIZATION: Sync to JWT
+          await supabase.auth.admin.updateUserById(profile.id, {
+            app_metadata: { plan: isCanceled ? 'free' : 'pro' }
+          })
           revalidatePath('/dashboard', 'layout')
         }
         break
@@ -185,6 +201,10 @@ export async function POST(req: Request) {
           .single()
 
         if (profile) {
+          // 🚀 SENIOR OPTIMIZATION: Sync to JWT
+          await supabase.auth.admin.updateUserById(profile.id, {
+            app_metadata: { plan: 'free' }
+          })
           revalidatePath('/dashboard', 'layout')
         }
         break

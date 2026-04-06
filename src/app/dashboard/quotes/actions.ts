@@ -19,10 +19,8 @@ export async function createQuoteAction(rawData: unknown) {
   const data = parsed.data;
 
   try {
-    console.log('[createQuoteAction] Starting...');
     const supabase = await createClient()
     
-    console.log('[createQuoteAction] Fetching user & limits...');
     const [authRes, limitStatus] = await Promise.all([
       supabase.auth.getUser(),
       getUsageLimits('quotes')
@@ -30,16 +28,13 @@ export async function createQuoteAction(rawData: unknown) {
 
     const { data: { user } } = authRes
     if (!user) {
-      console.warn('[createQuoteAction] No user found');
       return { success: false, error: 'Utilisateur non connecté' }
     }
 
     if (!limitStatus.allowed) {
-      console.warn('[createQuoteAction] Limit reached');
       return { success: false, error: "Limite atteinte. Passez en PRO pour continuer !" }
     }
 
-    console.log('[createQuoteAction] Calling RPC...');
     const { data: quote, error: rpcError } = await supabase.rpc('create_quote_with_items_v3', {
       p_client_id: data.client_id,
       p_status: data.status,
@@ -57,7 +52,6 @@ export async function createQuoteAction(rawData: unknown) {
       throw new Error(rpcError.message)
     }
     
-    console.log('[createQuoteAction] Success:', quote);
     
     // 🚀 Cache Invalidation (Tag + Path)
     // 🚀 Cache Invalidation (Path-based for reliability)

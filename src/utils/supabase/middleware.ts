@@ -57,22 +57,27 @@ export async function updateSession(request: NextRequest) {
 
   // 🛡️ CAS 2 : Utilisateur CONNECTÉ
   if (user) {
-    // Audit rapide du profil
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan')
-      .eq('id', user.id)
-      .single()
+    // 🚀 SENIOR OPTIMIZATION (GRADE 3): Prioritize JWT metadata (Zero-DB hit)
+    // We only query the database if the metadata is not yet synchronized.
+    let plan = user.app_metadata?.plan
+
+    if (!plan) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single()
+      plan = profile?.plan
+    }
 
     const isOnboardingPath = request.nextUrl.pathname.startsWith('/onboarding')
     const isDashboardPath = request.nextUrl.pathname.startsWith('/dashboard')
 
     // A. Redirection Onboarding si pas de plan
-    if (!profile?.plan && !isOnboardingPath && isDashboardPath) {
+    if (!plan && !isOnboardingPath && isDashboardPath) {
       const url = request.nextUrl.clone()
       url.pathname = '/onboarding/transition'
       const redirectResponse = NextResponse.redirect(url)
-      // On transfère les cookies de session rafraîchis
       supabaseResponse.cookies.getAll().forEach(c => redirectResponse.cookies.set(c.name, c.value, c))
       return redirectResponse
     }
@@ -80,9 +85,8 @@ export async function updateSession(request: NextRequest) {
     // B. Redirection vers Dashboard si sur "/"
     if (request.nextUrl.pathname === '/') {
       const url = request.nextUrl.clone()
-      url.pathname = profile?.plan ? '/dashboard' : '/onboarding/transition'
+      url.pathname = plan ? '/dashboard' : '/onboarding/transition'
       const redirectResponse = NextResponse.redirect(url)
-      // On transfère les cookies de session rafraîchis
       supabaseResponse.cookies.getAll().forEach(c => redirectResponse.cookies.set(c.name, c.value, c))
       return redirectResponse
     }

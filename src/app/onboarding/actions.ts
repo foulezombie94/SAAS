@@ -41,6 +41,13 @@ export async function setFreePlan() {
 
     if (error) return { data: null, error: error.message }
     
+    // 🚀 SENIOR OPTIMIZATION: Sync to JWT
+    const { createAdminClient } = await import('@/utils/supabase/admin')
+    const adminClient = createAdminClient()
+    await adminClient.auth.admin.updateUserById(user.id, {
+      app_metadata: { plan: 'free' }
+    })
+
     // Revlaidation pour s'assurer que le tableau de bord affiche les bonnes informations.
     revalidatePath('/dashboard', 'layout')
     
