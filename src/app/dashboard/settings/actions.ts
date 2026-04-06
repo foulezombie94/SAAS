@@ -13,7 +13,7 @@ export async function getProfile(): Promise<Profile | null> {
   // SÉCURITÉ : Filtrage strict des champs identité (Grade 3) 🛡️
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language')
+    .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language, notification_preferences')
     .eq('id', user.id)
     .single()
 
@@ -186,4 +186,22 @@ export async function getStripeAccountStatus() {
     console.error('Error retrieving Stripe account:', err)
     return { isReady: false, exists: false }
   }
+}
+
+export async function updateNotificationPreferences(preferences: any) {
+  const supabase = createClient()
+  const { data: { user } } = await (await supabase).auth.getUser()
+  if (!user) throw new Error('Non authentifié')
+
+  const { error } = await (await supabase)
+    .from('profiles')
+    .update({ 
+      notification_preferences: preferences 
+    } as any)
+    .eq('id', user.id)
+
+  if (error) throw error
+
+  revalidatePath('/dashboard/settings')
+  return { success: true }
 }

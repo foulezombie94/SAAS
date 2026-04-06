@@ -4,10 +4,12 @@ import { QuotePublicView } from './QuotePublicView'
 import { Quote } from '@/types/dashboard'
 import { LinkExpired } from '@/components/share/LinkExpired'
 
+import { ViewTracker } from './ViewTracker'
+
 export const dynamic = 'force-dynamic'
 
 export default async function PublicQuotePage({ 
-  params,
+  params, 
   searchParams 
 }: { 
   params: Promise<{ id: string }>,
@@ -56,6 +58,8 @@ export default async function PublicQuotePage({
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 md:px-0">
       <div className="max-w-5xl mx-auto">
+        {/* 🕵️‍♂️ Traçage d'ouverture sécurisé */}
+        <ViewTracker quoteId={id} publicToken={token} />
         <QuotePublicView quote={fullQuote} publicToken={token} />
       </div>
     </div>

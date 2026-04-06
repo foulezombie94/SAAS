@@ -173,3 +173,22 @@ export async function createInvoiceFromQuoteAction(quoteId: string) {
     return { success: false, error: err.message };
   }
 }
+
+export async function trackQuoteViewAction(quoteId: string, publicToken: string) {
+  // Use admin client to bypass standard RLS for public viewing but validate with token
+  const supabase = createAdminClient()
+  
+  try {
+    const { error } = await supabase.rpc('track_quote_view_v1' as any, {
+      p_quote_id: quoteId,
+      p_token: publicToken
+    })
+
+    if (error) throw error
+    return { success: true }
+  } catch (err) {
+    // We don't fail the page load if tracking fails, just log it
+    console.error('[trackQuoteViewAction] Error:', err)
+    return { success: false }
+  }
+}

@@ -1,9 +1,19 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useRef, useMemo } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
-import { QuoteNotification } from '@/types/dashboard'
+
+interface QuoteNotification {
+  id: string
+  number: string
+  status: string
+  updated_at: string
+  last_viewed_at?: string
+  clients?: {
+    name: string
+  } | null
+}
 
 interface NotificationContextType {
   unreadCount: number
@@ -14,63 +24,75 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
-interface NotificationProviderProps {
-  children: React.ReactNode
-  userId: string 
-}
-
-export function NotificationProvider({ children, userId }: NotificationProviderProps) {
-  const [unreadCount, setUnreadCount] = useState(0)
+export function NotificationProvider({ children, userId }: { children: React.ReactNode, userId: string | null }) {
+  const [supabase] = useState(() => createClient())
   const [notifications, setNotifications] = useState<QuoteNotification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [preferences, setPreferences] = useState<any>({
+    quotes_expired: true,
+    quotes_viewed: true,
+    quotes_accepted: true,
+    payments_received: true
+  })
   
-  // ⚡ PERFORMANCE: Memoize client to prevent recreation on each render
-  const supabase = useMemo(() => createClient(), [])
-
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const preferencesRef = useRef(preferences)
 
+  // 🔄 Sync Ref with state
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3')
-      audioRef.current.volume = 0.5
+    preferencesRef.current = preferences
+  }, [preferences])
+
+  // 🔊 Audio Warmup mechanism
+  useEffect(() => {
+    const warmup = () => {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => {
+          audioRef.current?.pause()
+          if (audioRef.current) audioRef.current.currentTime = 0
+        }).catch(() => {})
+      }
+      window.removeEventListener('click', warmup)
     }
+    window.addEventListener('click', warmup)
+    return () => window.removeEventListener('click', warmup)
   }, [])
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !supabase) return
 
-    const fetchRecentActivity = async () => {
+    const fetchInitialData = async () => {
+      // 1. Fetch Preferences
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('notification_preferences')
+        .eq('id', userId)
+        .single()
+      
+      const prefs = (profile as any)?.notification_preferences
+      if (prefs) {
+        setPreferences(prefs)
+      }
+
+      // 2. Fetch Initial Notifications
       const { data } = await supabase
         .from('quotes')
-        .select('*, clients(*)')
+        .select('*, clients(name)')
         .eq('user_id', userId)
         .in('status', ['paid', 'accepted', 'expired'] as any[])
         .order('updated_at', { ascending: false })
         .limit(8)
-
+      
       if (data) {
         setNotifications(data as QuoteNotification[])
       }
     }
 
-    fetchRecentActivity()
+    fetchInitialData()
 
-    // 🛡️ AUDIO WARM-UP GRADE 4+ 
-    // Browsers block audio unless there's a user interaction.
-    // We unlock it on the first click in the dashboard.
-    const warmupAudio = () => {
-      if (audioRef.current) {
-        audioRef.current.play().then(() => {
-          audioRef.current?.pause();
-          if (audioRef.current) audioRef.current.currentTime = 0;
-        }).catch(() => {});
-      }
-      window.removeEventListener('click', warmupAudio);
-    };
-    window.addEventListener('click', warmupAudio);
-
-    // 🚀 REALTIME: Supabase handles status updates (cron) or signatures
+    // 🛡️ REALTIME: Advanced Multi-Event Listener
     const channel = supabase
-      .channel(`user-activity-${userId}`)
+      .channel(`user-activity-v5-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -83,48 +105,55 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           const newQuote = payload.new as any
           const oldQuote = payload.old as any
 
-          // 🛡️ ZERO-LEAK SECURITY: Redundant client-side check
+          // Security check (Double redundant)
           if (newQuote.user_id !== userId) return
 
-          // 🛡️ SENIOR DETECTION: We focus on the NEW state. 
           const isPaid = newQuote.status === 'paid' && oldQuote?.status !== 'paid'
           const isAccepted = newQuote.status === 'accepted' && oldQuote?.status !== 'accepted'
           const isExpired = newQuote.status === 'expired' && oldQuote?.status !== 'expired'
+          const isViewed = newQuote.last_viewed_at !== oldQuote?.last_viewed_at && !!newQuote.last_viewed_at
 
-          if (isPaid || isAccepted || isExpired) {
+          // 🧠 Check preferences via Ref to avoid resubscribe chain
+          const prefs = preferencesRef.current
+          const shouldNotifyPaid = isPaid && prefs.payments_received
+          const shouldNotifyAccepted = isAccepted && prefs.quotes_accepted
+          const shouldNotifyExpired = isExpired && prefs.quotes_expired
+          const shouldNotifyViewed = isViewed && prefs.quotes_viewed
+
+          if (shouldNotifyPaid || shouldNotifyAccepted || shouldNotifyExpired || shouldNotifyViewed) {
             setUnreadCount(prev => prev + 1)
             
             setNotifications(prev => {
-              // 🛡️ STATE MERGER: Preserve 'clients' object to avoid UI breakage
               const existing = prev.find(n => n.id === newQuote.id)
               const enriched: QuoteNotification = {
                 ...newQuote,
                 clients: newQuote.clients || existing?.clients || null
               }
-              
               const filtered = prev.filter(n => n.id !== enriched.id)
               return [enriched, ...filtered].slice(0, 8)
             })
 
-            if (isPaid) {
-              toast.success(`Paiement reçu !`, { description: `Devis ${newQuote.number} payé.` })
-            } else if (isAccepted) {
-              toast.info(`Devis signé !`, { description: `Acceptation du client pour ${newQuote.number}.` })
-            } else if (isExpired) {
-              toast.warning(`Lien expiré !`, { description: `Sécurité : Le lien ${newQuote.number} est désormais invalide.` })
-            }
-            
             if (audioRef.current) {
               audioRef.current.play().catch(() => {})
+            }
+
+            if (shouldNotifyPaid) {
+              toast.success(`Paiement reçu !`, { description: `Règlement pour le devis ${newQuote.number}.` })
+            } else if (shouldNotifyAccepted) {
+              toast.info(`Signature reçue !`, { description: `Acceptation pour ${newQuote.number}.` })
+            } else if (shouldNotifyExpired) {
+              toast.warning(`Lien expiré !`, { description: `Le devis ${newQuote.number} est expiré.` })
+            } else if (shouldNotifyViewed) {
+              toast.message(`Devis ouvert !`, { description: `Le client consulte le devis ${newQuote.number}.`, icon: '👁️' })
             }
           }
         }
       )
       .subscribe()
 
-    // 🚀 PROTECTION GRADE 4: Instant Session Revocation
+    // 🚀 PROTECTION: Session & Prefs Sync
     const profileChannel = supabase
-      .channel(`profile-sync-${userId}`)
+      .channel(`profile-sync-v5-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -134,29 +163,27 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           filter: `id=eq.${userId}`
         },
         (payload: any) => {
-          // Double check owner
           if (payload.new.id !== userId) return
 
+          const newPrefs = payload.new.notification_preferences
+          if (newPrefs) {
+            setPreferences(newPrefs)
+          }
+
           if (payload.new.plan !== payload.old.plan) {
-            supabase.auth.refreshSession().then(() => {
-              window.location.reload()
-            })
+            supabase.auth.refreshSession().then(() => window.location.reload())
           }
         }
       )
       .subscribe()
 
     return () => {
-      window.removeEventListener('click', warmupAudio)
       supabase.removeChannel(channel)
       supabase.removeChannel(profileChannel)
     }
   }, [supabase, userId])
 
-  const markAllAsRead = () => {
-    setUnreadCount(0)
-  }
-
+  const markAllAsRead = () => setUnreadCount(0)
   const clearAllNotifications = () => {
     setNotifications([])
     setUnreadCount(0)
@@ -165,6 +192,7 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
   return (
     <NotificationContext.Provider value={{ unreadCount, notifications, markAllAsRead, clearAllNotifications }}>
       {children}
+      <audio ref={audioRef} src="/sounds/notification.mp3" preload="auto" />
     </NotificationContext.Provider>
   )
 }

@@ -9,6 +9,12 @@ export type Client = Database['public']['Tables']['clients']['Row']
 export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'num_contacts' | 'annual_revenue'> & {
   num_contacts?: string | number | null
   annual_revenue?: string | number | null
+  notification_preferences?: {
+    quotes_viewed?: boolean
+    quotes_accepted?: boolean
+    payments_received?: boolean
+    quotes_expired?: boolean
+  } | null
 }
 
 export type QuoteItem = Database['public']['Tables']['quote_items']['Row']

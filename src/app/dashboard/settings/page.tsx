@@ -1,15 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe, getStripeAccountStatus } from './actions'
+import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe, getStripeAccountStatus, updateNotificationPreferences } from './actions'
 import { Profile } from '@/types/dashboard'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { RefreshCw, Mail, Verified, Building2, Award, CheckCircle2, Rocket, ShieldCheck, Wallet, Clock, Link2, Unlink, Save, ExternalLink } from 'lucide-react'
-
-// Mapped SVG or lucide icons to replace material icons
-// using material-symbols format as the html requested, but adding standard ones if needed.
-// The HTML uses Google Material Symbols Outlined font which is nice.
+import { RefreshCw, Mail, Verified, Building2, Award, CheckCircle2, Rocket, ShieldCheck, Wallet, Clock, Link2, Unlink, Save, ExternalLink, Bell, Eye } from 'lucide-react'
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Partial<Profile>>({
@@ -23,6 +19,12 @@ export default function SettingsPage() {
     num_contacts: undefined,
     annual_revenue: undefined,
     preferred_language: 'fr',
+    notification_preferences: {
+      quotes_viewed: true,
+      quotes_accepted: true,
+      payments_received: true,
+      quotes_expired: true
+    }
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -118,7 +120,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-4 md:p-12 space-y-12">
-      {/* Header Section (Asymmetric) */}
+      {/* Header Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-slate-600 mb-2">Workspace Configuration</p>
@@ -126,7 +128,6 @@ export default function SettingsPage() {
           <p className="text-slate-500 max-w-xl">Configurez votre identité d'entreprise, vos normes légales et le traitement des paiements. Ces paramètres ont un impact direct sur vos documents générés et la facturation client.</p>
         </div>
         <div className="flex items-end justify-start lg:justify-end">
-          {/* Job Status Slab */}
           <div className="h-12 flex items-center px-6 bg-amber-100 text-amber-900 rounded-lg">
             <Verified className="mr-2" size={18} />
             <span className="text-[11px] font-bold uppercase tracking-widest">Compte Entreprise Actif</span>
@@ -145,7 +146,6 @@ export default function SettingsPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Prénom</label>
               <input 
@@ -155,7 +155,6 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, first_name: e.target.value})}
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nom</label>
               <input 
@@ -165,7 +164,6 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, last_name: e.target.value})}
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nom de l'Entreprise</label>
               <input 
@@ -175,7 +173,6 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, company_name: e.target.value})}
               />
             </div>
-            
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">SIRET / TVA</label>
               <input 
@@ -186,7 +183,6 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, siret: e.target.value})}
               />
             </div>
-            
             <div className="space-y-2 md:col-span-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Adresse de l'Entreprise</label>
               <input 
@@ -196,7 +192,6 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, address: e.target.value})}
               />
             </div>
-            
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Numéro de Téléphone</label>
               <input 
@@ -206,7 +201,6 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, phone: e.target.value})}
               />
             </div>
-            
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Email de Contact</label>
               <input 
@@ -214,10 +208,8 @@ export default function SettingsPage() {
                 type="email" 
                 value={profile.email || ''}
                 disabled
-                title="L'adresse email principale est liée à votre compte Auth."
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nombre de contacts</label>
               <select 
@@ -232,7 +224,6 @@ export default function SettingsPage() {
                 <option value="500+">Plus de 500</option>
               </select>
             </div>
-
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">CA Annuel estimé</label>
               <select 
@@ -247,13 +238,12 @@ export default function SettingsPage() {
                 <option value="250k+">Plus de 250 000 €</option>
               </select>
             </div>
-
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Langue préférée</label>
               <select 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
                 value={profile.preferred_language || 'fr'}
-                onChange={(e) => setProfile({...profile, preferred_language: e.target.value})}
+                onChange={(e) => setProfile({...profile, preferred_language: (e.target.value as 'fr' | 'en' | 'es')})}
               >
                 <option value="fr">Français (France)</option>
                 <option value="en">English (US)</option>
@@ -306,23 +296,68 @@ export default function SettingsPage() {
             </div>
           </div>
           
-          {/* Email Settings Link Card - Specially requested to keep separate but linked */}
+          {/* Email Settings Card */}
           {profile.is_pro && (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-4">
                <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center">
-                   <Mail size={18} />
-                 </div>
-                 <div>
+                  <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center">
+                    <Mail size={18} />
+                  </div>
+                  <div>
                     <h4 className="text-sm font-bold text-slate-900">Configuration Email</h4>
-                    <p className="text-xs text-slate-500">Serveur SMTP et paramètres d'envoi</p>
-                 </div>
+                    <p className="text-xs text-slate-500">Serveur SMTP</p>
+                  </div>
                </div>
                <Link href="/dashboard/settings/email" className="w-full h-10 mt-2 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-lg hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors">
                   Gérer les e-mails <ExternalLink className="w-3.5 h-3.5" />
                </Link>
             </div>
           )}
+        </div>
+
+        {/* Notification Preferences Card */}
+        <div className="md:col-span-12 bg-white rounded-xl p-8 shadow-[0px_24px_48px_rgba(0,35,111,0.06)] flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <h4 className="text-lg font-bold tracking-tight">Préférences de Notifications</h4>
+            <Bell className="text-slate-400" size={20} />
+          </div>
+          
+          <p className="text-sm text-slate-500 -mt-2">Paramétrez vos alertes visuelles et sonores pour votre tableau de bord.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+            {[
+              { id: 'quotes_viewed', label: 'Devis Ouvert', desc: 'Consultation client', icon: <Eye size={16} /> },
+              { id: 'quotes_accepted', label: 'Devis Signé', desc: 'Signature reçue', icon: <CheckCircle2 size={16} /> },
+              { id: 'payments_received', label: 'Paiement Reçu', desc: 'Règlement Stripe', icon: <Wallet size={16} /> },
+              { id: 'quotes_expired', label: 'Lien Expiré', desc: 'Fin de validité', icon: <Clock size={16} /> }
+            ].map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-100 hover:border-blue-100 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-900 border border-slate-100">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{item.label}</p>
+                    <p className="text-[10px] text-slate-500">{item.desc}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    const currentPrefs = profile.notification_preferences || {}
+                    const newPrefs = { ...currentPrefs, [item.id]: !currentPrefs[item.id as keyof typeof currentPrefs] }
+                    setProfile({ ...profile, notification_preferences: newPrefs })
+                    updateNotificationPreferences(newPrefs).catch(() => toast.error('Erreur de sauvegarde'))
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                  profile.notification_preferences?.[item.id as keyof typeof profile.notification_preferences] !== false ? 'bg-[#00236f]' : 'bg-slate-200'
+                }`}>
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    profile.notification_preferences?.[item.id as keyof typeof profile.notification_preferences] !== false ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Tax & Legal Card */}
@@ -345,9 +380,9 @@ export default function SettingsPage() {
             <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Note de bas de page par défaut (Factures)</label>
             <textarea 
               className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-3 text-sm transition-all resize-none font-medium" 
-              placeholder="Saisissez les conditions de paiement, frais de retard, mentions légales..." 
+              placeholder="Conditions de paiement..." 
               rows={4}
-              defaultValue="Le règlement des factures est attendu à réception. En cas de retard de paiement, une pénalité égale à 3 fois le taux d'intérêt légal sera appliquée. Aucun escompte pour paiement anticipé. Tout litige relève de la compétence du Tribunal de Commerce."
+              defaultValue="Le règlement des factures est attendu à réception."
             ></textarea>
           </div>
         </div>
@@ -369,67 +404,41 @@ export default function SettingsPage() {
               <div>
                 <h5 className="font-bold text-sm text-slate-900">Paiements Stripe</h5>
                 <p className="text-xs text-slate-500">
-                  {!stripeStatus.exists ? 'API Non configurée' : (stripeStatus.isReady ? 'Compte Connecté' : 'Configuration incomplète')}
+                  {stripeStatus.isReady ? 'Compte Connecté' : 'Non configuré'}
                 </p>
               </div>
             </div>
-            {!stripeStatus.exists ? (
-              <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
-                <span className="w-2 h-2 bg-slate-300 rounded-full"></span>
-                Inactif
-              </div>
-            ) : stripeStatus.isReady ? (
+            {stripeStatus.isReady ? (
               <div className="flex items-center gap-2 text-green-600 font-bold text-[10px] uppercase tracking-widest">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 Activé
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-amber-600 font-bold text-[10px] uppercase tracking-widest">
-                <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                Incomplet
+              <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                <span className="w-2 h-2 bg-slate-300 rounded-full"></span>
+                Inactif
               </div>
             )}
           </div>
           
-          <p className="text-sm text-slate-600 leading-relaxed">
-            {!stripeStatus.exists 
-              ? "Connectez votre compte Stripe pour accepter les paiements par carte bancaire. Les fonds seront versés directement sur votre compte."
-              : stripeStatus.isReady 
-                ? "Vos paiements sont gérés via votre compte Stripe Connect. Les fonds sont versés directement sur votre compte bancaire."
-                : "Votre compte Stripe est créé mais n'est pas encore prêt à recevoir des fonds. Terminez la configuration sur Stripe."}
-          </p>
-          
           <div className="mt-auto flex flex-col gap-3">
-            {!stripeStatus.isReady && stripeStatus.exists && (
+            {!stripeStatus.exists ? (
               <button 
                 onClick={handleConnectStripe}
                 disabled={isConnecting}
-                className="h-14 bg-amber-100 text-amber-900 font-black rounded-lg hover:bg-amber-200 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
-              >
-                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Clock className="w-5 h-5" />}
-                TERMINER LA CONFIGURATION
-              </button>
-            )}
-
-            {!stripeStatus.exists && (
-              <button 
-                onClick={handleConnectStripe}
-                disabled={isConnecting}
-                className="h-14 bg-[#635BFF] text-white font-black rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
+                className="h-14 bg-[#635BFF] text-white font-black rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
               >
                 {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Link2 className="w-5 h-5" />}
-                CONNECTER MON COMPTE STRIPE
+                CONNECTER STRIPE
               </button>
-            )}
-
-            {stripeStatus.exists && (
+            ) : (
               <button 
                 onClick={handleDisconnectStripe}
                 disabled={isConnecting}
-                className="h-14 bg-red-50 text-red-700 font-black rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 text-xs"
+                className="h-14 bg-red-50 text-red-700 font-bold rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
               >
                 {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Unlink className="w-4 h-4" />}
-                DÉCONNECTER LE COMPTE STRIPE
+                DÉCONNECTER STRIPE
               </button>
             )}
           </div>
