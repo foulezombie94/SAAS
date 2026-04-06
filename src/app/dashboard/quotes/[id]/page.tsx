@@ -13,7 +13,7 @@ export default async function QuoteViewPage({ params }: { params: Promise<{ id: 
     supabase
       .from('quotes')
       .select(`
-        id, number, client_id, status, total_ht, total_ttc, signature_url, stripe_session_id, user_id, created_at, updated_at, payment_method, payment_details,
+        id, number, client_id, status, total_ht, total_ttc, public_token, signature_url, stripe_session_id, user_id, created_at, updated_at, payment_method, payment_details,
         clients (id, name, email, phone, address, postal_code, city, country),
         quote_items (id, description, quantity, unit_price, total_price, tax_rate)
       `)
