@@ -114,9 +114,10 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
   const handleDownloadExcel = () => {
     try {
+      const sep = ';' // Standard for French Excel
       const escapeCSV = (str: string | number | null | undefined) => {
         const val = str === null || str === undefined ? '' : String(str)
-        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+        if (val.includes(sep) || val.includes('"') || val.includes('\n')) {
           return `"${val.replace(/"/g, '""')}"`
         }
         return val
@@ -124,25 +125,22 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
       const csvRows = []
 
-      // 1. Identification Section
-      csvRows.push(['IDENTIFICATION DU DEVIS'])
-      csvRows.push(['Référence', escapeCSV(quote.number)])
-      csvRows.push(['Artisan', escapeCSV(quote.profiles?.company_name)])
-      csvRows.push([''])
+      // sep=; instruction for Excel to automatically detect the separator
+      csvRows.push([`sep=${sep}`])
 
-      csvRows.push(['COORDONNÉES CLIENT'])
-      csvRows.push(['Nom', escapeCSV(quote.clients?.name)])
-      csvRows.push(['Email', escapeCSV(quote.clients?.email)])
-      csvRows.push(['Téléphone', escapeCSV(quote.clients?.phone)])
-      csvRows.push(['Adresse', escapeCSV(`${quote.clients?.address || ''}, ${quote.clients?.postal_code || ''} ${quote.clients?.city || ''}`)])
+      // 1. Identification & Client Section (Full Horizontal)
+      csvRows.push(['RÉFÉRENCE', 'DATE ÉMISSION', 'CLIENT', 'EMAIL', 'TÉLÉPHONE', 'ADRESSE'])
+      csvRows.push([
+        escapeCSV(quote.number), 
+        new Date(quote.created_at).toLocaleDateString(),
+        escapeCSV(quote.clients?.name),
+        escapeCSV(quote.clients?.email),
+        escapeCSV(quote.clients?.phone),
+        escapeCSV(`${quote.clients?.address || ''}, ${quote.clients?.city || ''}`)
+      ])
       csvRows.push([''])
-
-      csvRows.push(['DATES CLÉS'])
-      csvRows.push(['Émission', new Date(quote.created_at).toLocaleDateString()])
-      csvRows.push(['Validité', '30 jours (Échéance: ' + (quote.valid_until ? new Date(quote.valid_until).toLocaleDateString() : 'N/A') + ')'])
       csvRows.push([''])
-      csvRows.push([''])
-
+      
       // 2. Body Section (Operational Data)
       const headers = ['Désignation / Libellé', 'Unité', 'Quantité', 'Prix Unitaire HT', 'Taux TVA (%)', 'Total HT']
       csvRows.push(headers)
@@ -151,7 +149,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         quote.quote_items.forEach((item: QuoteItem) => {
           csvRows.push([
             escapeCSV(item.description),
-            'Unité', // Default unit as it's not in the base schema but common in exports
+            'Unité', 
             escapeCSV(item.quantity),
             escapeCSV(item.unit_price),
             escapeCSV(item.tax_rate || 20),
@@ -161,12 +159,12 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       }
       csvRows.push([''])
 
-      // 3. Financial Summary
+      // 4. Financial Summary - Aligned to the right
       csvRows.push(['', '', '', '', 'TOTAL GÉNÉRAL HT', escapeCSV(quote.total_ht)])
-      csvRows.push(['', '', '', '', 'MONTANT TVA', escapeCSV((quote.total_ht * 0.2).toFixed(2))])
+      csvRows.push(['', '', '', '', 'MONTANT TVA (20%)', escapeCSV((quote.total_ht * 0.2).toFixed(2))])
       csvRows.push(['', '', '', '', 'TOTAL TTC', escapeCSV(quote.total_ttc)])
 
-      const csvContent = csvRows.map(row => row.join(',')).join('\n')
+      const csvContent = csvRows.map(row => row.join(sep)).join('\n')
       
       // Use UTF-8 with BOM for Excel compatibility (accents support)
       const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
@@ -179,7 +177,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       
       URL.revokeObjectURL(url)
       document.body.removeChild(link)
-      toast.success("Export Excel (CSV) réussi !")
+      toast.success("Excel (CSV) généré avec succès !")
     } catch (e) {
       console.error('Excel Export Error:', e)
       toast.error("Erreur lors de l'export Excel")
