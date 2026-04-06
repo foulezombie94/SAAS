@@ -114,7 +114,6 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
   const handleDownloadExcel = () => {
     try {
-      const headers = ['Description', 'Quantite', 'Prix Unitaire HT', 'Total HT']
       const escapeCSV = (str: string | number | null | undefined) => {
         const val = str === null || str === undefined ? '' : String(str)
         if (val.includes(',') || val.includes('"') || val.includes('\n')) {
@@ -123,28 +122,66 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         return val
       }
 
-      const rows = (quote.quote_items || []).map((item: QuoteItem) => [
-        escapeCSV(item.description),
-        escapeCSV(item.quantity),
-        escapeCSV(item.unit_price),
-        escapeCSV(item.total_price)
-      ])
+      const csvRows = []
 
-      rows.push(['', '', '', ''])
-      rows.push(['TOTAL HT', '', '', escapeCSV(quote.total_ht)])
-      rows.push(['TOTAL TTC', '', '', escapeCSV(quote.total_ttc)])
+      // 1. Identification Section
+      csvRows.push(['IDENTIFICATION DU DEVIS'])
+      csvRows.push(['Référence', escapeCSV(quote.number)])
+      csvRows.push(['Artisan', escapeCSV(quote.profiles?.company_name)])
+      csvRows.push([''])
 
-      const csvContent = [headers.join(','), ...rows.map((row: any) => row.join(','))].join('\n')
+      csvRows.push(['COORDONNÉES CLIENT'])
+      csvRows.push(['Nom', escapeCSV(quote.clients?.name)])
+      csvRows.push(['Email', escapeCSV(quote.clients?.email)])
+      csvRows.push(['Téléphone', escapeCSV(quote.clients?.phone)])
+      csvRows.push(['Adresse', escapeCSV(`${quote.clients?.address || ''}, ${quote.clients?.postal_code || ''} ${quote.clients?.city || ''}`)])
+      csvRows.push([''])
+
+      csvRows.push(['DATES CLÉS'])
+      csvRows.push(['Émission', new Date(quote.created_at).toLocaleDateString()])
+      csvRows.push(['Validité', '30 jours (Échéance: ' + (quote.valid_until ? new Date(quote.valid_until).toLocaleDateString() : 'N/A') + ')'])
+      csvRows.push([''])
+      csvRows.push([''])
+
+      // 2. Body Section (Operational Data)
+      const headers = ['Désignation / Libellé', 'Unité', 'Quantité', 'Prix Unitaire HT', 'Taux TVA (%)', 'Total HT']
+      csvRows.push(headers)
+
+      if (quote.quote_items && quote.quote_items.length > 0) {
+        quote.quote_items.forEach((item: QuoteItem) => {
+          csvRows.push([
+            escapeCSV(item.description),
+            'Unité', // Default unit as it's not in the base schema but common in exports
+            escapeCSV(item.quantity),
+            escapeCSV(item.unit_price),
+            escapeCSV(item.tax_rate || 20),
+            escapeCSV(item.total_price)
+          ])
+        })
+      }
+      csvRows.push([''])
+
+      // 3. Financial Summary
+      csvRows.push(['', '', '', '', 'TOTAL GÉNÉRAL HT', escapeCSV(quote.total_ht)])
+      csvRows.push(['', '', '', '', 'MONTANT TVA', escapeCSV((quote.total_ht * 0.2).toFixed(2))])
+      csvRows.push(['', '', '', '', 'TOTAL TTC', escapeCSV(quote.total_ttc)])
+
+      const csvContent = csvRows.map(row => row.join(',')).join('\n')
+      
+      // Use UTF-8 with BOM for Excel compatibility (accents support)
       const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.body.appendChild(document.createElement('a'))
       const url = URL.createObjectURL(blob)
+      
       link.href = url
       link.download = `ArtisanFlow_Devis_${quote.number}.csv`
       link.click()
+      
       URL.revokeObjectURL(url)
       document.body.removeChild(link)
-      toast.success("Export Excel réussi !")
+      toast.success("Export Excel (CSV) réussi !")
     } catch (e) {
+      console.error('Excel Export Error:', e)
       toast.error("Erreur lors de l'export Excel")
     }
   }

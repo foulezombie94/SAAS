@@ -12,20 +12,13 @@ export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'num
 export type QuoteItem = Database['public']['Tables']['quote_items']['Row']
 
 export type Quote = Database['public']['Tables']['quotes']['Row'] & {
-  clients: { 
-    name: string
-    address?: string | null
-    city?: string | null
-    email?: string | null
-    site_address?: string | null
-    postal_code?: string | null
-  } | null
+  clients: Client | null
   profiles?: Profile | null
   quote_items?: QuoteItem[] | null
 }
 
 export type Invoice = Database['public']['Tables']['invoices']['Row'] & {
-  clients: { name: string } | null
+  clients: Client | null
 }
 
 export type ClientWithQuotes = Client & {
