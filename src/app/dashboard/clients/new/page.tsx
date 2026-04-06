@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react'
+import { createClientAction } from '../actions'
 import { getUsageLimits } from '@/app/dashboard/actions'
 import { LimitBanner } from '@/components/ui/LimitBanner'
 import { toast } from 'sonner'
@@ -83,22 +84,20 @@ export default function NewClientPage() {
       const ls = await getUsageLimits('clients')
       if (!ls.allowed) throw new Error("Limite de 3 clients atteinte. Passez en PRO !")
 
-      const { error } = await supabase
-        .from('clients')
-        .insert({
-          user_id: user.id,
-          name: formData.name,
-          email: formData.email || null,
-          phone: formData.phone || null,
-          address: formData.address || null,
-          city: formData.city || null,
-          postal_code: formData.postal_code || null,
-          country: formData.country || 'France',
-          site_address: formData.site_address || null,
-          notes: formData.notes || null
-        })
+      // 🛡️ BASTION DE SÉCURITÉ : Appel de l'action serveur avec validation Zod et Anti-XSS
+      const result = await createClientAction({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        postal_code: formData.postal_code,
+        country: formData.country,
+        site_address: formData.site_address,
+        notes: formData.notes
+      })
 
-      if (error) throw error
+      if (!result.success) throw new Error("Erreur de sauvegarde")
 
       toast.success("Client enregistré avec succès !")
       router.push('/dashboard/clients')

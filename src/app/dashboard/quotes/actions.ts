@@ -1,10 +1,11 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { QuoteInsertSchema } from '@/lib/validations/quote'
+import { QuoteInsertSchema, QuoteAcceptSchema, QuoteEmailSchema } from '@/lib/validations/quote'
 import { getUsageLimits } from '@/app/dashboard/actions'
-import { revalidateTag } from 'next/cache'
-import { revalidatePath } from 'next/cache'
+import { revalidateTag, revalidatePath } from 'next/cache'
+import { rateLimit } from '@/lib/rate-limit'
+import { createAdminClient } from '@/utils/supabase/admin'
 
 export async function createQuoteAction(rawData: unknown) {
   // 1. Validation Zod stricte : si ça échoue, ça lève une erreur qu'on attrape
@@ -56,5 +57,108 @@ export async function createQuoteAction(rawData: unknown) {
     return { success: true, quote }
   } catch (err: any) {
     return { success: false, error: err.message || 'Erreur lors de la création atomique du devis' }
+  }
+}
+
+export async function acceptQuoteAction(rawData: unknown) {
+  const parsed = QuoteAcceptSchema.safeParse(rawData);
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message };
+
+  const { quoteId, signatureDataUrl } = parsed.data;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { success: false, error: "Non autorisé" };
+
+  // 1. Rate Limit
+  const limit = await rateLimit(`accept-${user.id}`, 3, 60000);
+  if (!limit.success) return { success: false, error: limit.message };
+
+  try {
+    const adminSupabase = createAdminClient();
+    const base64Data = signatureDataUrl.split(',')[1];
+    const buffer = Buffer.from(base64Data, 'base64');
+    const fileName = `sig_${quoteId}_${Date.now()}.png`;
+
+    const { error: uploadError } = await adminSupabase.storage
+      .from('signatures')
+      .upload(fileName, buffer, { contentType: 'image/png', upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = adminSupabase.storage
+      .from('signatures')
+      .getPublicUrl(fileName);
+
+    const { error: rpcError } = await supabase.rpc('accept_quote_v3', {
+      p_quote_id: quoteId,
+      p_public_token: '', // Not needed for authenticated artisan
+      p_signature_url: publicUrl
+    });
+
+    if (rpcError) throw rpcError;
+
+    revalidatePath(`/dashboard/quotes/${quoteId}`);
+    return { success: true, signatureUrl: publicUrl };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function sendQuoteEmailAction(rawData: unknown) {
+  const parsed = QuoteEmailSchema.safeParse(rawData);
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message };
+
+  const { quoteId, subject, message } = parsed.data;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { success: false, error: "Non autorisé" };
+
+  const limit = await rateLimit(`email-${user.id}`, 5, 60000);
+  if (!limit.success) return { success: false, error: limit.message };
+
+  try {
+    // 🕵️‍♂️ On réutilise la logique de l'API mais de manière sécurisée en Server Action
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/quotes/send-email`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': (await import('next/headers')).cookies().toString() // Forward auth cookies
+      },
+      body: JSON.stringify({ quoteId, subject, message })
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error);
+
+    revalidatePath(`/dashboard/quotes/${quoteId}`);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function createInvoiceFromQuoteAction(quoteId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { success: false, error: "Non autorisé" };
+
+  try {
+    const { data, error: rpcError } = await supabase.rpc('create_invoice_from_quote_v2', {
+      p_quote_id: quoteId
+    });
+
+    if (rpcError) throw rpcError;
+
+    const result = data as { invoiceId: string; message?: string };
+    
+    revalidatePath('/dashboard/invoices');
+    revalidatePath(`/dashboard/quotes/${quoteId}`);
+    
+    return { success: true, invoiceId: result.invoiceId };
+  } catch (err: any) {
+    return { success: false, error: err.message };
   }
 }

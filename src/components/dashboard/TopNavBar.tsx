@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { useNotifications } from '@/components/providers/NotificationProvider'
@@ -13,8 +14,24 @@ interface TopNavBarProps {
 
 export function TopNavBar({ userEmail }: TopNavBarProps) {
   const { unreadCount, notifications, markAllAsRead, clearAllNotifications } = useNotifications()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // 🛡️ OPTIMISATION RECHERCHE : Debounce de 500ms pour éviter de bombarder la DB
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) {
+        router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery, router])
 
   const handleSignOut = async () => {
     await signOut()
@@ -40,6 +57,13 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
             className="w-full bg-slate-50 border border-slate-100 rounded-full pl-12 pr-6 py-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 placeholder:font-medium font-bold" 
             placeholder="Rechercher un devis, client..." 
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`)
+              }
+            }}
           />
         </div>
       </div>

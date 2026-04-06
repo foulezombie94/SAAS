@@ -5,7 +5,16 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { setFreePlan, createSubscriptionSession } from '../actions'
 import { toast } from 'sonner'
-import { CheckCircle2, ChevronRight, Verified, HardHat } from 'lucide-react'
+import { 
+  CheckCircle2, 
+  ChevronRight, 
+  Verified, 
+  HardHat, 
+  XCircle,
+  ShieldCheck,
+  CalendarDays,
+  LayoutDashboard
+} from 'lucide-react'
 
 export default function PlansPage() {
   const [isYearly, setIsYearly] = useState(true)
@@ -53,8 +62,6 @@ export default function PlansPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-4 md:pt-8 pb-0">
-      {/* Google Material Symbols Link (Required for the provided HTML style) */}
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       
       {/* BREADCRUMBS */}
       <div className="max-w-xl mx-auto mb-8 px-4">
@@ -64,14 +71,14 @@ export default function PlansPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Compte créé</span>
           </div>
           <div className="w-8 flex justify-center">
-            <span className="material-symbols-outlined text-primary scale-75">chevron_right</span>
+            <ChevronRight className="text-primary opacity-50" size={14} />
           </div>
           <div className="flex flex-col items-center gap-2 flex-1">
             <div className="h-1 w-full bg-primary rounded-full"></div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Choix de l'offre</span>
           </div>
           <div className="w-8 flex justify-center">
-            <span className="material-symbols-outlined text-outline-variant scale-75">chevron_right</span>
+            <ChevronRight className="text-slate-200" size={14} />
           </div>
           <div className="flex flex-col items-center gap-2 flex-1">
             <div className="h-1 w-full bg-surface-container-highest rounded-full"></div>
@@ -84,7 +91,7 @@ export default function PlansPage() {
         <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-primary mb-6">Propulsez votre activité.</h1>
         <p className="text-lg text-secondary max-w-2xl mx-auto leading-relaxed">Simplifiez votre gestion administrative et concentrez-vous sur ce que vous faites de mieux : bâtir.</p>
         
-        {/* Toggle Mensuel / Annuel (Added to match previous requirements) */}
+        {/* Toggle Mensuel / Annuel */}
         <div className="mt-10 flex items-center justify-center gap-6">
           <span className={`text-sm font-bold uppercase tracking-widest ${!isYearly ? 'text-primary' : 'text-slate-400'}`}>Mensuel</span>
           <button 
@@ -116,23 +123,23 @@ export default function PlansPage() {
             </div>
             <ul className="space-y-4 mb-12 flex-grow">
               <li className="flex items-center gap-3 text-on-surface">
-                <span className="material-symbols-outlined text-primary text-xl">check_circle</span>
+                <CheckCircle2 className="text-primary" size={18} />
                 <span className="text-sm font-medium">3 clients maximum</span>
               </li>
               <li className="flex items-center gap-3 text-on-surface">
-                <span className="material-symbols-outlined text-primary text-xl">check_circle</span>
+                <CheckCircle2 className="text-primary" size={18} />
                 <span className="text-sm font-medium">3 devis / factures</span>
               </li>
               <li className="flex items-center gap-3 text-on-surface">
-                <span className="material-symbols-outlined text-primary text-xl">check_circle</span>
+                <CheckCircle2 className="text-primary" size={18} />
                 <span className="text-sm font-medium">Signature électronique incluise</span>
               </li>
               <li className="flex items-center gap-3 text-on-surface">
-                <span className="material-symbols-outlined text-primary text-xl">check_circle</span>
+                <CheckCircle2 className="text-primary" size={18} />
                 <span className="text-sm font-medium">Paiements en ligne</span>
               </li>
               <li className="flex items-center gap-3 text-on-surface opacity-40">
-                <span className="material-symbols-outlined text-slate-400 text-xl">cancel</span>
+                <XCircle className="text-slate-400" size={18} />
                 <span className="text-sm font-medium">Envoi d'email intégré</span>
               </li>
             </ul>
@@ -153,7 +160,7 @@ export default function PlansPage() {
           </div>
           <div className="bg-primary-container p-10 rounded-xl shadow-2xl relative overflow-hidden ring-4 ring-primary-container">
             <div className="absolute top-0 right-0 p-8 opacity-10">
-              <span className="material-symbols-outlined text-[120px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>architecture</span>
+              <ShieldCheck className="text-white" size={120} />
             </div>
             <div className="flex flex-col h-full relative z-10">
               <div className="mb-8">
@@ -176,27 +183,27 @@ export default function PlansPage() {
               </div>
               <ul className="space-y-4 mb-12 flex-grow">
                 <li className="flex items-center gap-3 text-white">
-                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <ShieldCheck className="text-on-tertiary-container" size={18} />
                   <span className="text-sm font-bold">Devis & Factures illimités</span>
                 </li>
                 <li className="flex items-center gap-3 text-white">
-                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <ShieldCheck className="text-on-tertiary-container" size={18} />
                   <span className="text-sm font-bold">Signatures électroniques</span>
                 </li>
                 <li className="flex items-center gap-3 text-white">
-                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <ShieldCheck className="text-on-tertiary-container" size={18} />
                   <span className="text-sm font-bold">Paiements Stripe intégrés</span>
                 </li>
                 <li className="flex items-center gap-3 text-white">
-                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <ShieldCheck className="text-on-tertiary-container" size={18} />
                   <span className="text-sm font-bold">Relances automatiques</span>
                 </li>
                 <li className="flex items-center gap-3 text-white">
-                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <ShieldCheck className="text-on-tertiary-container" size={18} />
                   <span className="text-sm font-bold">Envoi d'email avec SMTP</span>
                 </li>
                 <li className="flex items-center gap-3 text-white">
-                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_month</span>
+                  <CalendarDays className="text-on-tertiary-container" size={18} />
                   <span className="text-sm font-bold">Agenda Interactif Pro</span>
                 </li>
               </ul>

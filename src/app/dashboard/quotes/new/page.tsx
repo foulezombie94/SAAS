@@ -43,6 +43,7 @@ interface Client {
 }
 
 import { getUsageLimits } from '@/app/dashboard/actions'
+import { getClientsAction } from '@/app/dashboard/clients/actions'
 import { LimitBanner } from '@/components/ui/LimitBanner'
 import { createQuoteAction } from '../actions'
 
@@ -75,8 +76,8 @@ export default function NewQuotePage() {
        setCheckingLimits(false)
 
        if (status.allowed) {
-         const { data: clientsData } = await supabase.from('clients').select('id, name, email').eq('user_id', user.id)
-         if (clientsData) setClients(clientsData)
+         const clientsData = await getClientsAction()
+         setClients(clientsData)
 
          setNumber(`DEV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`)
        }
@@ -136,7 +137,10 @@ export default function NewQuotePage() {
           tax_rate: taxRate,
           total_ht: item.total,
           total_ttc: item.total * (1 + taxRate / 100)
-        }))
+        })),
+        description: "", // Added to satisfy validation
+        terms: "",
+        notes: ""
       };
 
       const result = await createQuoteAction(payload);

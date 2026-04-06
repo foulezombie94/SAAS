@@ -27,12 +27,14 @@ import {
   Table as TableIcon,
   Share2,
   Mail,
-  X
+  X,
+  FileCheck2
 } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
+import { acceptQuoteAction, sendQuoteEmailAction, createInvoiceFromQuoteAction } from '../actions'
 
 interface QuoteClientProps {
   quote: Quote
@@ -161,34 +163,14 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
   const handleSaveSignature = async (dataUrl: string) => {
     try {
-      // 1. Storage Fix (Faille 1): Convert DataURL to Blob
-      const response = await fetch(dataUrl)
-      const blob = await response.blob()
-      // 2. Upload to Supabase Storage - High Security path
-      const fileName = `${quote.user_id}/${quote.id}_${Date.now()}.png`
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('signatures')
-        .upload(fileName, blob, { contentType: 'image/png' })
+      const result = await acceptQuoteAction({
+        quoteId: quote.id,
+        signatureDataUrl: dataUrl
+      });
 
-      if (uploadError) throw uploadError
+      if (!result.success) throw new Error(result.error);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('signatures')
-        .getPublicUrl(fileName)
-
-      // 3. Security Fix (Faille 3): Call secure backend route
-      const acceptResponse = await fetch('/api/quotes/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quoteId: quote.id,
-          signatureUrl: publicUrl
-        })
-      })
-
-      if (!acceptResponse.ok) throw new Error("Backend error")
-
-      setSignature(publicUrl)
+      setSignature(result.signatureUrl || null)
       setIsSigning(false)
       toast.success("Devis signé et approuvé !")
       router.refresh()
@@ -216,19 +198,16 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
   const handleCreateInvoice = async () => {
     setIsGeneratingInvoice(true)
+    const toastId = toast.loading("Conversion en facture...")
     try {
-      const response = await fetch('/api/invoices/create-from-quote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quoteId: quote.id })
-      })
-      const data = await response.json()
-      if (data.invoiceId) {
-        toast.success("Facture prête !")
-        router.push(`/dashboard/invoices/${data.invoiceId}`)
-      } else throw new Error(data.error)
+      const result = await createInvoiceFromQuoteAction(quote.id);
+      
+      if (!result.success) throw new Error(result.error);
+
+      toast.success("Facture créée avec succès !", { id: toastId })
+      router.push(`/dashboard/invoices/${result.invoiceId}`)
     } catch (e: any) {
-      toast.error("Échec génération facture : " + e.message)
+      toast.error(e.message, { id: toastId })
     } finally {
       setIsGeneratingInvoice(false)
     }
@@ -238,18 +217,13 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     setIsSendingEmail(true)
     const toastId = toast.loading("Envoi de l'email en cours...")
     try {
-      const response = await fetch('/api/quotes/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quoteId: quote.id,
-          subject: emailForm.subject,
-          message: emailForm.message
-        })
-      })
+      const result = await sendQuoteEmailAction({
+        quoteId: quote.id,
+        subject: emailForm.subject,
+        message: emailForm.message
+      });
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Erreur d'envoi")
+      if (!result.success) throw new Error(result.error);
 
       toast.success("Email envoyé avec succès !", { id: toastId })
       setIsEmailModalOpen(false)

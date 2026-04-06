@@ -5,7 +5,7 @@ import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe
 import { Profile } from '@/types/dashboard'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { RefreshCw, Mail } from 'lucide-react'
+import { RefreshCw, Mail, Verified, Building2, Award, CheckCircle2, Rocket, ShieldCheck, Wallet, Clock, Link2, Unlink, Save, ExternalLink } from 'lucide-react'
 
 // Mapped SVG or lucide icons to replace material icons
 // using material-symbols format as the html requested, but adding standard ones if needed.
@@ -63,7 +63,7 @@ export default function SettingsPage() {
         phone: profile.phone || '',
         num_contacts: profile.num_contacts || '',
         annual_revenue: profile.annual_revenue || '',
-        preferred_language: profile.preferred_language || 'fr',
+        preferred_language: (profile.preferred_language as 'fr' | 'en' | 'es') || 'fr',
       })
       toast.success('Paramètres enregistrés avec succès')
     } catch (err: any) {
@@ -128,7 +128,7 @@ export default function SettingsPage() {
         <div className="flex items-end justify-start lg:justify-end">
           {/* Job Status Slab */}
           <div className="h-12 flex items-center px-6 bg-amber-100 text-amber-900 rounded-lg">
-            <span className="material-symbols-outlined mr-2" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            <Verified className="mr-2" size={18} />
             <span className="text-[11px] font-bold uppercase tracking-widest">Compte Entreprise Actif</span>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function SettingsPage() {
         <div className="md:col-span-8 bg-white rounded-xl p-8 shadow-[0px_24px_48px_rgba(0,35,111,0.06)] flex flex-col gap-8">
           <div className="flex items-center justify-between">
             <h4 className="text-lg font-bold tracking-tight">Profil de l'Entreprise</h4>
-            <span className="material-symbols-outlined text-slate-400">business</span>
+            <Building2 className="text-slate-400" size={20} />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -273,19 +273,19 @@ export default function SettingsPage() {
                   <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-blue-200">Niveau Actuel</p>
                   <h4 className="text-2xl font-black tracking-tight">{profile.is_pro ? 'Plan Pro' : 'Plan Gratuit'}</h4>
                 </div>
-                <span className="material-symbols-outlined text-4xl opacity-50 text-amber-300">workspace_premium</span>
+                <Award className="text-4xl opacity-30 text-amber-300" size={48} />
               </div>
               <ul className="space-y-3">
                 <li className="flex items-center gap-2 text-sm">
-                  <span className="material-symbols-outlined text-sm text-green-400">check_circle</span>
+                  <CheckCircle2 className="text-emerald-400" size={16} />
                   {profile.is_pro ? 'Devis & Factures Illimités' : 'Limite de 3 Devis / Factures'}
                 </li>
                 <li className="flex items-center gap-2 text-sm">
-                  <span className="material-symbols-outlined text-sm text-green-400">check_circle</span>
+                  <CheckCircle2 className="text-emerald-400" size={16} />
                   Paiement en ligne (Stripe)
                 </li>
                 <li className="flex items-center gap-2 text-sm">
-                  <span className="material-symbols-outlined text-sm text-green-400">check_circle</span>
+                  <CheckCircle2 className="text-emerald-400" size={16} />
                   {profile.is_pro ? 'Signatures électroniques illimitées' : 'Support Standard'}
                 </li>
               </ul>
@@ -298,7 +298,7 @@ export default function SettingsPage() {
               ) : (
                 <Link href="/onboarding/plans" className="block">
                   <button className="w-full h-12 bg-amber-400 text-blue-900 font-bold rounded-lg hover:bg-amber-300 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-400/20 active:scale-95">
-                    <span className="material-symbols-outlined text-sm">rocket_launch</span>
+                    <Rocket className="w-4 h-4" />
                     PASSER AU PLAN PRO
                   </button>
                 </Link>
@@ -319,7 +319,7 @@ export default function SettingsPage() {
                  </div>
                </div>
                <Link href="/dashboard/settings/email" className="w-full h-10 mt-2 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-lg hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors">
-                  Gérer les e-mails <span className="material-symbols-outlined text-sm">open_in_new</span>
+                  Gérer les e-mails <ExternalLink className="w-3.5 h-3.5" />
                </Link>
             </div>
           )}
@@ -329,7 +329,7 @@ export default function SettingsPage() {
         <div className="md:col-span-6 bg-slate-50 rounded-xl p-8 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <h4 className="text-lg font-bold tracking-tight">Conformité Fiscale & Légale</h4>
-            <span className="material-symbols-outlined text-slate-400">policy</span>
+            <ShieldCheck className="text-slate-400" size={20} />
           </div>
           <div className="space-y-4">
             <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500 block">Taux de TVA par défaut</label>
@@ -356,7 +356,7 @@ export default function SettingsPage() {
         <div className="md:col-span-6 bg-slate-50 rounded-xl p-8 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <h4 className="text-lg font-bold tracking-tight">Passerelles de Paiement</h4>
-            <span className="material-symbols-outlined text-slate-400">account_balance_wallet</span>
+            <Wallet className="text-slate-400" size={20} />
           </div>
           
           <div className="p-6 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-sm">
@@ -406,7 +406,7 @@ export default function SettingsPage() {
                 disabled={isConnecting}
                 className="h-14 bg-amber-100 text-amber-900 font-black rounded-lg hover:bg-amber-200 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
               >
-                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">pending_actions</span>}
+                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Clock className="w-5 h-5" />}
                 TERMINER LA CONFIGURATION
               </button>
             )}
@@ -417,7 +417,7 @@ export default function SettingsPage() {
                 disabled={isConnecting}
                 className="h-14 bg-[#635BFF] text-white font-black rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
               >
-                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined">add_link</span>}
+                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Link2 className="w-5 h-5" />}
                 CONNECTER MON COMPTE STRIPE
               </button>
             )}
@@ -428,7 +428,7 @@ export default function SettingsPage() {
                 disabled={isConnecting}
                 className="h-14 bg-red-50 text-red-700 font-black rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 text-xs"
               >
-                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <span className="material-symbols-outlined text-sm">link_off</span>}
+                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Unlink className="w-4 h-4" />}
                 DÉCONNECTER LE COMPTE STRIPE
               </button>
             )}
@@ -451,7 +451,7 @@ export default function SettingsPage() {
             disabled={isSaving}
             className="px-10 py-4 bg-[#00236f] text-white font-bold rounded-lg hover:scale-[0.98] transition-transform shadow-xl shadow-blue-900/20 flex items-center gap-3 disabled:opacity-50"
           >
-            {isSaving ? <RefreshCw className="animate-spin" size={20} /> : <span className="material-symbols-outlined">save</span>}
+            {isSaving ? <RefreshCw className="animate-spin" size={20} /> : <Save className="w-5 h-5" />}
             Enregistrer les modifications
           </button>
         </div>

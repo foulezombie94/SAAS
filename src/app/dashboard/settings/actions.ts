@@ -44,34 +44,29 @@ export async function getSensitiveProfileData() {
   return data
 }
 
-export async function updateProfile(formData: {
-  company_name: string
-  first_name?: string
-  last_name?: string
-  siret: string
-  address: string
-  phone: string
-  num_contacts?: string | number
-  annual_revenue?: string | number
-  preferred_language?: string
-}) {
+import { profileSchema, ProfileInput } from '@/lib/validations/profile'
+
+export async function updateProfile(formData: ProfileInput) {
   const supabase = createClient()
   const { data: { user } } = await (await supabase).auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  // 🛡️ BASTION DE SÉCURITÉ : Validation Schema Zod + Anti-XSS (Grade 3)
+  const validatedData = profileSchema.parse(formData)
+
   const { error } = await (await supabase)
     .from('profiles')
     .update({
-      company_name: formData.company_name,
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      full_name: `${formData.first_name || ''} ${formData.last_name || ''}`.trim(),
-      siret: formData.siret,
-      address: formData.address,
-      phone: formData.phone,
-      num_contacts: formData.num_contacts ? Number(formData.num_contacts) : null,
-      annual_revenue: formData.annual_revenue ? Number(formData.annual_revenue) : null,
-      preferred_language: formData.preferred_language,
+      company_name: validatedData.company_name,
+      first_name: validatedData.first_name,
+      last_name: validatedData.last_name,
+      full_name: `${validatedData.first_name || ''} ${validatedData.last_name || ''}`.trim(),
+      siret: validatedData.siret,
+      address: validatedData.address,
+      phone: validatedData.phone,
+      num_contacts: validatedData.num_contacts ? Number(validatedData.num_contacts) : null,
+      annual_revenue: validatedData.annual_revenue ? Number(validatedData.annual_revenue) : null,
+      preferred_language: validatedData.preferred_language,
     })
     .eq('id', user.id)
 

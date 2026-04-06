@@ -1,12 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { 
+  Zap, 
+  MousePointer2, 
+  Wallet, 
+  ShieldCheck, 
+  CalendarDays, 
+  CheckCircle2, 
+  XCircle, 
+  Share2, 
+  Award,
+  ChevronRight,
+  ShieldAlert
+} from "lucide-react";
 
 export default function Home() {
   const [isYearly, setIsYearly] = useState(true);
@@ -55,7 +67,7 @@ export default function Home() {
   };
   return (
     <div className="bg-surface text-on-surface selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed border-t-2 border-transparent">
-      {/* Vercel Rebuild Trigger - Fix 404 Case Sensitivity & Versions */}
+      {/* Navbar component handles navigation */}
       <Navbar />
 
       <main className="pt-24 overflow-hidden">
@@ -118,42 +130,42 @@ export default function Home() {
               {/* Benefit 1 */}
               <div className="bg-surface-container-lowest p-8 rounded-lg transition-all hover:bg-surface-container-highest group">
                 <div className="w-12 h-12 bg-primary-container text-on-primary-container rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined">speed</span>
+                  <Zap size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-primary">Vitesse</h3>
-                <p className="text-on-surface-variant leading-relaxed">Devis en 2 minutes chrono. Répondez à vos clients avant même de quitter le chantier.</p>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Devis en 2 minutes chrono. Répondez à vos clients avant même de quitter le chantier.</p>
               </div>
               {/* Benefit 2 */}
               <div className="bg-surface-container-lowest p-8 rounded-lg transition-all hover:bg-surface-container-highest group">
                 <div className="w-12 h-12 bg-primary-container text-on-primary-container rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined">touch_app</span>
+                  <MousePointer2 size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-primary">Simplicité</h3>
-                <p className="text-on-surface-variant leading-relaxed">Pas besoin d'être un expert en informatique. Une interface intuitive pensée pour le terrain.</p>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Pas besoin d'être un expert en informatique. Une interface intuitive pensée pour le terrain.</p>
               </div>
               {/* Benefit 3 */}
               <div className="bg-surface-container-lowest p-8 rounded-lg transition-all hover:bg-surface-container-highest group">
                 <div className="w-12 h-12 bg-primary-container text-on-primary-container rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined">account_balance_wallet</span>
+                  <Wallet size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-primary">Paiement Rapide</h3>
-                <p className="text-on-surface-variant leading-relaxed">Lien Stripe intégré pour un règlement immédiat. Réduisez vos délais de paiement de 50%.</p>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Lien Stripe intégré pour un règlement immédiat. Réduisez vos délais de paiement de 50%.</p>
               </div>
               {/* Benefit 4 */}
               <div className="bg-surface-container-lowest p-8 rounded-lg transition-all hover:bg-surface-container-highest group">
                 <div className="w-12 h-12 bg-primary-container text-on-primary-container rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined">verified</span>
+                  <ShieldCheck size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-primary">Image Pro</h3>
-                <p className="text-on-surface-variant leading-relaxed">Des PDF impeccables à l'image de votre savoir-faire. Gagnez la confiance de vos clients.</p>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Des PDF impeccables à l'image de votre savoir-faire. Gagnez la confiance de vos clients.</p>
               </div>
               {/* Benefit 5 - Agenda */}
               <div className="bg-surface-container-lowest p-8 rounded-lg transition-all hover:bg-surface-container-highest group border-2 border-transparent hover:border-tertiary-fixed-dim/30">
                 <div className="w-12 h-12 bg-tertiary-container text-on-tertiary-container rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined">calendar_month</span>
+                  <CalendarDays size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-tertiary">Agenda Pro</h3>
-                <p className="text-on-surface-variant leading-relaxed">Planning intelligent et gestion d'équipes. Ne manquez plus aucun rendez-vous chantier.</p>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Planning intelligent et gestion d'équipes. Ne manquez plus aucun rendez-vous chantier.</p>
               </div>
             </div>
           </div>
@@ -177,16 +189,16 @@ export default function Home() {
                 Centralisez l'historique complet de chaque chantier. Accédez aux coordonnées, aux anciens devis et aux notes spécifiques en un clin d'œil, même hors connexion.
               </p>
               <ul className="space-y-4">
-                <li className="flex items-center gap-3 font-medium text-primary">
-                  <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                <li className="flex items-center gap-3 font-bold text-primary text-sm uppercase tracking-wider">
+                  <CheckCircle2 className="text-on-tertiary-container" size={18} />
                   Répertoire client intelligent
                 </li>
-                <li className="flex items-center gap-3 font-medium text-primary">
-                  <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                <li className="flex items-center gap-3 font-bold text-primary text-sm uppercase tracking-wider">
+                  <CheckCircle2 className="text-on-tertiary-container" size={18} />
                   Historique des interventions
                 </li>
-                <li className="flex items-center gap-3 font-medium text-primary">
-                  <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                <li className="flex items-center gap-3 font-bold text-primary text-sm uppercase tracking-wider">
+                  <CheckCircle2 className="text-on-tertiary-container" size={18} />
                   Notes de chantier photos incluses
                 </li>
               </ul>
@@ -201,16 +213,16 @@ export default function Home() {
                 Transformez vos devis acceptés en factures professionnelles instantanément. Automatisez vos rappels de paiement et offrez à vos clients la possibilité de payer par carte.
               </p>
               <ul className="space-y-4">
-                <li className="flex items-center gap-3 font-medium text-primary">
-                  <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                <li className="flex items-center gap-3 font-bold text-primary text-sm uppercase tracking-wider">
+                  <CheckCircle2 className="text-on-tertiary-container" size={18} />
                   Conversion devis en facture auto
                 </li>
-                <li className="flex items-center gap-3 font-medium text-primary">
-                  <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                <li className="flex items-center gap-3 font-bold text-primary text-sm uppercase tracking-wider">
+                  <CheckCircle2 className="text-on-tertiary-container" size={18} />
                   Relances automatiques par SMS/Email
                 </li>
-                <li className="flex items-center gap-3 font-medium text-primary">
-                  <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                <li className="flex items-center gap-3 font-bold text-primary text-sm uppercase tracking-wider">
+                  <CheckCircle2 className="text-on-tertiary-container" size={18} />
                   Suivi des encaissements en temps réel
                 </li>
               </ul>
@@ -262,25 +274,25 @@ export default function Home() {
                   </div>
                 </div>
                 <ul className="space-y-4 mb-10 flex-grow">
-                  <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> 3 devis & 3 factures maximum
+                  <li className="flex items-center gap-3 text-sm font-bold uppercase tracking-wider">
+                    <CheckCircle2 className="text-tertiary-fixed-dim" size={18} /> 3 devis & 3 factures maximum
                   </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Gestion de 3 clients maximum
+                  <li className="flex items-center gap-3 text-sm font-bold uppercase tracking-wider">
+                    <CheckCircle2 className="text-tertiary-fixed-dim" size={18} /> Gestion de 3 clients maximum
                   </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Signature électronique incluse
+                  <li className="flex items-center gap-3 text-sm font-bold uppercase tracking-wider">
+                    <CheckCircle2 className="text-tertiary-fixed-dim" size={18} /> Signature électronique incluse
                   </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim">check</span> Paiements en ligne
+                  <li className="flex items-center gap-3 text-sm font-bold uppercase tracking-wider">
+                    <CheckCircle2 className="text-tertiary-fixed-dim" size={18} /> Paiements en ligne
                   </li>
-                  <li className="flex items-center gap-3 text-sm opacity-40">
-                    <span className="material-symbols-outlined text-white/40">close</span> Envoi d'email intégré
+                  <li className="flex items-center gap-3 text-sm opacity-40 font-bold uppercase tracking-wider">
+                    <XCircle className="text-white/40" size={18} /> Envoi d'email intégré
                   </li>
                 </ul>
                 <button 
                   onClick={handleFreeAction}
-                  className="w-full py-4 border border-white/30 rounded-md font-bold hover:bg-white/10 transition-all"
+                  className="w-full py-4 border border-white/30 rounded-md font-bold hover:bg-white/10 transition-all uppercase tracking-widest text-xs"
                 >
                   {user ? 'Aller au Dashboard' : "S'inscrire"}
                 </button>
@@ -307,29 +319,29 @@ export default function Home() {
                   </div>
                 </div>
                 <ul className="space-y-4 mb-10 flex-grow">
-                  <li className="flex items-center gap-3 text-sm font-semibold">
-                    <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Devis & factures illimités
+                  <li className="flex items-center gap-3 text-sm font-black uppercase tracking-tighter text-primary">
+                    <Award className="text-on-tertiary-container" size={18} /> Devis & factures illimités
                   </li>
-                  <li className="flex items-center gap-3 text-sm font-semibold">
-                    <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Clients illimités
+                  <li className="flex items-center gap-3 text-sm font-black uppercase tracking-tighter text-primary">
+                    <Award className="text-on-tertiary-container" size={18} /> Clients illimités
                   </li>
-                  <li className="flex items-center gap-3 text-sm font-semibold">
-                    <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Paiement Stripe intégré
+                  <li className="flex items-center gap-3 text-sm font-black uppercase tracking-tighter text-primary">
+                    <Award className="text-on-tertiary-container" size={18} /> Paiement Stripe intégré
                   </li>
-                  <li className="flex items-center gap-3 text-sm font-semibold">
-                    <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Signature électronique
+                  <li className="flex items-center gap-3 text-sm font-black uppercase tracking-tighter text-primary">
+                    <Award className="text-on-tertiary-container" size={18} /> Signature électronique
                   </li>
-                  <li className="flex items-center gap-3 text-sm font-semibold">
-                    <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Envoi d'email avec SMTP
+                  <li className="flex items-center gap-3 text-sm font-black uppercase tracking-tighter text-primary">
+                    <Award className="text-on-tertiary-container" size={18} /> Envoi d'email avec SMTP
                   </li>
-                  <li className="flex items-center gap-3 text-sm font-semibold text-tertiary">
-                    <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_today</span> Agenda Interactif & Planning
+                  <li className="flex items-center gap-3 text-sm font-black uppercase tracking-tighter text-tertiary">
+                    <CalendarDays className="text-tertiary" size={18} /> Agenda Interactif & Planning
                   </li>
                 </ul>
                 <button 
                   onClick={() => handleProAction()}
                   disabled={loading}
-                  className="w-full py-4 bg-tertiary-fixed-dim text-on-tertiary-fixed rounded-md font-black shadow-md hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-tertiary-fixed-dim text-on-tertiary-fixed rounded-md font-black shadow-md hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
                 >
                   {loading ? (
                     <span className="w-5 h-5 border-2 border-on-tertiary-fixed border-t-transparent rounded-full animate-spin" />
@@ -343,75 +355,59 @@ export default function Home() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-24 text-center bg-surface relative">
+        <section className="py-24 text-center bg-white relative">
           <div className="max-w-4xl mx-auto px-6">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-primary mb-6">Rejoignez plus de 500 artisans qui ont choisi la simplicité.</h2>
-            <p className="text-lg text-on-surface-variant mb-12">Libérez-vous de la paperasse administrative et concentrez-vous sur ce que vous faites de mieux : votre métier.</p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-primary mb-6 uppercase">Rejoignez plus de 500 artisans</h2>
+            <p className="text-lg text-on-surface-variant font-bold mb-12 uppercase tracking-widest text-xs opacity-60">Libérez-vous de la paperasse administrative et concentrez-vous sur votre métier.</p>
             <div className="inline-flex flex-col items-center gap-6">
               <button 
                 onClick={handleFreeAction}
-                className="bg-primary text-on-primary px-12 py-5 text-xl font-bold rounded-md shadow-2xl hover:bg-primary-container transition-all scale-100 hover:scale-105 active:scale-95"
+                className="bg-primary text-white px-12 py-5 text-xl font-black rounded-xl shadow-2xl hover:brightness-110 transition-all scale-100 hover:scale-105 active:scale-95 uppercase tracking-widest"
               >
-                Commencer mon essai gratuit
+                C'est parti gratuitement
               </button>
-              <p className="text-sm font-medium text-on-surface-variant/70 flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-tertiary-container">verified_user</span>
+              <p className="text-xs font-black text-on-surface-variant/70 flex items-center gap-2 uppercase tracking-[0.2em]">
+                <ShieldCheck className="text-on-tertiary-container" size={16} />
                 Aucune carte bancaire requise
               </p>
-            </div>
-          </div>
-          {/* Decorative artisan illustration */}
-          <div className="mt-16 max-w-5xl mx-auto px-6">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img
-                className="w-full h-[400px] object-cover"
-                alt="Professional artisan at work"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1E-VpTUWPjs0D5smTQ5OXcg5FcqeE4_Si7nU1QaY0eBaJyC1SX2xNjBB_46nkj4KEnAnTzATOE-nh3xkrO9J4N5DcufEM7gidWlHiKo5juHcWKMcW5nSxufEttbNm9-XvYsCSoWwMnnHFRgJUqN4uy8Um0fzFZvomTj2Um7Hd0CqMSW-uTCnYYEX_TXRugvcp5hBxTnDy-CBllxTpDyHW-VOTUH5fkczosvxqbWjyVftA7jcHkV4x-wwvscZNMQR-xbw1E93rOIu6"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
-              <div className="absolute bottom-8 left-8 text-white text-left max-w-sm">
-                <p className="italic text-lg mb-2">"ArtisanFlow a changé ma façon de travailler. Je fais mes devis le soir en 10 minutes au lieu de 2 heures."</p>
-                <p className="font-bold">— Jean-Marc, Électricien à Lyon</p>
-              </div>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-slate-50 dark:bg-slate-950 w-full py-16 px-6 border-t font-headline">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-sm tracking-wide text-blue-900 dark:text-blue-400">
+      <footer className="bg-slate-50 w-full py-16 px-6 border-t font-headline">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-sm tracking-wide text-primary">
           <div className="col-span-2 md:col-span-1">
-            <div className="text-xl font-black text-blue-900 dark:text-blue-100 mb-6">ArtisanFlow</div>
-            <p className="text-slate-500 mb-6">La solution de gestion conçue pour le bâtiment.</p>
-            <div className="flex gap-4">
-              <span className="material-symbols-outlined text-slate-400 cursor-pointer hover:text-blue-900">social_leaderboard</span>
-              <span className="material-symbols-outlined text-slate-400 cursor-pointer hover:text-blue-900">share</span>
+            <div className="text-2xl font-black text-primary mb-6 uppercase tracking-tighter">ArtisanFlow</div>
+            <p className="text-slate-500 font-bold text-xs uppercase tracking-widest leading-relaxed">Le bastion digital des bâtisseurs modernes. Efficacité. Rigueur. Succès.</p>
+            <div className="flex gap-4 mt-6">
+              <Share2 className="text-slate-400 cursor-pointer hover:text-primary transition-colors" size={20} />
             </div>
           </div>
           <div>
-            <h4 className="font-bold text-orange-600 dark:text-orange-400 mb-6 uppercase tracking-widest text-xs">Produit</h4>
-            <ul className="space-y-4">
-              <li><Link className="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 hover:translate-x-1 transition-transform inline-block no-underline" href="#">Features</Link></li>
-              <li><Link className="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 hover:translate-x-1 transition-transform inline-block no-underline" href="#">Pricing</Link></li>
+            <h4 className="font-black text-primary mb-6 uppercase tracking-[0.2em] text-[10px] opacity-40">Produit</h4>
+            <ul className="space-y-4 font-bold uppercase tracking-widest text-[10px]">
+              <li><Link className="text-slate-500 hover:text-primary hover:translate-x-1 transition-transform inline-block no-underline" href="#features">Features</Link></li>
+              <li><Link className="text-slate-500 hover:text-primary hover:translate-x-1 transition-transform inline-block no-underline" href="#pricing">Pricing</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-slate-500 dark:text-slate-400 mb-6 uppercase tracking-widest text-xs">Entreprise</h4>
-            <ul className="space-y-4">
-              <li><Link className="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 hover:translate-x-1 transition-transform inline-block no-underline" href="#">About Us</Link></li>
-              <li><Link className="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 hover:translate-x-1 transition-transform inline-block no-underline" href="#">Careers</Link></li>
+            <h4 className="font-black text-primary mb-6 uppercase tracking-[0.2em] text-[10px] opacity-40">Entreprise</h4>
+            <ul className="space-y-4 font-bold uppercase tracking-widest text-[10px]">
+              <li><Link className="text-slate-500 hover:text-primary hover:translate-x-1 transition-transform inline-block no-underline" href="#">About Us</Link></li>
+              <li><Link className="text-slate-500 hover:text-primary hover:translate-x-1 transition-transform inline-block no-underline" href="#">Careers</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-slate-500 dark:text-slate-400 mb-6 uppercase tracking-widest text-xs">Légal</h4>
-            <ul className="space-y-4">
-              <li><Link className="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 hover:translate-x-1 transition-transform inline-block no-underline" href="#">Privacy Policy</Link></li>
-              <li><Link className="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 hover:translate-x-1 transition-transform inline-block no-underline" href="#">Terms of Service</Link></li>
+            <h4 className="font-black text-primary mb-6 uppercase tracking-[0.2em] text-[10px] opacity-40">Légal</h4>
+            <ul className="space-y-4 font-bold uppercase tracking-widest text-[10px]">
+              <li><Link className="text-slate-500 hover:text-primary hover:translate-x-1 transition-transform inline-block no-underline" href="#">Privacy</Link></li>
+              <li><Link className="text-slate-500 hover:text-primary hover:translate-x-1 transition-transform inline-block no-underline" href="#">Terms</Link></li>
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs">
-          © 2026 ArtisanFlow SARL.
+        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-200 text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">
+          © 2026 ArtisanFlow. Tous droits réservés.
         </div>
       </footer>
     </div>

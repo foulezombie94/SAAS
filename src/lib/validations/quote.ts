@@ -59,3 +59,17 @@ export const QuoteInsertSchema = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Le total TTC du devis est incohérent avec le total HT et la TVA", path: ["total_ttc"] });
   }
 });
+
+// Schéma pour l'acceptation d'un devis (Signature)
+export const QuoteAcceptSchema = z.object({
+  quoteId: z.string().uuid("ID de devis invalide"),
+  signatureDataUrl: z.string().startsWith('data:image/png;base64,', "Format de signature invalide (PNG attendu)"),
+  publicToken: z.string().optional(), // Utilisé pour les signatures clients sans auth
+}).strict();
+
+// Schéma pour l'envoi d'un devis par email
+export const QuoteEmailSchema = z.object({
+  quoteId: z.string().uuid("ID de devis invalide"),
+  subject: sanitizeString.min(5, "Le sujet doit faire au moins 5 caractères"),
+  message: sanitizeString.min(10, "Le message doit faire au moins 10 caractères"),
+}).strict();
