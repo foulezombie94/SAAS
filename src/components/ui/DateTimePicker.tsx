@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, parseISO } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Check } from 'lucide-react'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -21,12 +21,7 @@ export function DateTimePicker({ value, onChange, onClose }: DateTimePickerProps
   const initialDate = value ? new Date(value) : new Date()
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(initialDate))
   const [selectedDate, setSelectedDate] = useState(initialDate)
-  
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'))
-  const minutes = ['00', '15', '30', '45']
-
-  const selectedHour = selectedDate.getHours().toString().padStart(2, '0')
-  const selectedMinute = (Math.round(selectedDate.getMinutes() / 15) * 15 % 60).toString().padStart(2, '0')
+  const [timeValue, setTimeValue] = useState(format(initialDate, 'HH:mm'))
 
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 }),
@@ -39,39 +34,51 @@ export function DateTimePicker({ value, onChange, onClose }: DateTimePickerProps
     newDate.setMonth(day.getMonth())
     newDate.setDate(day.getDate())
     setSelectedDate(newDate)
-    onChange(newDate.toISOString())
+    const isoString = newDate.toISOString()
+    onChange(isoString)
   }
 
-  const handleTimeSelect = (type: 'h' | 'm', val: string) => {
-    const newDate = new Date(selectedDate)
-    if (type === 'h') newDate.setHours(parseInt(val))
-    if (type === 'm') newDate.setMinutes(parseInt(val))
-    setSelectedDate(newDate)
-    onChange(newDate.toISOString())
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setTimeValue(val)
+    
+    // Only update the actual date if it's a valid complete time (HH:mm)
+    const parts = val.split(':')
+    if (parts.length === 2) {
+      const h = parseInt(parts[0])
+      const m = parseInt(parts[1])
+      if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+        const newDate = new Date(selectedDate)
+        newDate.setHours(h)
+        newDate.setMinutes(m)
+        setSelectedDate(newDate)
+        onChange(newDate.toISOString())
+      }
+    }
   }
 
   return (
-    <div className="bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden flex flex-col md:flex-row w-[480px] animate-in zoom-in-95 duration-300">
+    <div className="bg-white rounded-[32px] shadow-diffused border border-slate-100 overflow-hidden flex flex-col w-[340px] animate-in zoom-in-95 duration-300">
       
-      {/* CALENDAR SECTION (2/3) */}
-      <div className="p-8 border-r border-slate-50 flex-1">
-        <div className="flex items-center justify-between mb-8">
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">
+      {/* CALENDAR SECTION */}
+      <div className="p-6 border-b border-slate-50">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
             {format(currentMonth, 'MMMM yyyy', { locale: fr })}
           </h4>
-          <div className="flex gap-2">
-            <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400">
-              <ChevronLeft size={16} />
+          <div className="flex gap-1">
+            <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-lg text-slate-300 transition-colors">
+              <ChevronLeft size={14} />
             </button>
-            <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400">
-              <ChevronRight size={16} />
+            <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-lg text-slate-300 transition-colors">
+              <ChevronRight size={14} />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 mb-4">
+        <div className="grid grid-cols-7 gap-1 mb-2">
           {['lu', 'ma', 'me', 'je', 've', 'sa', 'di'].map(d => (
-            <div key={d} className="text-center text-[10px] font-black uppercase text-slate-300 py-2">{d}</div>
+            <div key={d} className="text-center text-[9px] font-black uppercase text-slate-200 py-1">{d}</div>
           ))}
           {days.map((day, i) => {
             const isCurrentMonth = day.getMonth() === currentMonth.getMonth()
@@ -83,9 +90,9 @@ export function DateTimePicker({ value, onChange, onClose }: DateTimePickerProps
                 type="button"
                 onClick={() => handleDateSelect(day)}
                 className={cn(
-                  "h-10 w-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all",
-                  !isCurrentMonth && "text-slate-200",
-                  isCurrentMonth && !isSelected && "text-slate-600 hover:bg-slate-50",
+                  "h-9 w-9 rounded-xl flex items-center justify-center text-[11px] font-bold transition-all",
+                  !isCurrentMonth && "text-slate-100",
+                  isCurrentMonth && !isSelected && "text-slate-500 hover:bg-slate-50",
                   isSelected && "bg-[#00236F] text-white shadow-lg shadow-blue-900/20"
                 )}
               >
@@ -94,59 +101,44 @@ export function DateTimePicker({ value, onChange, onClose }: DateTimePickerProps
             )
           })}
         </div>
+      </div>
 
-        <div className="flex items-center gap-4 pt-6 border-t border-slate-50 mt-4">
+      {/* TIME INPUT SECTION (DIRECT ENTRY) */}
+      <div className="p-6 bg-slate-50/50 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <Clock size={12} className="text-primary/40" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">HEURE MISSION</span>
+            </div>
+            <input 
+                type="time" 
+                value={timeValue}
+                onChange={handleTimeChange}
+                className="bg-transparent border-none outline-none font-black text-lg text-[#00236F] w-[80px] text-right"
+            />
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <button 
             type="button"
-            onClick={() => handleDateSelect(new Date())}
-            className="text-[10px] font-black uppercase tracking-[0.1em] text-primary hover:underline"
+            onClick={() => {
+                const now = new Date()
+                setSelectedDate(now)
+                handleDateSelect(now)
+                setTimeValue(format(now, 'HH:mm'))
+            }}
+            className="text-[9px] font-black uppercase tracking-[0.1em] text-primary hover:text-[#00236F] transition-colors"
           >
             Aujourd'hui
           </button>
           <button 
             type="button"
             onClick={onClose}
-            className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 hover:text-slate-600 ml-auto"
+            className="h-10 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
           >
-            Fermer
+            Confirmer <Check size={12} />
           </button>
         </div>
-      </div>
-
-      {/* TIME SECTION (1/3) */}
-      <div className="bg-slate-50/50 w-[140px] flex border-l border-slate-100 relative">
-         {/* HOURS */}
-         <div className="flex-1 flex flex-col overflow-y-auto max-h-[380px] scrollbar-hide py-4 border-r border-slate-100">
-            {hours.map(h => (
-              <button
-                key={h}
-                type="button"
-                onClick={() => handleTimeSelect('h', h)}
-                className={cn(
-                  "py-3 text-sm font-black transition-all",
-                  selectedHour === h ? "bg-[#00236F] text-white" : "text-slate-400 hover:bg-white"
-                )}
-              >
-                {h}
-              </button>
-            ))}
-         </div>
-         {/* MINUTES */}
-         <div className="flex-1 flex flex-col overflow-y-auto max-h-[380px] scrollbar-hide py-4">
-            {minutes.map(m => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => handleTimeSelect('m', m)}
-                className={cn(
-                  "py-3 text-sm font-black transition-all",
-                  selectedMinute === m ? "bg-[#00236F] text-white" : "text-slate-400 hover:bg-white"
-                )}
-              >
-                {m}
-              </button>
-            ))}
-         </div>
       </div>
     </div>
   )
