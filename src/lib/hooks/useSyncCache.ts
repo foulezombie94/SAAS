@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createClient } from '@/utils/supabase/client'
 
 const CACHE_VERSION = 'v1.1'
 const DEFAULT_TTL = 1000 * 60 * 30 // 30 minutes
@@ -63,44 +64,50 @@ export function useSyncCache<T>(
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const isFirstMount = useRef(true)
   const isFirstSync = useRef(true)
+  const supabase = createClient()
 
   // 2. Revalidation (Background)
-  const revalidate = useCallback(async () => {
-    if (!enabled) return // Ne pas forcer si désactivé
+  const revalidate = useCallback(async (isManual = false) => {
+    if (!enabled && !isManual) return // Ne pas forcer si désactivé
     
     setIsSyncing(true)
     try {
+      // 🛡️ Double vérification de session avant de polluer le cache
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session && !isManual) {
+        // Si pas de session en arrière-plan, on ne fait rien pour ne pas écraser les données du serveur
+        console.warn(`[SyncTracker] Skip sync for "${key}": No active session.`)
+        return
+      }
+
       const freshData = await fetcher()
-      
-      // PROTECTION "GOD TIER": 
-      // Si on a déjà des données (initialData ou Cache) et qu'on reçoit du Vide au sync initial
-      // On suspecte un délai de session Supabase. On ne met à jour QUE si la session est confirmée.
-      const hasActualData = Array.isArray(state) ? state.length > 0 : !!state
-      const receivedEmpty = Array.isArray(freshData) ? freshData.length === 0 : !freshData
-      
-      // On utilise un ref pour savoir si c'est REELLEMENT le premier sync qui finit
+      const hasActualData = state && Array.isArray(state) && state.length > 0
+      const receivedEmpty = Array.isArray(freshData) && freshData.length === 0
+
+      // 🔥 Protection Critique : Ne pas écraser les données par du vide lors du premier sync
+      // si le navigateur n'a pas encore fini d'initialiser la session (ce qui renverrait [] via RLS)
       if (isFirstSync.current && hasActualData && receivedEmpty) {
-        console.warn(`[SyncCache] "${key}" suspecté de Session-Race condition. Update ignoré pour préserver les données stables.`)
+        console.log(`[SyncTracker] Protection activée pour "${key}": Données serveur préservées.`)
         isFirstSync.current = false
         return
       }
-      isFirstSync.current = false
 
       const envelope: CacheEnvelope<T> = {
         data: freshData,
         timestamp: Date.now(),
         version: CACHE_VERSION
       }
-      
+
       window.localStorage.setItem(key, JSON.stringify(envelope))
       setState(freshData)
       setLastUpdated(envelope.timestamp)
+      isFirstSync.current = false
     } catch (error) {
       console.error(`[SyncCache Error] "${key}":`, error)
     } finally {
       setIsSyncing(false)
     }
-  }, [key, fetcher, options.enabled, state])
+  }, [key, fetcher, state])
 
   // 3. Mount + Polling Cycle
   useEffect(() => {
