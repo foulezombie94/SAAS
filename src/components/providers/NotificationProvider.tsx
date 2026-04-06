@@ -69,6 +69,8 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           const newQuote = payload.new as any
           const oldQuote = payload.old as any
 
+          // 🛡️ SENIOR DETECTION: We focus on the NEW state. 
+          // Server-side updates (cron) might not always send a full 'old' record.
           const isPaid = newQuote.status === 'paid' && oldQuote?.status !== 'paid'
           const isAccepted = newQuote.status === 'accepted' && oldQuote?.status !== 'accepted'
           const isExpired = newQuote.status === 'expired' && oldQuote?.status !== 'expired'
