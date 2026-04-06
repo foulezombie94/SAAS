@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { createTransporter } from '@/lib/nodemailer'
 import { encrypt, decrypt } from '@/lib/encryption'
+import { rateLimit } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+const smtpSchema = z.object({
+  host: z.string().min(1, 'Host is required'),
+  port: z.union([z.string(), z.number()]).transform(v => parseInt(v.toString())),
+  user: z.string().min(1, 'User is required'),
+  pass: z.string().optional(),
+  from: z.string().email('Invalid email format').optional(),
+})
 
 export async function POST(request: Request) {
   try {
@@ -11,6 +21,13 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
+
+    // 🛡️ RATE LIMITING (Grade 3)
+    const ratelimit = await rateLimit(`smtp:${user.id}`, 5, 60000)
+    if (!ratelimit.success) {
+      return NextResponse.json({ error: ratelimit.message }, { headers: ratelimit.headers, status: 429 })
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_pro')
@@ -20,13 +37,24 @@ export async function POST(request: Request) {
     if (!profile?.is_pro) {
       return NextResponse.json({ error: 'Fonctionnalité réservée aux comptes Pro' }, { status: 403 })
     }
+
     const body = await request.json()
-    const { action, config } = body
+    const { action, config: rawConfig } = body
+
+    // 🛡️ ZOD VALIDATION
+    const configResult = smtpSchema.safeParse(rawConfig)
+    if (!configResult.success) {
+      return NextResponse.json({ 
+        error: 'Configuration invalide', 
+        details: configResult.error.format() 
+      }, { status: 400 })
+    }
+    const config = configResult.data
 
     if (action === 'save') {
       const updateData: any = {
         smtp_host: config.host,
-        smtp_port: parseInt(config.port),
+        smtp_port: config.port,
         smtp_user: config.user,
         smtp_from: config.from || user.email
       }
@@ -64,11 +92,11 @@ export async function POST(request: Request) {
         }
 
         const transporter = await createTransporter({
-          host: config.host,
-          port: parseInt(config.port),
-          user: config.user,
-          pass: testPass,
-          from: config.from || user.email
+          host: config.host as string,
+          port: config.port,
+          user: config.user as string,
+          pass: testPass || '',
+          from: config.from || user.email as string
         })
 
         // Verify connection

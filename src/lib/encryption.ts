@@ -29,12 +29,8 @@ export function encrypt(text: string): string {
 
 export function decrypt(encryptedText: string): string | null {
   try {
-    if (!encryptedText || !encryptedText.includes(':')) {
-      return encryptedText // Fallback for legacy plain text
-    }
-    
     const parts = encryptedText.split(':')
-    if (parts.length < 3) return encryptedText
+    if (parts.length < 3) return null; // Enforce strict standard format
 
     const [ivHex, authTagHex, encrypted] = parts
     

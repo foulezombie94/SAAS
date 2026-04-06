@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@/utils/supabase/server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   try {
@@ -10,6 +11,12 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
+    // 🛡️ RATE LIMITING (Grade 3)
+    const ratelimit = await rateLimit(`checkout:${user.id}`, 3, 60000)
+    if (!ratelimit.success) {
+      return NextResponse.json({ error: ratelimit.message }, { headers: ratelimit.headers, status: 429 })
     }
 
     // Origin for redirects

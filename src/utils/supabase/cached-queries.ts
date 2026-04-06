@@ -45,7 +45,7 @@ export async function getCachedDashboardStats(): Promise<DashboardStats> {
     },
     ['dashboard-stats', user.id],
     {
-      revalidate: 60,
+      revalidate: 3600, // 🏎️ Edge-optimized (1h) - Combined with on-demand revalidatePath
       tags: [`dashboard-stats-${user.id}`]
     }
   )()
@@ -107,7 +107,7 @@ export async function getCachedRecentQuotes() {
     },
     ['recent-quotes', user.id],
     {
-      revalidate: 60,
+      revalidate: 3600, // 🏎️ Edge-optimized (1h)
       tags: [`dashboard-stats-${user.id}`]
     }
   )()
