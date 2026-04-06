@@ -59,20 +59,16 @@ export default function NewClientPage() {
   useEffect(() => {
     async function init() {
        try {
-         const { data: { user }, error: authError } = await supabase.auth.getUser()
-         if (!user || authError) {
-           toast.error("Session expirée. Redirection...")
-           router.push('/login')
-           return
-         }
+         // Suppression de la redirection agressive qui causait des bugs de session
+         await supabase.auth.getUser()
 
          // Check limits
          const status = await getUsageLimits('clients')
          setLimitStatus(status)
-         setCheckingLimits(false)
        } catch (err) {
-         console.error(err)
-         toast.error("Erreur d'initialisation")
+         console.error("Erreur init clients:", err)
+       } finally {
+         setCheckingLimits(false)
        }
     }
     init()

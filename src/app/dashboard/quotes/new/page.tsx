@@ -67,19 +67,24 @@ export default function NewQuotePage() {
 
   useEffect(() => {
     async function init() {
-       const { data: { user } } = await supabase.auth.getUser()
-       if (!user) return
+       try {
+         // Suppression de la redirection agressive qui causait des bugs de session
+         await supabase.auth.getUser()
+         
+         // Check limits via Server Action (qui est déjà sécurisée)
+         const status = await getUsageLimits('quotes')
+         setLimitStatus(status)
 
-       // Check limits
-       const status = await getUsageLimits('quotes')
-       setLimitStatus(status)
-       setCheckingLimits(false)
-
-       if (status.allowed) {
-         const clientsData = await getClientsAction()
-         setClients(clientsData)
-
-         setNumber(`DEV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`)
+         if (status.allowed) {
+           const clientsData = await getClientsAction()
+           setClients(clientsData)
+           setNumber(`DEV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`)
+         }
+       } catch (err) {
+         console.error("Erreur init devis:", err)
+         // On ne bloque pas l'utilisateur, les actions serveur échoueront si vraiment non auth
+       } finally {
+         setCheckingLimits(false)
        }
     }
     init()
