@@ -15,9 +15,8 @@ export async function POST(req: Request) {
     }
 
     // 🚀 REVALIDATION INSTANTANÉE
-    // On vide le profil spécifique ET le layout global
+    // On vide le layout global du dashboard, ce qui rafraîchit toutes les données du profil
     revalidatePath('/dashboard', 'layout')
-    revalidateTag(`profile-${userId}`)
 
     console.log(`[REVALIDATE] Success for user ${userId}`)
     return NextResponse.json({ revalidated: true, now: Date.now() })
