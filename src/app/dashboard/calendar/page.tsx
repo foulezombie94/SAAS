@@ -307,9 +307,9 @@ function CalendarContent() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* START TIME COLUMN */}
-                <div className="space-y-3 relative w-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                {/* START TIME COLUMN - ALIGN LEFT */}
+                <div className="relative space-y-3 w-full flex flex-col items-start">
                   <div className="flex items-center gap-3">
                     <DateIcon size={14} className="text-primary/40" />
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Début Mission</label>
@@ -323,7 +323,7 @@ function CalendarContent() {
                   </button>
 
                   {pickerType === 'start' && (
-                    <div className="absolute top-[calc(100%+8px)] left-0 z-[120] animate-in slide-in-from-top-2 duration-300">
+                    <div className="absolute top-[calc(100%+8px)] left-0 z-[120] animate-in slide-in-from-top-2 duration-300 pointer-events-auto">
                       <DateTimePicker 
                         value={formData.start_time}
                         onChange={handleStartTimeChange}
@@ -333,9 +333,9 @@ function CalendarContent() {
                   )}
                 </div>
 
-                {/* END TIME COLUMN */}
-                <div className="space-y-3 relative w-full">
-                  <div className="flex items-center gap-3">
+                {/* END TIME COLUMN - ALIGN RIGHT */}
+                <div className="relative space-y-3 w-full flex flex-col items-end">
+                  <div className="flex items-center gap-3 w-full">
                     <DateIcon size={14} className="text-primary/40" />
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Fin Estimée</label>
                   </div>
@@ -348,7 +348,7 @@ function CalendarContent() {
                   </button>
 
                   {pickerType === 'end' && (
-                    <div className="absolute top-[calc(100%+8px)] right-0 z-[120] animate-in slide-in-from-top-2 duration-300">
+                    <div className="absolute top-[calc(100%+8px)] right-0 z-[120] animate-in slide-in-from-top-2 duration-300 pointer-events-auto">
                       <DateTimePicker 
                         value={formData.end_time}
                         onChange={handleEndTimeChange}

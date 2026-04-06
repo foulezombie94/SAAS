@@ -66,12 +66,20 @@ export function DateTimePicker({ value, onChange, onClose }: DateTimePickerProps
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
             {format(currentMonth, 'MMMM yyyy', { locale: fr })}
           </h4>
-          <div className="flex gap-1">
-            <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-lg text-slate-300 transition-colors">
-              <ChevronLeft size={14} />
+          <div className="flex gap-2">
+            <button 
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentMonth(subMonths(currentMonth, 1)); }} 
+              className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-[#00236F] transition-all border border-slate-100"
+            >
+              <ChevronLeft size={16} strokeWidth={3} />
             </button>
-            <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-slate-50 rounded-lg text-slate-300 transition-colors">
-              <ChevronRight size={14} />
+            <button 
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentMonth(addMonths(currentMonth, 1)); }} 
+              className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-[#00236F] transition-all border border-slate-100"
+            >
+              <ChevronRight size={16} strokeWidth={3} />
             </button>
           </div>
         </div>
