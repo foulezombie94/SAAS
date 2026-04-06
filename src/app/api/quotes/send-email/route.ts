@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const [quoteRes, profileRes] = await Promise.all([
       supabase
         .from('quotes')
-        .select('id, user_id, number, status, total_ttc, client_id, clients(name, email)')
+        .select('id, user_id, number, status, total_ttc, public_token, client_id, clients(name, email)')
         .eq('id', quoteId)
         .eq('user_id', user.id) // IDOR PROTECTION
         .single(),
@@ -93,8 +93,8 @@ export async function POST(req: Request) {
     const protocol = host?.includes('localhost') ? 'http' : 'https'
     const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_SITE_URL || 'https://artisanflow.app')
     
-    const shareUrl = `${baseUrl}/share/quotes/${quote.id}`
-    const paymentUrl = `${shareUrl}?pay=true` // Triggers Stripe checkout immediately
+    const shareUrl = `${baseUrl}/share/quotes/${quote.id}?token=${quote.public_token}`
+    const paymentUrl = `${shareUrl}&pay=true` // Triggers Stripe checkout immediately
 
     // 3. Construct HTML Email
     const htmlEmail = `

@@ -150,7 +150,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   }
 
   const handleCopyShareLink = () => {
-    const shareUrl = `${window.location.origin}/share/quotes/${quote.id}`
+    const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${quote.public_token}`
     navigator.clipboard.writeText(shareUrl)
     toast.success("Lien de signature copié !", {
       description: "Vous pouvez l'envoyer par SMS ou Email à votre client."
@@ -183,7 +183,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     setIsPaying(true)
     try {
       // Pour l'artisan, "Activer Paiement" signifie maintenant copier le lien pour le client
-      const shareUrl = `${window.location.origin}/share/quotes/${quote.id}`
+      const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${quote.public_token}`
       await navigator.clipboard.writeText(shareUrl)
 
       toast.success("Lien de paiement copié !", {

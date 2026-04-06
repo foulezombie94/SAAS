@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { QuoteInsertSchema, QuoteAcceptSchema, QuoteEmailSchema } from '@/lib/validations/quote'
 import { getUsageLimits } from '@/app/dashboard/actions'
 import { revalidateTag, revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
 import { createAdminClient } from '@/utils/supabase/admin'
 
@@ -51,8 +52,9 @@ export async function createQuoteAction(rawData: unknown) {
     if (rpcError) throw new Error(rpcError.message)
     
     // 🚀 Cache Invalidation (Tag + Path)
-    revalidateTag(`dashboard-stats-${user.id}`, 'page')
-    revalidatePath('/dashboard', 'page')
+    // 🚀 Cache Invalidation (Path-based for reliability)
+    revalidatePath('/dashboard', 'layout')
+    revalidatePath('/dashboard/quotes')
 
     return { success: true, quote }
   } catch (err: any) {
@@ -120,11 +122,12 @@ export async function sendQuoteEmailAction(rawData: unknown) {
 
   try {
     // 🕵️‍♂️ On réutilise la logique de l'API mais de manière sécurisée en Server Action
+    const cookieStore = await cookies()
     const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/quotes/send-email`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Cookie': (await import('next/headers')).cookies().toString() // Forward auth cookies
+        'Cookie': cookieStore.toString() // Forward auth cookies
       },
       body: JSON.stringify({ quoteId, subject, message })
     });
@@ -152,10 +155,16 @@ export async function createInvoiceFromQuoteAction(quoteId: string) {
 
     if (rpcError) throw rpcError;
 
-    const result = data as { invoiceId: string; message?: string };
+    const result = data as { invoiceId: string; message?: string; quote?: { id: string; public_token: string } };
     
     revalidatePath('/dashboard/invoices');
     revalidatePath(`/dashboard/quotes/${quoteId}`);
+    
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    if (result.quote) {
+      const shareUrl = `${baseUrl}/share/quotes/${result.quote.id}?token=${result.quote.public_token}`;
+      const paymentUrl = `${shareUrl}&pay=true`;
+    }
     
     return { success: true, invoiceId: result.invoiceId };
   } catch (err: any) {
