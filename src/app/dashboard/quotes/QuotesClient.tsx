@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
@@ -12,13 +12,14 @@ import {
   CheckCircle2, 
   ChevronRight,
   TrendingUp,
-  Calendar
+  Calendar,
+  RefreshCw,
+  Loader2
 } from 'lucide-react'
 import { Quote } from '@/types/dashboard'
 import { useSyncCache } from '@/lib/hooks/useSyncCache'
 import { createClient } from '@/utils/supabase/client'
-import { useCallback } from 'react'
-import { Loader2 } from 'lucide-react'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 
 interface QuotesClientProps {
   initialQuotes: Quote[]
@@ -30,6 +31,8 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
 
   // 0. Fetcher pour la synchronisation (Source de Vérité)
   const fetcher = useCallback(async () => {
+    if (!userId) return []
+    
     const { data, error } = await supabase
       .from('quotes')
       .select('*, clients(name)')
@@ -40,7 +43,7 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
     return data as Quote[]
   }, [supabase, userId])
 
-  const { data: quotes, isSyncing } = useSyncCache<Quote[]>(
+  const { data: quotes, isSyncing, revalidate } = useSyncCache<Quote[]>(
     `quotes-${userId}`, 
     initialQuotes, 
     fetcher,
@@ -48,24 +51,41 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
   )
   
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 200)
 
-  // 1. Filtrage instantané (God Tier)
-  const filteredQuotes = useMemo(() => {
-    if (!searchTerm) return quotes
-    if (!Array.isArray(quotes)) return []
-    const lowerSearch = searchTerm.toLowerCase()
-    return quotes.filter(q => 
+  // 1. Realtime Push (Synchronisation Instantanée God Tier)
+  useEffect(() => {
+    const channel = supabase
+      .channel('quotes-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'quotes', filter: `user_id=eq.${userId}` },
+        () => revalidate()
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, revalidate, userId])
+
+  // 2. Filtrage instantané (God Tier)
+  const filteredQuotes = useMemo<Quote[]>(() => {
+    const quotesList = (quotes || []) as Quote[]
+    if (!debouncedSearch) return quotesList
+    const lowerSearch = debouncedSearch.toLowerCase()
+    return quotesList.filter(q => 
       (q.number || '').toLowerCase().includes(lowerSearch) || 
       (q.clients?.name || '').toLowerCase().includes(lowerSearch)
     )
-  }, [quotes, searchTerm])
+  }, [quotes, debouncedSearch])
 
-  // 2. Stats calculées dynamiquement
+  // 3. Stats calculées dynamiquement
   const stats = useMemo(() => ({
     total: filteredQuotes.length,
-    accepted: filteredQuotes.filter(q => q.status === 'accepted').length,
-    pending: filteredQuotes.filter(q => q.status === 'sent' || q.status === 'draft').length,
-    totalValue: filteredQuotes.reduce((acc, q) => acc + Number(q.total_ttc), 0)
+    accepted: filteredQuotes.filter((q: Quote) => q.status === 'accepted').length,
+    pending: filteredQuotes.filter((q: Quote) => q.status === 'sent' || q.status === 'draft').length,
+    totalValue: filteredQuotes.reduce((acc: number, q: Quote) => acc + Number(q.total_ttc), 0)
   }), [filteredQuotes])
 
   const getStatusStyle = (status: string) => {

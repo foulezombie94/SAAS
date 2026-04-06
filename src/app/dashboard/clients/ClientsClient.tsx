@@ -14,13 +14,16 @@ import {
   TrendingUp,
   Clock,
   Users,
-  Filter
+  Filter,
+  ArrowLeft,
+  RefreshCw
 } from 'lucide-react'
 import { ClientWithQuotes } from '@/types/dashboard'
+import { useCallback, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 import { useSyncCache } from '@/lib/hooks/useSyncCache'
 import { createClient } from '@/utils/supabase/client'
-import { useCallback } from 'react'
-import { Loader2 } from 'lucide-react'
 
 interface ClientsClientProps {
   initialClients: ClientWithQuotes[]
@@ -30,8 +33,10 @@ interface ClientsClientProps {
 export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
   const supabase = createClient()
 
-  // 0. Fetcher pour la synchronisation
+  // 0. Fetcher pour la synchronisation (Source de Vérité)
   const fetcher = useCallback(async () => {
+    if (!userId) return []
+    
     const { data, error } = await supabase
       .from('clients')
       .select('*, quotes(*)')
@@ -41,7 +46,7 @@ export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
     return data as ClientWithQuotes[]
   }, [supabase, userId])
 
-  const { data: clients, isSyncing } = useSyncCache<ClientWithQuotes[]>(
+  const { data: clients, isSyncing, revalidate } = useSyncCache<ClientWithQuotes[]>(
     `clients-${userId}`, 
     initialClients, 
     fetcher,
@@ -49,18 +54,19 @@ export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
   )
 
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 200)
 
   // 1. Filtrage instantané (God Tier)
   const filteredClients = useMemo(() => {
-    if (!searchTerm) return clients
+    if (!debouncedSearch) return clients
     if (!Array.isArray(clients)) return []
-    const lowerSearch = searchTerm.toLowerCase()
+    const lowerSearch = debouncedSearch.toLowerCase()
     return clients.filter(c => 
       (c.name || '').toLowerCase().includes(lowerSearch) || 
       (c.email || '').toLowerCase().includes(lowerSearch) ||
       (c.city || '').toLowerCase().includes(lowerSearch)
     )
-  }, [clients, searchTerm])
+  }, [clients, debouncedSearch])
 
   // 2. Stats calculées (useMemo)
   const stats = useMemo(() => {
@@ -122,7 +128,23 @@ export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
         </Card>
         
         <Card className="p-8 bg-white border-2 border-slate-50 shadow-sm transition-all hover:border-primary/20 rounded-3xl flex flex-col justify-between group">
-          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 mb-8">Devis en cours</p>
+          <div className="flex justify-between items-start mb-8">
+            <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-on-surface-variant/40">Devis en cours</p>
+            <div className="flex items-center gap-2">
+              {isSyncing && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-100 animate-pulse">
+                  <Loader2 size={14} className="animate-spin text-blue-600" />
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Sinc. en cours...</span>
+                </div>
+              )}
+              <button 
+                onClick={() => revalidate()}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-primary transition-all active:scale-95 ${isSyncing ? 'animate-spin border-primary text-primary' : ''}`}
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
+          </div>
           <div className="flex items-center gap-4">
              <span className="text-4xl font-black tracking-tighter text-primary group-hover:scale-110 transition-transform">{stats.unpaidCount}</span>
              <Clock className="text-primary/20" size={24} />

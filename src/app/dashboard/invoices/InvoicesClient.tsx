@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
@@ -14,13 +14,14 @@ import {
   ChevronRight,
   MoreVertical,
   Plus,
-  ArrowRight
+  ArrowRight,
+  RefreshCw,
+  Loader2
 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Invoice } from '@/types/dashboard'
 import { useSyncCache } from '@/lib/hooks/useSyncCache'
-import { Loader2 } from 'lucide-react'
-import { useCallback } from 'react'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 
 interface InvoicesClientProps {
   initialInvoices: Invoice[]
@@ -30,11 +31,13 @@ interface InvoicesClientProps {
 export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps) {
   const supabase = createClient()
 
-  // 0. Fetcher Source de Vérité
+  // 0. Fetcher pour la synchronisation (Source de Vérité)
   const fetcher = useCallback(async () => {
+    if (!userId) return []
+    
     const { data, error } = await supabase
       .from('invoices')
-      .select('*, clients(name)')
+      .select('*, clients(*)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     
@@ -46,12 +49,13 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
     `invoices-${userId}`, 
     initialInvoices, 
     fetcher,
-    { ttl: 1000 * 60 * 30, refreshInterval: 1000 * 60 * 5 } // Polling 5 min
+    { ttl: 1000 * 60 * 30, refreshInterval: 1000 * 60 * 5 }
   )
 
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 300)
 
-  // 2. Sync Realtime & Fetch
+  // 1. Sync Realtime
   useEffect(() => {
     const channel = supabase
       .channel('invoices-list')
@@ -65,18 +69,18 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
     return () => { supabase.removeChannel(channel) }
   }, [supabase, userId, revalidate])
 
-  // 3. Filtrage Haute Performance (0ms latence)
+  // 2. Filtrage instantané
   const filteredInvoices = useMemo(() => {
-    if (!searchTerm) return invoices
+    if (!debouncedSearch) return invoices || []
     if (!Array.isArray(invoices)) return []
-    const lowerSearch = searchTerm.toLowerCase()
+    const lowerSearch = debouncedSearch.toLowerCase()
     return invoices.filter(invoice => 
       (invoice.number || '').toLowerCase().includes(lowerSearch) || 
       (invoice.clients?.name || '').toLowerCase().includes(lowerSearch)
     )
-  }, [invoices, searchTerm])
+  }, [invoices, debouncedSearch])
 
-  // 4. Calculs Optimisés (useMemo)
+  // 3. Stats calculées dynamiquement
   const totals = useMemo(() => ({
     paid: filteredInvoices.filter(i => i.status === 'paid').reduce((acc, i) => acc + Number(i.total_ttc), 0),
     unpaid: filteredInvoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((acc, i) => acc + Number(i.total_ttc), 0),
@@ -120,8 +124,20 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-8 border-none shadow-diffused bg-surface-container-lowest border-2 border-primary/5 group hover:border-primary/20 transition-all">
           <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 mb-8">Nombre de factures</p>
-          <div className="flex items-center gap-6">
-            <span className="text-4xl font-black tracking-tighter text-primary group-hover:scale-110 transition-transform">{totals.count}</span>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+           {isSyncing && (
+             <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-100 animate-pulse">
+               <Loader2 size={14} className="animate-spin text-blue-600" />
+               <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Sinc. en cours...</span>
+             </div>
+           )}
+           <button 
+             onClick={() => revalidate()}
+             className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-primary transition-all active:scale-95 ${isSyncing ? 'animate-spin border-primary text-primary' : ''}`}
+           >
+             <RefreshCw size={20} />
+           </button>
+           <span className="text-4xl font-black tracking-tighter text-primary group-hover:scale-110 transition-transform">{totals.count}</span>
           </div>
         </Card>
         
