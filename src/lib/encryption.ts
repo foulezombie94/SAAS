@@ -27,7 +27,7 @@ export function encrypt(text: string): string {
   return `${iv.toString('hex')}:${authTag}:${encrypted}`
 }
 
-export function decrypt(encryptedText: string): string {
+export function decrypt(encryptedText: string): string | null {
   try {
     if (!encryptedText || !encryptedText.includes(':')) {
       return encryptedText // Fallback for legacy plain text
@@ -51,7 +51,8 @@ export function decrypt(encryptedText: string): string {
     
     return decrypted
   } catch (err) {
-    // Silent fail for decryption gracefully (returns input)
-    return encryptedText
+    // SECURITY: Returning null on failure prevents malformed data exposure
+    console.error('[ENCRYPTION] Decryption failed. Malformed header or invalid key.');
+    return null;
   }
 }

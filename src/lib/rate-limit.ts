@@ -2,7 +2,7 @@ import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 
 /**
- * Distributed Rate Limiter using Upstash Redis for Next.js App Router (Level 10 Polish)
+ * Distributed Rate Limiter using Upstash Redis for Next.js App Router (Staff-Level Polishing)
  */
 
 export interface RateLimitResult {
@@ -17,7 +17,7 @@ export interface RateLimitResult {
     'X-RateLimit-Limit': string;
     'X-RateLimit-Remaining': string;
     'X-RateLimit-Reset': string;
-    // Modern Standards (IETF-like)
+    // Modern Standards (IETF-like) - Using Delta Seconds for Reset
     'RateLimit-Limit': string;
     'RateLimit-Remaining': string;
     'RateLimit-Reset': string;
@@ -32,6 +32,9 @@ interface RateLimitStore {
 }
 const localStores = new Map<string, RateLimitStore>();
 
+// Improvement: Memory safety cap (5000 entries) to prevent unbounded growth during Redis outages
+const MAX_LOCAL_STORES = 5000;
+
 // Initialize Redis only if environment variables are available
 const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
   ? new Redis({
@@ -40,18 +43,18 @@ const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_R
     })
   : null;
 
-// Cache of Ratelimit instances for different configurations (limit, window)
+// Cache of Ratelimit instances for different configurations (limit, window, prefix)
 const ratelimitCache = new Map<string, Ratelimit>();
 
 /**
  * Returns a Ratelimit instance for the specific configuration, creating it if necessary.
  */
-function getRatelimit(limit: number, windowMs: number): Ratelimit | null {
+function getRatelimit(limit: number, windowMs: number, prefix: string): Ratelimit | null {
   if (!redis) return null;
   
   // Improvement: Scale to seconds for more robust parsing in Upstash
   const windowSeconds = Math.ceil(windowMs / 1000);
-  const cfgKey = `cfg:${limit}:${windowSeconds}`;
+  const cfgKey = `cfg:${limit}:${windowSeconds}:${prefix}`;
   
   const existing = ratelimitCache.get(cfgKey);
   if (existing) return existing;
@@ -60,7 +63,7 @@ function getRatelimit(limit: number, windowMs: number): Ratelimit | null {
     redis,
     limiter: Ratelimit.slidingWindow(limit, `${windowSeconds} s`),
     analytics: true,
-    prefix: 'artisan-flow:ratelimit',
+    prefix,
   });
   
   ratelimitCache.set(cfgKey, instance);
@@ -72,28 +75,32 @@ function getRatelimit(limit: number, windowMs: number): Ratelimit | null {
  * @param identifier Unique key (e.g., 'auth:login', IP, or UserId)
  * @param limit Max permitted requests
  * @param windowMs Time window in milliseconds
+ * @param options Additional configuration (prefix, onLimitExceeded)
  */
 export async function rateLimit(
   identifier: string, 
   limit: number = 5, 
-  windowMs: number = 60000
+  windowMs: number = 60000,
+  options?: {
+    prefix?: string;
+    onLimitExceeded?: (res: RateLimitResult) => void;
+  }
 ): Promise<RateLimitResult> {
-  // Validation: Security and DX
+  // 1. Validation
   if (!identifier) {
     throw new Error('Rate limit identifier is required');
   }
 
   const now = Date.now();
+  const prefix = options?.prefix || 'artisan-flow:ratelimit';
   
-  // Improvement 1: Granular key generation captures BOTH the resource and the config
-  // This prevents config leakage (e.g., 5/min logic sharing a bucket with 100/hr)
-  const granularKey = `rl:${identifier}:${limit}:${windowMs}`;
+  // 2. Granular key generation captures BOTH the resource and the config
+  const granularKey = `${prefix}-rl:${identifier}:${limit}:${windowMs}`;
 
-  // If Redis is configured, use it for distributed rate limiting
-  const ratelimit = getRatelimit(limit, windowMs);
+  // 3. Redis-based Distributed Rate Limiting
+  const ratelimit = getRatelimit(limit, windowMs, prefix);
   if (ratelimit) {
     try {
-      // Improvement 2: Use granularKey for Redis as well to maintain consistency with memory fallback
       const { success, limit: totalLimit, remaining, reset } = await ratelimit.limit(granularKey);
       const retryAfter = Math.max(0, Math.ceil((reset - now) / 1000));
       
@@ -109,13 +116,14 @@ export async function rateLimit(
           'X-RateLimit-Reset': reset.toString(),
           'RateLimit-Limit': totalLimit.toString(),
           'RateLimit-Remaining': remaining.toString(),
-          'RateLimit-Reset': reset.toString(),
+          'RateLimit-Reset': retryAfter.toString(), // SPEC: Delta seconds is more standard
         },
       };
 
       if (!success) {
         result.message = `Trop de requêtes. Veuillez réessayer dans ${retryAfter} secondes.`;
         result.headers['Retry-After'] = retryAfter.toString();
+        options?.onLimitExceeded?.(result);
       }
 
       return result;
@@ -125,11 +133,17 @@ export async function rateLimit(
     }
   }
 
-  // Local In-Memory Fallback
+  // 4. Local In-Memory Fallback
   let store = localStores.get(granularKey);
   
-  // Passive cleanup
+  // Passive cleanup & Memory Safety
   if (!store || now > store.resetTime) {
+    // Soft cap enforcement: Clear oldest entries if map is full
+    if (localStores.size >= MAX_LOCAL_STORES) {
+      const oldestKey = localStores.keys().next().value;
+      if (oldestKey) localStores.delete(oldestKey);
+    }
+
     store = {
       count: 0,
       resetTime: now + windowMs,
@@ -153,13 +167,14 @@ export async function rateLimit(
       'X-RateLimit-Reset': store.resetTime.toString(),
       'RateLimit-Limit': limit.toString(),
       'RateLimit-Remaining': remaining.toString(),
-      'RateLimit-Reset': store.resetTime.toString(),
+      'RateLimit-Reset': retryAfter.toString(),
     },
   };
 
   if (!result.success) {
     result.message = `Trop de requêtes. Veuillez réessayer dans ${retryAfter} secondes.`;
     result.headers['Retry-After'] = retryAfter.toString();
+    options?.onLimitExceeded?.(result);
   }
   
   return result;

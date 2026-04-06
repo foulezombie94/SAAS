@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { verifyProAccess } from '@/lib/pro-gate'
 import { sendEmail } from '@/lib/nodemailer'
 import { decrypt } from '@/lib/encryption'
+import { SendEmailSchema } from '@/lib/validations/email'
 import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
@@ -20,16 +21,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Forfait Pro requis pour l\'envoi d\'emails' }, { status: 403 })
     }
 
-    const { quoteId, subject, message } = await req.json()
+    const body = await req.json()
+    const result = SendEmailSchema.safeParse(body)
+    
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
+    }
+
+    const { quoteId, subject, message } = result.data
 
     // 0. RATE LIMITING (3 requests per minute per user)
     const limit = await rateLimit(`send-email-${user.id}`, 3, 60000)
     if (!limit.success) {
       return NextResponse.json({ error: limit.message }, { status: 429 })
-    }
-
-    if (!quoteId) {
-      return NextResponse.json({ error: 'ID du devis manquant' }, { status: 400 })
     }
 
     // 1. Fetch Quote, Client and Artisan Profile in PARALLEL for speed
@@ -67,6 +71,14 @@ export async function POST(req: Request) {
     if (!profile.smtp_host || !profile.smtp_user || !profile.smtp_pass) {
       return NextResponse.json({ 
         error: 'Configuration SMTP manquante. Veuillez configurer vos paramètres email.' 
+      }, { status: 400 })
+    }
+
+    // 1.1 Decrypt SMTP Password with Strict Check
+    const decryptedPass = decrypt(profile.smtp_pass)
+    if (!decryptedPass) {
+      return NextResponse.json({ 
+        error: 'Erreur de déchiffrement des identifiants SMTP. Veuillez reconfigurer votre mot de passe.' 
       }, { status: 400 })
     }
 
@@ -135,7 +147,7 @@ export async function POST(req: Request) {
       host: profile.smtp_host,
       port: profile.smtp_port || 465,
       user: profile.smtp_user,
-      pass: decrypt(profile.smtp_pass), // Security fix: Decrypt before use
+      pass: decryptedPass,
       from: profile.smtp_from || user.email || ''
     }
 

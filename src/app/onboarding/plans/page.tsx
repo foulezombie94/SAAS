@@ -14,8 +14,7 @@ export default function PlansPage() {
   const router = useRouter()
 
   // Use price IDs from environment variables
-  const STRIPE_PRO_MONTHLY_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID || ''
-  const STRIPE_PRO_YEARLY_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID || ''
+  // Price IDs are now handled server-side for enhanced security
 
   const handleSelectFree = async () => {
     setIsLoading(true)
@@ -37,11 +36,9 @@ export default function PlansPage() {
     setIsLoading(true)
     setSelectedPlan('pro')
     try {
-      const priceId = isYearly ? STRIPE_PRO_YEARLY_PRICE_ID : STRIPE_PRO_MONTHLY_PRICE_ID
-      if (!priceId) {
-        throw new Error('Les identifiants de prix ne sont pas configurés')
-      }
-      const response = await createSubscriptionSession(priceId)
+      const planType = isYearly ? 'yearly' : 'monthly'
+      const response = await createSubscriptionSession(planType)
+      
       if (response?.error) {
         throw new Error(response.error)
       }

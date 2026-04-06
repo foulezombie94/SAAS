@@ -50,11 +50,14 @@ export async function setFreePlan() {
   }
 }
 
-export async function createSubscriptionSession(priceId: string) {
+export async function createSubscriptionSession(planType: 'monthly' | 'yearly') {
   try {
-    const STRIPE_PLANS: Record<string, string> = {
-      [process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '']: 'monthly',
-      [process.env.STRIPE_PRO_YEARLY_PRICE_ID || '']: 'yearly'
+    const priceId = planType === 'monthly' 
+      ? process.env.STRIPE_PRO_MONTHLY_PRICE_ID 
+      : process.env.STRIPE_PRO_YEARLY_PRICE_ID
+
+    if (!priceId) {
+      return { data: null, error: 'Identifiant de prix non configuré sur le serveur' }
     }
 
     const supabase = await createClient()
@@ -69,22 +72,12 @@ export async function createSubscriptionSession(priceId: string) {
       return { data: null, error: limit.message }
     }
 
-    // 4. Sécurité des entrées (Zod) pour protéger l'injection d'IDs arbitraires
-    const priceIdSchema = z.string().superRefine((val, ctx) => {
-      if (!val || !(val in STRIPE_PLANS)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Identifiant de prix Stripe invalide ou non supporté.",
-        });
-      }
-    });
-
-    const parsedResult = priceIdSchema.safeParse(priceId);
+    // 4. Sécurité des entrées (Zod)
+    const planSchema = z.enum(['monthly', 'yearly'])
+    const parsedResult = planSchema.safeParse(planType)
     if (!parsedResult.success) {
-      return { data: null, error: parsedResult.error.issues[0]?.message || 'Prix invalide' };
+      return { data: null, error: 'Type de forfait invalide' }
     }
-
-    const planType = STRIPE_PLANS[priceId]; // 'monthly' | 'yearly'
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 

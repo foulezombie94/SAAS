@@ -1,18 +1,26 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 
+const CreateSessionSchema = z.object({
+  invoiceId: z.string().uuid("ID de facture invalide"),
+}).strict()
+
 export async function POST(req: Request) {
   try {
-    const { invoiceId } = await req.json()
+    const body = await req.json()
+    const result = CreateSessionSchema.safeParse(body)
+    
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
+    }
+
+    const { invoiceId } = result.data
     
     // Use origin from headers or fallback to env for the redirect URL
     const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || ''
-    
-    if (!invoiceId) {
-      return NextResponse.json({ error: 'Invoice ID is required' }, { status: 400 })
-    }
 
     // 0. RATE LIMITING (5 requests per minute per IP)
     const ip = req.headers.get('x-forwarded-for') || 'anonymous'

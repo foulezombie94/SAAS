@@ -18,7 +18,7 @@ export async function createClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, {
                 ...options,
-                maxAge: 315360000, // 10 ans de session
+                maxAge: 2592000, // 30 jours (Sécurité accrue)
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
