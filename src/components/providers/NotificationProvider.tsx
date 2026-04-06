@@ -54,6 +54,20 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
 
     fetchRecentActivity()
 
+    // 🛡️ AUDIO WARM-UP GRADE 4+ 
+    // Browsers block audio unless there's a user interaction.
+    // We unlock it on the first click in the dashboard.
+    const warmupAudio = () => {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => {
+          audioRef.current?.pause();
+          if (audioRef.current) audioRef.current.currentTime = 0;
+        }).catch(() => {});
+      }
+      window.removeEventListener('click', warmupAudio);
+    };
+    window.addEventListener('click', warmupAudio);
+
     // 🚀 REALTIME: Supabase handles status updates (cron) or signatures
     const channel = supabase
       .channel(`user-activity-${userId}`)
@@ -69,8 +83,10 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           const newQuote = payload.new as any
           const oldQuote = payload.old as any
 
+          // 🛡️ ZERO-LEAK SECURITY: Redundant client-side check
+          if (newQuote.user_id !== userId) return
+
           // 🛡️ SENIOR DETECTION: We focus on the NEW state. 
-          // Server-side updates (cron) might not always send a full 'old' record.
           const isPaid = newQuote.status === 'paid' && oldQuote?.status !== 'paid'
           const isAccepted = newQuote.status === 'accepted' && oldQuote?.status !== 'accepted'
           const isExpired = newQuote.status === 'expired' && oldQuote?.status !== 'expired'
@@ -79,8 +95,7 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
             setUnreadCount(prev => prev + 1)
             
             setNotifications(prev => {
-              // 🛡️ STATE MERGER: Supabase only sends the changed quote row. 
-              // We must preserve the 'clients' object from our current state to avoid UI breakage.
+              // 🛡️ STATE MERGER: Preserve 'clients' object to avoid UI breakage
               const existing = prev.find(n => n.id === newQuote.id)
               const enriched: QuoteNotification = {
                 ...newQuote,
@@ -108,7 +123,6 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
       .subscribe()
 
     // 🚀 PROTECTION GRADE 4: Instant Session Revocation
-    // We watch the 'profiles' table for plan changes to force JWT refresh
     const profileChannel = supabase
       .channel(`profile-sync-${userId}`)
       .on(
@@ -120,8 +134,10 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           filter: `id=eq.${userId}`
         },
         (payload: any) => {
+          // Double check owner
+          if (payload.new.id !== userId) return
+
           if (payload.new.plan !== payload.old.plan) {
-            // Force a session refresh to get a new JWT with updated app_metadata
             supabase.auth.refreshSession().then(() => {
               window.location.reload()
             })
@@ -131,6 +147,7 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
       .subscribe()
 
     return () => {
+      window.removeEventListener('click', warmupAudio)
       supabase.removeChannel(channel)
       supabase.removeChannel(profileChannel)
     }
