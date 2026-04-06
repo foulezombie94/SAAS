@@ -79,8 +79,11 @@ export default async function DashboardPage({
             <div className="w-10 h-10 bg-primary/5 rounded-full flex items-center justify-center text-primary">
               <CreditCard size={20} />
             </div>
-            <div className="flex items-center gap-1 text-green-600 bg-green-100 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-              <TrendingUp size={10} /> +12%
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              (stats as any).revenue_change >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
+            }`}>
+              <TrendingUp size={10} className={(stats as any).revenue_change < 0 ? 'rotate-180' : ''} /> 
+              {(stats as any).revenue_change >= 0 ? '+' : ''}{(stats as any).revenue_change}%
             </div>
           </div>
           <div>
@@ -96,7 +99,7 @@ export default async function DashboardPage({
               <Clock size={20} />
             </div>
             <div className="flex items-center gap-1 bg-[#433228]/10 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest text-[#433228]">
-              {invoices?.filter(i => i.status !== 'paid').length || 0} en attente
+              {(stats as any).unpaid_count || 0} en attente
             </div>
           </div>
           <div>
@@ -111,7 +114,11 @@ export default async function DashboardPage({
             <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600">
               <CheckCircle2 size={20} />
             </div>
-            <div className="text-[0.625rem] font-black text-on-surface-variant/40 uppercase tracking-widest">Ce mois</div>
+            <div className={`text-[0.625rem] font-black uppercase tracking-widest ${
+              (stats as any).quotes_change >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {(stats as any).quotes_change >= 0 ? '+' : ''}{(stats as any).quotes_change}% vs mois dernier
+            </div>
           </div>
           <div>
             <p className="text-[0.625rem] font-black uppercase tracking-widest text-on-surface-variant/40 mb-1">Devis Acceptés</p>
@@ -131,20 +138,28 @@ export default async function DashboardPage({
             </select>
           </div>
           <div className="h-48 flex items-end justify-between gap-2 px-2">
-            <div className="w-full bg-primary/10 rounded-t-lg h-[40%] hover:bg-primary/20 transition-all cursor-help" title="Semaine 1"></div>
-            <div className="w-full bg-primary/10 rounded-t-lg h-[55%] hover:bg-primary/20 transition-all cursor-help"></div>
-            <div className="w-full bg-primary/30 rounded-t-lg h-[35%] hover:bg-primary/40 transition-all cursor-help"></div>
-            <div className="w-full bg-primary/40 rounded-t-lg h-[65%] hover:bg-primary/50 transition-all cursor-help"></div>
-            <div className="w-full bg-primary rounded-t-lg h-[85%] hover:shadow-lg transition-all cursor-help"></div>
-            <div className="w-full bg-primary/10 rounded-t-lg h-[45%] hover:bg-primary/20 transition-all cursor-help"></div>
-            <div className="w-full bg-primary/20 rounded-t-lg h-[60%] hover:bg-primary/30 transition-all cursor-help"></div>
-            <div className="w-full bg-primary rounded-t-lg h-[95%] hover:shadow-lg transition-all cursor-help"></div>
+            {(stats as any).history?.map((item: any, idx: number) => {
+              const maxRev = Math.max(...(stats as any).history.map((h: any) => h.revenue), 1000);
+              const height = Math.max((item.revenue / maxRev) * 100, 5); // Min 5% height
+              return (
+                <div 
+                  key={idx}
+                  className={`w-full rounded-t-lg transition-all cursor-help relative group ${
+                    idx === (stats as any).history.length - 1 ? 'bg-primary shadow-lg' : 'bg-primary/20 hover:bg-primary/40'
+                  }`}
+                  style={{ height: `${height}%` }}
+                >
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-black py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 shadow-xl pointer-events-none">
+                    {item.revenue.toLocaleString('fr-FR')}€
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <div className="flex justify-between mt-4 text-[0.625rem] font-black uppercase tracking-[0.2em] text-slate-400">
-            <span>SEM 1</span>
-            <span>SEM 2</span>
-            <span>SEM 3</span>
-            <span>SEM 4</span>
+            {(stats as any).history?.map((item: any, idx: number) => (
+              <span key={idx}>{item.month}</span>
+            ))}
           </div>
         </div>
 

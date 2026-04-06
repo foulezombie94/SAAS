@@ -12,37 +12,26 @@ export async function getCachedDashboardStats() {
 
   return unstable_cache(
     async () => {
-      // 🏎️ TENTATIVE ÉLITE : Agrégation côté SQL (RPC Grade 3)
-      const { data: stats, error: rpcError } = await (supabase as any).rpc('get_dashboard_summary', { 
+      // 🏎️ GRADE 3 : Agrégation atomique côté SQL (Ultra-Performance)
+      const { data: stats, error } = await supabase.rpc('get_dashboard_analytics', { 
         p_user_id: user.id 
       })
 
-      // ✨ FALLBACK : Si le RPC n'est pas encore créé, on utilise le reduce JS
-      if (!rpcError && stats) {
-        return stats
+      if (error) {
+        console.error('[STATS ERROR]', error)
+        // Fallback vide mais typé
+        return {
+          revenue: 0,
+          revenue_change: 0,
+          unpaid: 0,
+          unpaid_count: 0,
+          acceptedCount: 0,
+          quotes_change: 0,
+          history: []
+        }
       }
 
-      // 🛡️ SECURITY : ID session-only (Anti-IDOR)
-      const [quotesRes, invoicesRes] = await Promise.all([
-        supabase
-          .from('quotes')
-          .select('id, status, total_ttc')
-          .eq('user_id', user.id),
-        supabase
-          .from('invoices')
-          .select('id, status, total_ttc')
-          .eq('user_id', user.id)
-      ])
-
-      const quotes = quotesRes.data || []
-      const invoices = invoicesRes.data || []
-
-      return {
-        revenue: quotes.reduce((acc, q) => acc + (q.status === 'accepted' || q.status === 'invoiced' ? (q.total_ttc || 0) : 0), 0),
-        unpaid: invoices.reduce((acc, i) => acc + (i.status !== 'paid' ? (i.total_ttc || 0) : 0), 0),
-        acceptedCount: quotes.filter(q => q.status === 'accepted').length,
-        totalInvoices: invoices.length
-      }
+      return stats
     },
     ['dashboard-stats', user.id],
     {
