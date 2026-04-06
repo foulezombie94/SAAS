@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, Suspense, useRef } from 'react'
 import { 
   Calendar as CalendarIcon, 
   ChevronLeft, 
@@ -20,14 +20,16 @@ import {
   CalendarDays,
   UserPlus,
   StickyNote,
-  X
+  X,
+  CalendarDays as DateIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { createIntervention, getInterventions, deleteIntervention, updateInterventionStatus, sendInterventionReminder } from './actions'
 import { toast } from 'sonner'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, isToday, isSameMonth } from 'date-fns'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, isToday, isSameMonth, parseISO } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { DateTimePicker } from '@/components/ui/DateTimePicker'
 
 function CalendarContent() {
   const searchParams = useSearchParams()
@@ -37,13 +39,16 @@ function CalendarContent() {
   const [showModal, setShowModal] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Custom Picker State
+  const [pickerType, setPickerType] = useState<'start' | 'end' | null>(null)
 
   // Form State
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    start_time: '',
-    end_time: '',
+    start_time: format(new Date(), "yyyy-MM-dd'T'09:00"),
+    end_time: format(new Date(), "yyyy-MM-dd'T'10:00"),
     client_id: '',
     quote_id: ''
   })
@@ -166,7 +171,7 @@ function CalendarContent() {
           
           <Button 
             onClick={() => {
-              setFormData({title:'', description:'', start_time:'', end_time:'', client_id:'', quote_id:''})
+              setFormData({title:'', description:'', start_time: format(new Date(), "yyyy-MM-dd'T'09:00"), end_time: format(new Date(), "yyyy-MM-dd'T'10:00"), client_id:'', quote_id:''})
               setShowModal(true)
             }}
             className="group h-[72px] px-10 bg-primary text-white rounded-[24px] shadow-2xl shadow-primary/30 flex items-center gap-4 hover:scale-[1.02] active:scale-95 transition-all overflow-hidden relative"
@@ -290,7 +295,7 @@ function CalendarContent() {
                   <div className="flex flex-col gap-4 relative z-10">
                      {selectedEvent.status !== 'completed' && (
                        <Button 
-                         onClick={() => handleStatusChange(selectedEvent.id, 'completed',)}
+                         onClick={() => handleStatusChange(selectedEvent.id, 'completed')}
                          className="h-[72px] bg-emerald-500 hover:bg-emerald-600 font-black uppercase tracking-[0.2em] text-[10px] w-full gap-3 rounded-2xl shadow-xl shadow-emerald-900/40 border-none"
                        >
                           <CheckCircle2 size={20} /> Valider l'Exécution
@@ -335,10 +340,10 @@ function CalendarContent() {
         </div>
       </div>
 
-      {/* REFINED FLOATING MODAL (AS REQUESTED) */}
+      {/* FLOATING MODAL WITH CUSTOM PICKER */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/10 backdrop-blur-md animate-in fade-in duration-500">
-          <div className="bg-white w-full max-w-xl rounded-[48px] shadow-diffused border border-white/10 relative overflow-hidden animate-in zoom-in-95 duration-500">
+          <div className="bg-white w-full max-w-xl rounded-[48px] shadow-diffused border border-white/10 relative overflow-visible animate-in zoom-in-95 duration-500">
             
             {/* Header / Title */}
             <div className="px-12 pt-12 pb-8 flex items-center justify-between">
@@ -347,7 +352,10 @@ function CalendarContent() {
                 <div className="h-1 w-8 bg-primary/20 rounded-full mt-4" />
               </div>
               <button 
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false)
+                  setPickerType(null)
+                }}
                 className="p-4 hover:bg-slate-100 rounded-full transition-all text-slate-400"
               >
                 <X size={24} />
@@ -356,7 +364,7 @@ function CalendarContent() {
             
             <form onSubmit={handleCreate} className="px-12 pb-12 space-y-8">
               
-              {/* TITLE FIELD */}
+              {/* OBJECT FIELD */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <StickyNote size={14} className="text-primary/40" />
@@ -373,33 +381,59 @@ function CalendarContent() {
                 />
               </div>
 
-              {/* DATES GRID */}
+              {/* DATES GRID WITH CUSTOM PICKERS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
+                
+                {/* START TIME TRIGGER */}
+                <div className="space-y-3 relative">
                   <div className="flex items-center gap-3">
-                    <Clock size={14} className="text-primary/40" />
+                    <DateIcon size={14} className="text-primary/40" />
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Début Mission</label>
                   </div>
-                  <input 
-                    type="datetime-local" 
-                    required
-                    value={formData.start_time}
-                    onChange={(e) => setFormData({...formData, start_time: e.target.value})}
-                    className="w-full h-14 bg-slate-50 border border-slate-100 focus:border-primary/20 rounded-[16px] px-5 outline-none font-bold text-sm text-primary transition-all" 
-                  />
+                  <button 
+                    type="button"
+                    onClick={() => setPickerType(pickerType === 'start' ? null : 'start')}
+                    className="w-full h-14 bg-slate-50 border border-slate-100 focus:border-primary/20 rounded-[16px] px-5 flex items-center justify-between font-bold text-sm text-primary transition-all group"
+                  >
+                    <span>{format(new Date(formData.start_time), "d MMMM HH:mm", {locale: fr})}</span>
+                    <Clock size={16} className="text-slate-300 group-hover:text-primary transition-colors" />
+                  </button>
+
+                  {pickerType === 'start' && (
+                    <div className="absolute top-[100%] left-0 z-[110] mt-4">
+                      <DateTimePicker 
+                        value={formData.start_time}
+                        onChange={(val) => setFormData({...formData, start_time: val})}
+                        onClose={() => setPickerType(null)}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-3">
+
+                {/* END TIME TRIGGER */}
+                <div className="space-y-3 relative">
                   <div className="flex items-center gap-3">
-                    <Clock size={14} className="text-primary/40" />
+                    <DateIcon size={14} className="text-primary/40" />
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Fin Estimée</label>
                   </div>
-                  <input 
-                    type="datetime-local" 
-                    required
-                    value={formData.end_time}
-                    onChange={(e) => setFormData({...formData, end_time: e.target.value})}
-                    className="w-full h-14 bg-slate-50 border border-slate-100 focus:border-primary/20 rounded-[16px] px-5 outline-none font-bold text-sm text-primary transition-all" 
-                  />
+                  <button 
+                    type="button"
+                    onClick={() => setPickerType(pickerType === 'end' ? null : 'end')}
+                    className="w-full h-14 bg-slate-50 border border-slate-100 focus:border-primary/20 rounded-[16px] px-5 flex items-center justify-between font-bold text-sm text-primary transition-all group"
+                  >
+                    <span>{format(new Date(formData.end_time), "d MMMM HH:mm", {locale: fr})}</span>
+                    <Clock size={16} className="text-slate-300 group-hover:text-primary transition-colors" />
+                  </button>
+
+                  {pickerType === 'end' && (
+                    <div className="absolute top-[100%] right-0 md:right-auto md:left-0 z-[110] mt-4">
+                      <DateTimePicker 
+                        value={formData.end_time}
+                        onChange={(val) => setFormData({...formData, end_time: val})}
+                        onClose={() => setPickerType(null)}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -413,16 +447,16 @@ function CalendarContent() {
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   className="w-full h-32 bg-slate-50 border border-slate-100 focus:border-primary/20 rounded-[20px] p-6 outline-none font-bold text-sm text-slate-600 resize-none transition-all" 
-                  placeholder="Détails du chantier..."
+                  placeholder="Détails techniques, accès chantier..."
                 />
               </div>
 
-              {/* ACTION BUTTONS (MATCHING IMAGE) */}
+              {/* ACTION BUTTONS (DEEP NAVY) */}
               <div className="flex items-center gap-8 pt-6 border-t border-slate-50">
                 <button 
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-red-500 transition-colors px-4"
+                  className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-primary transition-colors px-4"
                 >
                   Annuler
                 </button>
