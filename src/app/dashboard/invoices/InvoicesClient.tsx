@@ -22,6 +22,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Invoice } from '@/types/dashboard'
 import { useSyncCache } from '@/lib/hooks/useSyncCache'
 import { useDebounce } from '@/lib/hooks/useDebounce'
+import { getInvoicesServer } from '@/app/dashboard/data-actions'
 
 interface InvoicesClientProps {
   initialInvoices: Invoice[]
@@ -33,17 +34,8 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
 
   // 0. Fetcher pour la synchronisation (Source de Vérité)
   const fetcher = useCallback(async () => {
-    if (!userId) return []
-    
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('*, clients(*)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    return data as Invoice[]
-  }, [supabase, userId])
+    return await getInvoicesServer()
+  }, [])
 
   const { data: invoices, isSyncing, revalidate } = useSyncCache<Invoice[]>(
     `invoices-${userId}`, 

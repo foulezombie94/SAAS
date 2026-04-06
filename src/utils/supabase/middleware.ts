@@ -26,7 +26,7 @@ export async function updateSession(request: NextRequest) {
             })
             supabaseResponse.cookies.set(name, value, {
               ...options,
-              // On laisse Supabase gérer le httpOnly
+              httpOnly: true,
               maxAge: 2592000,
               secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax',

@@ -18,8 +18,8 @@ export async function createClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, {
                 ...options,
-                // On laisse Supabase gérer le httpOnly (false pour la session client)
                 maxAge: 2592000,
+                httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
                 path: '/',

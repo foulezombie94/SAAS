@@ -20,6 +20,7 @@ import { Quote } from '@/types/dashboard'
 import { useSyncCache } from '@/lib/hooks/useSyncCache'
 import { createClient } from '@/utils/supabase/client'
 import { useDebounce } from '@/lib/hooks/useDebounce'
+import { getQuotesServer } from '@/app/dashboard/data-actions'
 
 interface QuotesClientProps {
   initialQuotes: Quote[]
@@ -31,17 +32,8 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
 
   // 0. Fetcher pour la synchronisation (Source de Vérité)
   const fetcher = useCallback(async () => {
-    if (!userId) return []
-    
-    const { data, error } = await supabase
-      .from('quotes')
-      .select('*, clients(name)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    return data as Quote[]
-  }, [supabase, userId])
+    return await getQuotesServer()
+  }, [])
 
   const { data: quotes, isSyncing, revalidate } = useSyncCache<Quote[]>(
     `quotes-${userId}`, 

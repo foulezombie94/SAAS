@@ -22,6 +22,7 @@ import { ClientWithQuotes } from '@/types/dashboard'
 import { useCallback, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useDebounce } from '@/lib/hooks/useDebounce'
+import { getClientsServer } from '@/app/dashboard/data-actions'
 import { useSyncCache } from '@/lib/hooks/useSyncCache'
 import { createClient } from '@/utils/supabase/client'
 
@@ -35,16 +36,8 @@ export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
 
   // 0. Fetcher pour la synchronisation (Source de Vérité)
   const fetcher = useCallback(async () => {
-    if (!userId) return []
-    
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*, quotes(*)')
-      .eq('user_id', userId)
-    
-    if (error) throw error
-    return data as ClientWithQuotes[]
-  }, [supabase, userId])
+    return await getClientsServer()
+  }, [])
 
   const { data: clients, isSyncing, revalidate } = useSyncCache<ClientWithQuotes[]>(
     `clients-${userId}`, 
