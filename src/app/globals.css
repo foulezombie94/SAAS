@@ -74,6 +74,17 @@
     -webkit-backdrop-filter: blur(24px);
   }
   
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .neon-shadow {
+    box-shadow: 0 0 20px rgba(0, 35, 111, 0.05), 0 0 40px rgba(0, 35, 111, 0.02);
+  }
+
   .shadow-diffused {
     box-shadow: 0px 24px 48px rgba(0, 35, 111, 0.06);
   }
