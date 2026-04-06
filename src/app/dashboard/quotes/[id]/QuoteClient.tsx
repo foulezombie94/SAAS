@@ -724,6 +724,16 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               )}
 
               {quote.status === 'accepted' && (
+                <Link href={`/dashboard/calendar?quote_id=${quote.id}&client_id=${quote.client_id}&title=Intervention : ${quote.number} - ${quote.clients?.name}`}>
+                  <Button
+                    className="w-full h-16 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest text-xs gap-3 border border-white/10 mb-4"
+                  >
+                    <Calendar size={20} /> Planifier l'Intervention
+                  </Button>
+                </Link>
+              )}
+
+              {quote.status === 'accepted' && (
                 <Button
                   onClick={handleCreateInvoice}
                   isLoading={isGeneratingInvoice}

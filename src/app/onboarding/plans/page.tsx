@@ -198,6 +198,10 @@ export default function PlansPage() {
                   <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                   <span className="text-sm font-bold">Envoi d'email avec SMTP</span>
                 </li>
+                <li className="flex items-center gap-3 text-white">
+                  <span className="material-symbols-outlined text-on-tertiary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_month</span>
+                  <span className="text-sm font-bold">Agenda Interactif Pro</span>
+                </li>
               </ul>
               <Button 
                 onClick={handleSelectPro}

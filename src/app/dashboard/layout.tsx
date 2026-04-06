@@ -3,7 +3,7 @@ import { getUserProfile } from '@/utils/supabase/cached-queries'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { TopNavBar } from '@/components/dashboard/TopNavBar'
-import { Home, Users, PlusCircle, Receipt } from 'lucide-react'
+import { Home, Users, PlusCircle, Receipt, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { Toaster } from 'sonner'
 import { NotificationProvider } from '@/components/providers/NotificationProvider'
@@ -52,6 +52,12 @@ export default async function DashboardLayout({
             <Users size={24} />
             <span className="text-[10px] uppercase tracking-widest font-black mt-1">Clients</span>
           </Link>
+          {isPro && (
+            <Link href="/dashboard/calendar" className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-2 scale-95 active:scale-90 transition-all">
+              <Calendar size={24} />
+              <span className="text-[10px] uppercase tracking-widest font-black mt-1">Agenda</span>
+            </Link>
+          )}
           <Link href="/dashboard/quotes/new" className="flex flex-col items-center justify-center bg-tertiary-container text-on-tertiary-container rounded-2xl h-14 w-14 mb-2 shadow-lg shadow-tertiary-container/30 scale-100 active:scale-90 transition-all">
             <PlusCircle size={28} />
           </Link>

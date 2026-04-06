@@ -12,6 +12,7 @@ import {
   Mail,
   PlusCircle,
   ShieldCheck,
+  Calendar,
   LucideIcon
 } from 'lucide-react'
 import { clsx, type ClassValue } from 'clsx'
@@ -32,6 +33,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Clients', href: '/dashboard/clients', icon: Users },
   { name: 'Devis', href: '/dashboard/quotes', icon: FileText },
+  { name: 'Agenda', href: '/dashboard/calendar', icon: Calendar },
   { name: 'Factures', href: '/dashboard/invoices', icon: Receipt },
   { name: 'Paramètres', href: '/dashboard/settings', icon: Settings },
   { name: 'E-mails', href: '/dashboard/settings/email', icon: Mail },
@@ -53,8 +55,8 @@ export function Sidebar({ isPro }: SidebarProps) {
 
       <nav className="flex-1 space-y-1">
         {navigation.map((item) => {
-          // Hide E-mails for non-pro users
-          if (item.name === 'E-mails' && !isPro) return null
+          // Hide Pro features for non-pro users
+          if ((item.name === 'E-mails' || item.name === 'Agenda') && !isPro) return null
 
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (

@@ -114,7 +114,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold tracking-tight text-primary mb-4">Pourquoi choisir ArtisanFlow ?</h2>
               <div className="h-1.5 w-20 bg-tertiary-fixed-dim mx-auto"></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               {/* Benefit 1 */}
               <div className="bg-surface-container-lowest p-8 rounded-lg transition-all hover:bg-surface-container-highest group">
                 <div className="w-12 h-12 bg-primary-container text-on-primary-container rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -146,6 +146,14 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-primary">Image Pro</h3>
                 <p className="text-on-surface-variant leading-relaxed">Des PDF impeccables à l'image de votre savoir-faire. Gagnez la confiance de vos clients.</p>
+              </div>
+              {/* Benefit 5 - Agenda */}
+              <div className="bg-surface-container-lowest p-8 rounded-lg transition-all hover:bg-surface-container-highest group border-2 border-transparent hover:border-tertiary-fixed-dim/30">
+                <div className="w-12 h-12 bg-tertiary-container text-on-tertiary-container rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined">calendar_month</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-tertiary">Agenda Pro</h3>
+                <p className="text-on-surface-variant leading-relaxed">Planning intelligent et gestion d'équipes. Ne manquez plus aucun rendez-vous chantier.</p>
               </div>
             </div>
           </div>
@@ -313,6 +321,9 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-3 text-sm font-semibold">
                     <span className="material-symbols-outlined text-on-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Envoi d'email avec SMTP
+                  </li>
+                  <li className="flex items-center gap-3 text-sm font-semibold text-tertiary">
+                    <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_today</span> Agenda Interactif & Planning
                   </li>
                 </ul>
                 <button 
