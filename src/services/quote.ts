@@ -39,34 +39,18 @@ export async function createQuote(input: CreateQuoteInput) {
     throw new Error('Limite de 3 devis atteinte pour la version gratuite. Passez à la Pro pour un accès illimité !')
   }
 
-  // 1. Create Quote
-  const { data: quote, error: quoteError } = await supabase
-    .from('quotes')
-    .insert([{
-      user_id: user.id,
-      client_id: input.client_id,
-      number: input.number,
-      status: input.status || 'draft',
-      total_ht: input.total_ht,
-      tax_rate: input.tax_rate,
-      total_ttc: input.total_ttc
-    }])
-    .select()
-    .single()
+  // 1. Create Quote with Items via RPC (Atomic Transaction)
+  const { data: result, error: rpcError } = await supabase.rpc('create_quote_with_items', {
+    p_client_id: input.client_id,
+    p_number: input.number,
+    p_status: input.status || 'draft',
+    p_total_ht: input.total_ht,
+    p_tax_rate: input.tax_rate,
+    p_total_ttc: input.total_ttc,
+    p_items: input.items as any
+  })
 
-  if (quoteError) throw quoteError
+  if (rpcError) throw rpcError
 
-  // 2. Create Items
-  const itemsToInsert = input.items.map(item => ({
-    quote_id: quote.id,
-    ...item
-  }))
-
-  const { error: itemsError } = await supabase
-    .from('quote_items')
-    .insert(itemsToInsert)
-
-  if (itemsError) throw itemsError
-
-  return quote
+  return result
 }

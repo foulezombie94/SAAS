@@ -3,22 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
-// Basic In-Memory Rate Limiter (Better than nothing for public endpoints)
-const rateLimitMap = new Map<string, { count: number, lastReset: number }>();
-function rateLimit(ip: string, limit: number, windowMs: number) {
-  const now = Date.now();
-  const userData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
-  
-  if (now - userData.lastReset > windowMs) {
-    userData.count = 0;
-    userData.lastReset = now;
-  }
-  
-  userData.count++;
-  rateLimitMap.set(ip, userData);
-  
-  return { success: userData.count <= limit, message: 'Trop de requêtes, réessayez plus tard.' };
-}
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   try {
@@ -26,7 +11,7 @@ export async function POST(req: Request) {
     
     // 0. RATE LIMITING SECURE (IP detection)
     const ip = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || 'anonymous'
-    const limit = rateLimit(`public-accept-${ip}`, 5, 60000)
+    const limit = await rateLimit(`public-accept-${ip}`, 5, 60000)
     if (!limit.success) {
       return NextResponse.json({ error: limit.message }, { status: 429 })
     }

@@ -29,7 +29,7 @@ export async function createPayment(quoteId: string, amount: number, email: stri
   if (!user) throw new Error('Non autorisé')
 
   // 0. RATE LIMITING (5 requests per minute per user)
-  const limit = rateLimit(`stripe-payment-${user.id}`, 5, 60000)
+  const limit = await rateLimit(`stripe-payment-${user.id}`, 5, 60000)
   if (!limit.success) throw new Error(limit.message)
 
   // 1. Verify Ownership before Stripe

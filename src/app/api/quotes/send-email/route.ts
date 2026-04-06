@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const { quoteId, subject, message } = await req.json()
 
     // 0. RATE LIMITING (3 requests per minute per user)
-    const limit = rateLimit(`send-email-${user.id}`, 3, 60000)
+    const limit = await rateLimit(`send-email-${user.id}`, 3, 60000)
     if (!limit.success) {
       return NextResponse.json({ error: limit.message }, { status: 429 })
     }

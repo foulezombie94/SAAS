@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     // 0. RATE LIMITING (5 requests per minute per IP)
     const ip = req.headers.get('x-forwarded-for') || 'anonymous'
-    const limit = rateLimit(`public-payment-${ip}`, 5, 60000)
+    const limit = await rateLimit(`public-payment-${ip}`, 5, 60000)
     if (!limit.success) {
       return NextResponse.json({ error: limit.message }, { status: 429 })
     }

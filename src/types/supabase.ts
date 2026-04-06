@@ -59,6 +59,66 @@ export type Database = {
         }
         Relationships: []
       }
+      interventions: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          description: string | null
+          end_time: string
+          id: string
+          quote_id: string | null
+          reminder_sent: boolean | null
+          start_time: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          quote_id?: string | null
+          reminder_sent?: boolean | null
+          start_time: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          quote_id?: string | null
+          reminder_sent?: boolean | null
+          start_time?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interventions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           created_at: string | null
@@ -409,13 +469,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      accept_quote_v3: {
+      accept_quote_v3:
+        | {
+            Args: {
+              p_public_token: string
+              p_quote_id: string
+              p_signature_url: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_public_token: string
+              p_quote_id: string
+              p_signature_url: string
+            }
+            Returns: string
+          }
+      create_invoice_from_quote_v2: {
+        Args: { p_quote_id: string }
+        Returns: Json
+      }
+      create_quote_with_items: {
         Args: {
-          p_public_token: string
-          p_quote_id: string
-          p_signature_url: string
+          p_client_id: string
+          p_items: Json
+          p_number: string
+          p_status: Database["public"]["Enums"]["quote_status"]
+          p_tax_rate: number
+          p_total_ht: number
+          p_total_ttc: number
         }
-        Returns: string
+        Returns: Json
       }
       create_quote_with_items_v2:
         | {
@@ -462,6 +547,7 @@ export type Database = {
         }
         Returns: string
       }
+      get_dashboard_analytics: { Args: { p_user_id: string }; Returns: Json }
       get_next_quote_number: { Args: { p_user_id: string }; Returns: string }
     }
     Enums: {
