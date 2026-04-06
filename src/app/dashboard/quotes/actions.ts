@@ -18,25 +18,28 @@ export async function createQuoteAction(rawData: unknown) {
 
   const data = parsed.data;
 
-  // 2. Vérification DB / Auth & Limites en PARALLÈLE ⚡
-  const supabase = await createClient()
-  const [authRes, limitStatus] = await Promise.all([
-    supabase.auth.getUser(),
-    getUsageLimits('quotes')
-  ])
-
-  const { data: { user } } = authRes
-  if (!user) {
-    return { success: false, error: 'Utilisateur non connecté' }
-  }
-
-  // Double check des limites (sécurité serveur absolue)
-  if (!limitStatus.allowed) {
-    return { success: false, error: "Limite atteinte. Passez en PRO pour continuer !" }
-  }
-
   try {
-    // 3. Insertion Atomique v3 (Zero Trust : user_id géré par SQL)
+    console.log('[createQuoteAction] Starting...');
+    const supabase = await createClient()
+    
+    console.log('[createQuoteAction] Fetching user & limits...');
+    const [authRes, limitStatus] = await Promise.all([
+      supabase.auth.getUser(),
+      getUsageLimits('quotes')
+    ])
+
+    const { data: { user } } = authRes
+    if (!user) {
+      console.warn('[createQuoteAction] No user found');
+      return { success: false, error: 'Utilisateur non connecté' }
+    }
+
+    if (!limitStatus.allowed) {
+      console.warn('[createQuoteAction] Limit reached');
+      return { success: false, error: "Limite atteinte. Passez en PRO pour continuer !" }
+    }
+
+    console.log('[createQuoteAction] Calling RPC...');
     const { data: quote, error: rpcError } = await supabase.rpc('create_quote_with_items_v3', {
       p_client_id: data.client_id,
       p_status: data.status,
@@ -49,7 +52,12 @@ export async function createQuoteAction(rawData: unknown) {
       p_valid_until: data.valid_until || undefined
     });
 
-    if (rpcError) throw new Error(rpcError.message)
+    if (rpcError) {
+      console.error('[createQuoteAction] RPC Error:', rpcError);
+      throw new Error(rpcError.message)
+    }
+    
+    console.log('[createQuoteAction] Success:', quote);
     
     // 🚀 Cache Invalidation (Tag + Path)
     // 🚀 Cache Invalidation (Path-based for reliability)

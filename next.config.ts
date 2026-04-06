@@ -4,10 +4,10 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' https://js.stripe.com;
-    style-src 'self' 'unsafe-inline';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com;
-    font-src 'self' data:;
+    font-src 'self' data: https://fonts.gstatic.com;
     connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com;
     frame-src 'self' https://js.stripe.com https://hooks.stripe.com;
     object-src 'none';
@@ -15,7 +15,7 @@ const cspHeader = `
     form-action 'self';
     frame-ancestors 'none';
     upgrade-insecure-requests;
-`;
+`.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig: NextConfig = {
   // Configured for Next.js 16 (Stability & Standard)
@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: cspHeader.replace(/\n/g, "").trim(),
+            value: cspHeader,
           },
           {
             key: "X-Content-Type-Options",
