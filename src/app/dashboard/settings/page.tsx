@@ -20,8 +20,8 @@ export default function SettingsPage() {
     phone: '',
     siret: '',
     email: '',
-    num_contacts: '',
-    annual_revenue: '',
+    num_contacts: undefined,
+    annual_revenue: undefined,
     preferred_language: 'fr',
   })
   const [isLoading, setIsLoading] = useState(true)
@@ -61,8 +61,8 @@ export default function SettingsPage() {
         siret: profile.siret || '',
         address: profile.address || '',
         phone: profile.phone || '',
-        num_contacts: profile.num_contacts || '',
-        annual_revenue: profile.annual_revenue || '',
+        num_contacts: profile.num_contacts ? Number(profile.num_contacts) : null,
+        annual_revenue: profile.annual_revenue ? Number(profile.annual_revenue) : null,
         preferred_language: (profile.preferred_language as 'fr' | 'en' | 'es') || 'fr',
       })
       toast.success('Paramètres enregistrés avec succès')

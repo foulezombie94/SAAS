@@ -1,0 +1,229 @@
+'use client'
+
+import React, { useState, useMemo } from 'react'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import Link from 'next/link'
+import { 
+  Plus, 
+  Search, 
+  FileText, 
+  Clock, 
+  CheckCircle2, 
+  ChevronRight,
+  TrendingUp,
+  Calendar
+} from 'lucide-react'
+import { Quote } from '@/types/dashboard'
+import { useSyncCache } from '@/lib/hooks/useSyncCache'
+import { createClient } from '@/utils/supabase/client'
+import { useCallback } from 'react'
+import { Loader2 } from 'lucide-react'
+
+interface QuotesClientProps {
+  initialQuotes: Quote[]
+  userId: string
+}
+
+export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
+  const supabase = createClient()
+
+  // 0. Fetcher pour la synchronisation (Source de Vérité)
+  const fetcher = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*, clients(name)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data as Quote[]
+  }, [supabase, userId])
+
+  const { data: quotes, isSyncing } = useSyncCache<Quote[]>(
+    `quotes-${userId}`, 
+    initialQuotes, 
+    fetcher,
+    { ttl: 1000 * 60 * 30, refreshInterval: 1000 * 60 * 5 } // Polling 5 min
+  )
+  
+  const [searchTerm, setSearchTerm] = useState('')
+
+  // 1. Filtrage instantané (God Tier)
+  const filteredQuotes = useMemo(() => {
+    if (!searchTerm) return quotes
+    const lowerSearch = searchTerm.toLowerCase()
+    return quotes.filter(q => 
+      q.number.toLowerCase().includes(lowerSearch) || 
+      q.clients?.name?.toLowerCase().includes(lowerSearch)
+    )
+  }, [quotes, searchTerm])
+
+  // 2. Stats calculées dynamiquement
+  const stats = useMemo(() => ({
+    total: filteredQuotes.length,
+    accepted: filteredQuotes.filter(q => q.status === 'accepted').length,
+    pending: filteredQuotes.filter(q => q.status === 'sent' || q.status === 'draft').length,
+    totalValue: filteredQuotes.reduce((acc, q) => acc + Number(q.total_ttc), 0)
+  }), [filteredQuotes])
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'accepted': return 'bg-emerald-50 text-emerald-700 border-emerald-100'
+      case 'sent': return 'bg-blue-50 text-blue-700 border-blue-100'
+      case 'rejected': return 'bg-rose-50 text-rose-700 border-rose-100'
+      case 'invoiced': return 'bg-purple-50 text-purple-700 border-purple-100'
+      default: return 'bg-slate-50 text-slate-500 border-slate-100'
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'accepted': return 'Accepté'
+      case 'sent': return 'Envoyé'
+      case 'rejected': return 'Refusé'
+      case 'invoiced': return 'Facturé'
+      case 'draft': return 'Brouillon'
+      default: return status
+    }
+  }
+
+  return (
+    <div className="space-y-12">
+      <header className="flex flex-col md:flex-row md:items-end justify-between self-stretch gap-8">
+        <div className="flex-1">
+          <h2 className="text-4xl font-black text-primary tracking-tighter uppercase leading-none mb-3 italic">Archives Pro</h2>
+          <p className="text-on-surface-variant font-bold uppercase tracking-widest text-[10px] opacity-60 flex items-center gap-2">
+             {stats.total} projets {searchTerm ? 'filtrés' : 'répertoriés'} • 
+             {isSyncing ? (
+               <span className="flex items-center gap-1.5 text-primary animate-pulse">
+                 <Loader2 size={10} className="animate-spin" /> Synchronisation...
+               </span>
+             ) : (
+               <span className="text-emerald-500">Données à jour</span>
+             )}
+          </p>
+        </div>
+        
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative w-full md:w-96 group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
+            <input 
+              className="w-full bg-white border-2 border-slate-50 outline-none focus:ring-4 focus:ring-primary/5 pl-14 pr-6 py-4 rounded-3xl shadow-sm text-primary font-black placeholder:text-slate-300 transition-all uppercase text-[10px] tracking-widest" 
+              placeholder="Numéro, client, montant..." 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Link href="/dashboard/quotes/new" className="w-full md:w-auto">
+            <Button className="w-full h-14 px-8 bg-primary hover:bg-primary-container text-on-primary font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl active:scale-95 transition-all rounded-3xl">
+              <Plus size={20} /> Nouveau Devis
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="p-8 bg-primary text-on-primary border-none shadow-2xl relative overflow-hidden flex flex-col justify-between h-48 rounded-3xl group">
+          <TrendingUp className="absolute -top-4 -right-4 opacity-5 group-hover:scale-125 transition-transform" size={140} />
+          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] opacity-60">Volume Brut</p>
+          <span className="text-4xl font-black tracking-tighter uppercase leading-none">
+            {stats.totalValue.toLocaleString('fr-FR')} €
+          </span>
+        </Card>
+        
+        <Card className="p-8 bg-white border-2 border-slate-50 shadow-sm flex flex-col justify-between h-48 group hover:border-primary/20 transition-all rounded-3xl">
+          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-slate-400">En Attente</p>
+          <div className="flex items-center gap-4">
+            <span className="text-5xl font-black tracking-tighter text-primary group-hover:scale-110 transition-transform">{stats.pending}</span>
+            <Clock className="text-orange-400" size={32} />
+          </div>
+        </Card>
+
+        <Card className="p-8 bg-white border-2 border-slate-50 shadow-sm flex flex-col justify-between h-48 group hover:border-emerald-200 transition-all rounded-3xl">
+          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-slate-400">Succès Client</p>
+          <div className="flex items-center gap-4">
+            <span className="text-5xl font-black tracking-tighter text-emerald-600 group-hover:scale-110 transition-transform">{stats.accepted}</span>
+            <CheckCircle2 className="text-emerald-500" size={32} />
+          </div>
+        </Card>
+
+        <Card className="p-8 bg-slate-50/50 border-none shadow-inner flex flex-col justify-between h-48 rounded-3xl">
+          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-slate-400">Conversion</p>
+          <span className="text-4xl font-black tracking-tighter text-primary">
+            {stats.total > 0 ? Math.round((stats.accepted / stats.total) * 100) : 0} <span className="text-xl opacity-40">%</span>
+          </span>
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <div className="hidden md:grid grid-cols-12 px-12 py-4 text-[0.6875rem] font-black uppercase tracking-[0.2em] text-slate-400">
+          <div className="col-span-2">Dossier</div>
+          <div className="col-span-4">Mandataire</div>
+          <div className="col-span-2">Émission</div>
+          <div className="col-span-2">État</div>
+          <div className="col-span-2 text-right">Volume TTC</div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {filteredQuotes?.map((quote) => (
+            <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`} className="block group">
+              <Card className="p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group-hover:scale-[1.01] active:scale-[0.99] rounded-3xl">
+                <div className="col-span-2">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">N°</span>
+                    <span className="font-black text-primary tracking-tighter text-xl uppercase italic underline decoration-primary/10 group-hover:decoration-primary/40 transition-all">{quote.number}</span>
+                  </div>
+                </div>
+
+                <div className="col-span-4 flex items-center gap-6">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black text-xl group-hover:bg-primary group-hover:text-on-primary transition-all uppercase shadow-sm">
+                    {quote.clients?.name?.charAt(0) || 'C'}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-primary uppercase tracking-tighter text-lg group-hover:text-primary-container transition-colors">{quote.clients?.name || 'Client Inconnu'}</h4>
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">
+                      <Clock size={10} /> Validité à confirmer
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="col-span-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                   {quote.created_at ? new Date(quote.created_at).toLocaleDateString() : 'N/A'}
+                </div>
+
+                <div className="col-span-2">
+                  <span className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${getStatusStyle(quote.status || 'draft')}`}>
+                    {getStatusLabel(quote.status || 'draft')}
+                  </span>
+                </div>
+
+                <div className="col-span-2 text-right">
+                  <div className="flex flex-col">
+                    <span className="font-black text-primary text-2xl tracking-tighter group-hover:scale-105 transition-transform">
+                      {Number(quote.total_ttc).toLocaleString('fr-FR')} €
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Net à payer</span>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+
+          {filteredQuotes.length === 0 && (
+            <Card className="flex flex-col items-center justify-center p-32 bg-slate-50/30 border-2 border-dashed border-slate-100 text-center rounded-3xl shadow-inner">
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-primary/10 mb-8 shadow-sm">
+                <Search size={48} />
+              </div>
+              <h3 className="text-3xl font-black text-primary uppercase tracking-tighter mb-4 opacity-40">Aucun devis détecté</h3>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] max-w-sm mb-10 leading-relaxed">
+                Affinez vos critères ou créez un nouveau projet pour alimenter votre archive.
+              </p>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

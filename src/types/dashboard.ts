@@ -1,86 +1,35 @@
-export interface Client {
-  id: string
-  name: string
-  email: string | null
-  phone: string | null
-  address: string | null
-  postal_code: string | null
-  city: string | null
-  country: string | null
-  site_address: string | null
-  notes: string | null
-  user_id: string
-  created_at: string
+import { Database } from './supabase'
+
+export type QuoteStatus = Database['public']['Enums']['quote_status']
+
+export type Client = Database['public']['Tables']['clients']['Row']
+
+export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'num_contacts' | 'annual_revenue'> & {
+  num_contacts?: string | number | null
+  annual_revenue?: string | number | null
 }
 
-export interface QuoteItem {
-  id: string
-  quote_id: string
-  description: string
-  quantity: number
-  unit_price: number
-  total_price: number
-  // Ajouts cruciaux pour l'évolution
-  tax_rate?: number 
-  total_ht?: number
-  total_ttc?: number
+export type QuoteItem = Database['public']['Tables']['quote_items']['Row']
+
+export type Quote = Database['public']['Tables']['quotes']['Row'] & {
+  clients: { 
+    name: string
+    address?: string | null
+    city?: string | null
+    email?: string | null
+    site_address?: string | null
+    postal_code?: string | null
+  } | null
+  profiles?: Profile | null
+  quote_items?: QuoteItem[] | null
 }
 
-export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'invoiced' | 'paid'
-
-export interface Profile {
-  id: string
-  company_name: string | null
-  full_name: string | null
-  first_name: string | null
-  last_name: string | null
-  email: string
-  address: string | null
-  phone: string | null
-  siret: string | null
-  iban: string | null
-  bic: string | null
-  bank_name: string | null
-  updated_at: string | null
-  smtp_host?: string | null
-  smtp_port?: number | null
-  smtp_user?: string | null
-  smtp_pass?: string | null
-  smtp_from?: string | null
-  stripe_account_id?: string | null
-  stripe_details_submitted?: boolean | null
-  stripe_charges_enabled?: boolean | null
-  is_pro?: boolean | null
-  plan?: string | null
-  num_contacts?: string | null
-  annual_revenue?: string | null
-  preferred_language?: string | null
+export type Invoice = Database['public']['Tables']['invoices']['Row'] & {
+  clients: { name: string } | null
 }
 
-export interface Quote {
-  id: string
-  number: string
-  client_id: string | null
-  status: QuoteStatus | null
-  total_ht: number
-  total_ttc: number
-  signature_url: string | null
-  stripe_session_id?: string | null
-  user_id: string
-  created_at: string
-  updated_at?: string
-  profiles?: Profile
-  clients?: Client
-  quote_items?: QuoteItem[]
-  
-  // Payment Tracking
-  payment_method?: 'card' | 'virement' | string
-  payment_details?: any
-}
-
-export interface DashboardHistory {
-  month: string
-  revenue: number
+export type ClientWithQuotes = Client & {
+  quotes: (Database['public']['Tables']['quotes']['Row'])[]
 }
 
 export interface DashboardStats {
@@ -90,5 +39,8 @@ export interface DashboardStats {
   unpaid_count: number
   acceptedCount: number
   quotes_change: number
-  history: DashboardHistory[]
+  history: {
+    month: string
+    revenue: number
+  }[]
 }
