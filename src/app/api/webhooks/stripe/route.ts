@@ -22,7 +22,8 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, sig, stripeWebhookSecret)
   } catch (err: any) {
     console.error(`[STRIPE WEBHOOK] Signature error: ${err.message}`)
-    await (supabase as any).from('webhook_logs').insert({
+    // On utilise l'admin client typé pour logger l'erreur via RLS bypass
+    await supabase.from('webhook_logs').insert({
       event_type: 'signature_failed',
       error: err.message,
       payload: { sig_prefix: sig?.substring(0, 10) }
@@ -37,15 +38,18 @@ export async function POST(req: Request) {
 
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
+        // SÉCURITÉ : userId et facture_id sont récupérés depuis les métadonnées Stripe
+        // Ces métadonnées ont été injectées CÔTÉ SERVEUR lors de la création de la session
+        // (voir src/app/api/billing/checkout/route.ts et src/app/api/payments/create-session/route.ts)
         const userId = session.client_reference_id || session.metadata?.userId
         const planType = session.metadata?.plan || (session.amount_total === 2200 ? 'monthly' : 'yearly')
         const factureId = session.metadata?.facture_id
         const quoteId = session.metadata?.quoteId || session.metadata?.devisId
 
-        // Log de debug
-        await (supabase as any).from('webhook_logs').insert({
+        // Log de debug typé
+        await supabase.from('webhook_logs').insert({
           event_type: 'checkout.session.completed',
-          payload: { userId, session_id: session.id, planType, metadata: session.metadata }
+          payload: { userId, session_id: session.id, planType, metadata: session.metadata } as any
         })
 
         // A. ACTIVATION PRO
@@ -187,9 +191,9 @@ export async function POST(req: Request) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        await (supabase as any).from('webhook_logs').insert({
+        await supabase.from('webhook_logs').insert({
           event_type: 'invoice.payment_failed',
-          payload: { customer: invoice.customer, invoice_id: invoice.id }
+          payload: { customer: invoice.customer, invoice_id: invoice.id } as any
         })
         break
       }

@@ -74,6 +74,8 @@ export async function POST(req: Request) {
       cancel_url: `${origin}/share/quotes/${invoice.quote_id}?payment=canceled`,
       customer_email: customerEmail,
       metadata: {
+        // SÉCURITÉ : Ces IDs proviennent de la base de données (invoice) 
+        // récupérée via un ID d'objet (UUID) secret, et non via des entrées utilisateurs arbitraires.
         facture_id: invoice.id,
         quoteId: invoice.quote_id || '',
         devisId: invoice.quote_id || '',

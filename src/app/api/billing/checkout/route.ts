@@ -35,6 +35,8 @@ export async function POST(req: Request) {
       ...(user.email ? { customer_email: user.email } : {}),
       client_reference_id: user.id,
       metadata: {
+        // SÉCURITÉ : userId provient strictement de supabase.auth.getUser()
+        // Empêche un pirate de payer pour le compte d'un autre utilisateur (IDOR).
         type: 'pro_plan',
         userId: user.id,
         plan: plan, // 'monthly' or 'yearly'

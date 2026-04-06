@@ -1,10 +1,12 @@
 import { createClient } from '@/utils/supabase/server'
+import { cache } from 'react'
 
 /**
- * Vérifie si l'utilisateur actuel a un abonnement Pro actif.
- * @returns {Promise<{ isPro: boolean, userId: string }>}
+ * Version de vérification mise en cache au niveau de la requête (Request-scoped cache).
+ * Cela évite de solliciter la base de données 5 fois si 5 Server Actions sont appelées
+ * dans le même cycle de rendu.
  */
-export async function verifyProAccess() {
+export const verifyProAccess = cache(async () => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -23,7 +25,7 @@ export async function verifyProAccess() {
   }
 
   return { isPro: !!profile.is_pro, userId: user.id }
-}
+})
 
 /**
  * Middleware-like check for Server Actions or API Routes.
