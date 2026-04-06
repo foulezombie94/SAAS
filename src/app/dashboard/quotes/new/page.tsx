@@ -68,9 +68,6 @@ export default function NewQuotePage() {
   useEffect(() => {
     async function init() {
        try {
-         // Suppression de la redirection agressive qui causait des bugs de session
-         await supabase.auth.getUser()
-         
          // Check limits via Server Action (qui est déjà sécurisée)
          const status = await getUsageLimits('quotes')
          setLimitStatus(status)

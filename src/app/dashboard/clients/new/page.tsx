@@ -59,10 +59,7 @@ export default function NewClientPage() {
   useEffect(() => {
     async function init() {
        try {
-         // Suppression de la redirection agressive qui causait des bugs de session
-         await supabase.auth.getUser()
-
-         // Check limits
+         // Check limits via Server Action (sécurisé serveur)
          const status = await getUsageLimits('clients')
          setLimitStatus(status)
        } catch (err) {
@@ -86,13 +83,6 @@ export default function NewClientPage() {
 
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Non authentifié")
-
-      // Limit check
-      const ls = await getUsageLimits('clients')
-      if (!ls.allowed) throw new Error("Limite de 3 clients atteinte. Passez en PRO !")
-
       // 🛡️ BASTION DE SÉCURITÉ : Appel de l'action serveur avec validation Zod et Anti-XSS
       const result = await createClientAction({
         name: formData.name,
