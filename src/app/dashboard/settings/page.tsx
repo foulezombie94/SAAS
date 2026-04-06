@@ -307,20 +307,22 @@ export default function SettingsPage() {
           </div>
           
           {/* Email Settings Link Card - Specially requested to keep separate but linked */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-4">
-             <div className="flex items-center gap-3">
-               <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center">
-                 <Mail size={18} />
+          {profile.is_pro && (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
+               <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center">
+                   <Mail size={18} />
+                 </div>
+                 <div>
+                    <h4 className="text-sm font-bold text-slate-900">Configuration Email</h4>
+                    <p className="text-xs text-slate-500">Serveur SMTP et paramètres d'envoi</p>
+                 </div>
                </div>
-               <div>
-                  <h4 className="text-sm font-bold text-slate-900">Configuration Email</h4>
-                  <p className="text-xs text-slate-500">Serveur SMTP et paramètres d'envoi</p>
-               </div>
-             </div>
-             <Link href="/dashboard/settings/email" className="w-full h-10 mt-2 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-lg hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors">
-                Gérer les e-mails <span className="material-symbols-outlined text-sm">open_in_new</span>
-             </Link>
-          </div>
+               <Link href="/dashboard/settings/email" className="w-full h-10 mt-2 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-lg hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors">
+                  Gérer les e-mails <span className="material-symbols-outlined text-sm">open_in_new</span>
+               </Link>
+            </div>
+          )}
         </div>
 
         {/* Tax & Legal Card */}
