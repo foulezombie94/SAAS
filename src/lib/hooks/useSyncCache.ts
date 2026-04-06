@@ -62,6 +62,7 @@ export function useSyncCache<T>(
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const isFirstMount = useRef(true)
+  const isFirstSync = useRef(true)
 
   // 2. Revalidation (Background)
   const revalidate = useCallback(async () => {
@@ -72,16 +73,18 @@ export function useSyncCache<T>(
       const freshData = await fetcher()
       
       // PROTECTION "GOD TIER": 
-      // Si on a déjà des données (Prop ou Cache) et qu'on reçoit du Vide au 1er sync
-      // Il y a de fortes chances que ce soit une erreur de session client/serveur.
-      // On n'écrase que s'il y a un changement réel ou apres confirmation session.
+      // Si on a déjà des données (initialData ou Cache) et qu'on reçoit du Vide au sync initial
+      // On suspecte un délai de session Supabase. On ne met à jour QUE si la session est confirmée.
       const hasActualData = Array.isArray(state) ? state.length > 0 : !!state
       const receivedEmpty = Array.isArray(freshData) ? freshData.length === 0 : !freshData
       
-      if (isFirstMount.current && hasActualData && receivedEmpty) {
-        console.warn(`[SyncCache] "${key}" suspecté de Session-Race condition. Update ignoré.`)
+      // On utilise un ref pour savoir si c'est REELLEMENT le premier sync qui finit
+      if (isFirstSync.current && hasActualData && receivedEmpty) {
+        console.warn(`[SyncCache] "${key}" suspecté de Session-Race condition. Update ignoré pour préserver les données stables.`)
+        isFirstSync.current = false
         return
       }
+      isFirstSync.current = false
 
       const envelope: CacheEnvelope<T> = {
         data: freshData,
