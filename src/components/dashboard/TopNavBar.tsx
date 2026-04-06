@@ -144,26 +144,26 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                           notif.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 
                           notif.status === 'expired' ? 'bg-amber-100 text-amber-600' : 'bg-blue-50 text-blue-600'
                         )}>
-                          {notif.status === 'paid' ? <CreditCard size={18} /> : 
-                           notif.status === 'expired' ? <Bell size={18} className="animate-pulse" /> : <CheckCircle2 size={18} />}
+                            {notif.status === 'expired' ? <Bell size={18} className="animate-pulse" /> : 
+                             notif.status === 'paid' ? <CreditCard size={18} /> : <CheckCircle2 size={18} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={cn(
                             "text-xs font-black uppercase tracking-tight mb-1 truncate",
-                            notif.status === 'expired' ? "text-amber-700" : "text-primary"
+                            notif.status === 'expired' ? "text-amber-600" : "text-primary"
                           )}>
                             {notif.status === 'paid' ? 'Paiement Encaissé' : 
                              notif.status === 'expired' ? 'Lien Expiré (Sécurité)' : 'Devis Signature reçue'}
                           </p>
                           <p className="text-[11px] font-bold text-slate-500 mb-2">
-                             Devis <span className={cn("text-secondary", notif.status === 'expired' && "text-amber-600 font-black")}>
+                             Devis <span className={cn("text-secondary", notif.status === 'expired' && "text-amber-500 font-black")}>
                                {notif.number}
                              </span> {notif.status === 'expired' ? 'n\'est plus accessible.' : `par ${notif.clients?.name || 'le client'}.`}
                           </p>
                           <div className="flex items-center gap-2">
                              <span className={cn(
                                "text-[9px] font-black uppercase tracking-widest",
-                               notif.status === 'expired' ? "text-amber-400" : "text-slate-300"
+                               notif.status === 'expired' ? "text-amber-500" : "text-slate-300"
                              )}>{notif.status === 'expired' ? 'Expiré' : 'Récent'}</span>
                           </div>
                         </div>

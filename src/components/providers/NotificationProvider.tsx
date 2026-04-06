@@ -69,9 +69,9 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           const newQuote = payload.new as any
           const oldQuote = payload.old as any
 
-          const isPaid = newQuote.status === 'paid' && oldQuote.status !== 'paid'
-          const isAccepted = newQuote.status === 'accepted' && oldQuote.status !== 'accepted'
-          const isExpired = newQuote.status === 'expired' && oldQuote.status !== 'expired'
+          const isPaid = newQuote.status === 'paid' && oldQuote?.status !== 'paid'
+          const isAccepted = newQuote.status === 'accepted' && oldQuote?.status !== 'accepted'
+          const isExpired = newQuote.status === 'expired' && oldQuote?.status !== 'expired'
 
           if (isPaid || isAccepted || isExpired) {
             setUnreadCount(prev => prev + 1)
