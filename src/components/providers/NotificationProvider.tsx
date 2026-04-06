@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 import { QuoteNotification } from '@/types/dashboard'
@@ -22,7 +22,10 @@ interface NotificationProviderProps {
 export function NotificationProvider({ children, userId }: NotificationProviderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<QuoteNotification[]>([])
-  const supabase = createClient()
+  
+  // ⚡ PERFORMANCE: Memoize client to prevent recreation on each render
+  const supabase = useMemo(() => createClient(), [])
+
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -74,8 +77,16 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
             setUnreadCount(prev => prev + 1)
             
             setNotifications(prev => {
-              const filtered = prev.filter(n => n.id !== newQuote.id)
-              return [newQuote, ...filtered].slice(0, 8)
+              // 🛡️ STATE MERGER: Supabase only sends the changed quote row. 
+              // We must preserve the 'clients' object from our current state to avoid UI breakage.
+              const existing = prev.find(n => n.id === newQuote.id)
+              const enriched: QuoteNotification = {
+                ...newQuote,
+                clients: newQuote.clients || existing?.clients || null
+              }
+              
+              const filtered = prev.filter(n => n.id !== enriched.id)
+              return [enriched, ...filtered].slice(0, 8)
             })
 
             if (isPaid) {
