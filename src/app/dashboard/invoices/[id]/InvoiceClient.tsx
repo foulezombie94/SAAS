@@ -23,8 +23,6 @@ import {
   FileBadge,
   Loader
 } from 'lucide-react'
-import { jsPDF } from 'jspdf'
-import html2canvas from 'html2canvas'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -42,6 +40,10 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
     setIsGeneratingPdf(true)
 
     try {
+      // Importation dynamique pour réduire le bundle initial (Audit Quick Win)
+      const { jsPDF } = await import('jspdf')
+      const html2canvas = (await import('html2canvas')).default
+
       const canvas = await html2canvas(printElement, {
         scale: 4,
         useCORS: true,
@@ -62,6 +64,7 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
       pdf.save(`ArtisanFlow_Facture_${invoice.number}.pdf`)
       toast.success("Facture PDF générée !")
     } catch (error) {
+      console.error(error)
       toast.error("Erreur génération PDF")
     } finally {
       setIsGeneratingPdf(false)

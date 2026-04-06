@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
+    script-src 'self' ${isDev ? "'unsafe-eval'" : ""} 'unsafe-inline' https://js.stripe.com;
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com;
     font-src 'self';

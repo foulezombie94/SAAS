@@ -29,6 +29,7 @@ export default function SettingsPage() {
     pass: '',
     from: ''
   })
+  const [hasStoredPass, setHasStoredPass] = useState(false)
 
   useEffect(() => {
     fetchConfig()
@@ -43,9 +44,10 @@ export default function SettingsPage() {
           host: data.smtp_host || '',
           port: data.smtp_port?.toString() || '465',
           user: data.smtp_user || '',
-          pass: data.smtp_pass || '',
+          pass: data.has_smtp_pass ? '••••••••' : '',
           from: data.smtp_from || ''
         })
+        setHasStoredPass(data.has_smtp_pass)
       }
     } catch (err) {
       console.error('Fetch error:', err)
@@ -56,11 +58,17 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    try {
+     try {
+      // SÉCURITÉ : N'envoyer le mot de passe que s'il a été modifié (différent des étoiles)
+      const submitConfig = { ...config }
+      if (submitConfig.pass === '••••••••') {
+        delete (submitConfig as any).pass
+      }
+
       const res = await fetch('/api/settings/smtp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save', config })
+        body: JSON.stringify({ action: 'save', config: submitConfig })
       })
       if (res.ok) {
         toast.success("Paramètres enregistrés avec succès")
@@ -82,10 +90,22 @@ export default function SettingsPage() {
     setIsTesting(true)
     const toastId = toast.loading("Test de connexion en cours...")
     try {
+      // SÉCURITÉ : Utiliser le mot de passe masqué s'il n'a pas été changé
+      const testConfig = { ...config }
+      if (testConfig.pass === '••••••••') {
+        // Pour le test, on a besoin du vrai mot de passe. 
+        // Si l'utilisateur n'a pas changé le champ, l'API 'test' devra 
+        // récupérer le mot de passe existant en base (ce qu'elle fait déjà via le profil chargé)
+        // Mais ici l'API 'test' s'attend à recevoir la config complète.
+        // MODIFICATION : On va passer une action spéciale ou laisser l'API gérer.
+        // En fait, if pass is '••••••••', we tell the API to use the stored one.
+        testConfig.pass = '__STORED_PASSWORD__'
+      }
+
       const res = await fetch('/api/settings/smtp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'test', config })
+        body: JSON.stringify({ action: 'test', config: testConfig })
       })
       const data = await res.json()
       if (res.ok) {

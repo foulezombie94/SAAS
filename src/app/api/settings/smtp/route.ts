@@ -24,15 +24,21 @@ export async function POST(request: Request) {
     const { action, config } = body
 
     if (action === 'save') {
+      const updateData: any = {
+        smtp_host: config.host,
+        smtp_port: parseInt(config.port),
+        smtp_user: config.user,
+        smtp_from: config.from || user.email
+      }
+
+      // N'update le mot de passe que s'il est présent
+      if (config.pass) {
+        updateData.smtp_pass = encrypt(config.pass)
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          smtp_host: config.host,
-          smtp_port: parseInt(config.port),
-          smtp_user: config.user,
-          smtp_pass: encrypt(config.pass), // Security fix: Encrypt before save
-          smtp_from: config.from || user.email
-        })
+        .update(updateData)
         .eq('id', user.id)
 
       if (error) throw error
@@ -41,11 +47,27 @@ export async function POST(request: Request) {
 
     if (action === 'test') {
       try {
+        let testPass = config.pass
+        
+        // Si on demande d'utiliser le mot de passe stocké
+        if (testPass === '__STORED_PASSWORD__') {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('smtp_pass')
+            .eq('id', user.id)
+            .single()
+          
+          if (!profile?.smtp_pass) {
+            return NextResponse.json({ error: "Aucun mot de passe configuré." }, { status: 400 })
+          }
+          testPass = decrypt(profile.smtp_pass)
+        }
+
         const transporter = await createTransporter({
           host: config.host,
           port: parseInt(config.port),
           user: config.user,
-          pass: config.pass,
+          pass: testPass,
           from: config.from || user.email
         })
 
@@ -121,12 +143,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Fonctionnalité réservée aux comptes Pro' }, { status: 403 })
     }
 
-    // Decrypt password for display if needed (though masked by UI)
-    if (profile?.smtp_pass) {
-      profile.smtp_pass = decrypt(profile.smtp_pass)
+    // SÉCURITÉ : Ne jamais renvoyer le mot de passe en clair au client.
+    // On renvoie un indicateur pour l'UI.
+    const has_smtp_pass = !!profile?.smtp_pass;
+    
+    // On nettoie l'objet avant de le renvoyer
+    const sanitizedProfile = {
+      ...profile,
+      smtp_pass: undefined,
+      has_smtp_pass
     }
 
-    return NextResponse.json(profile)
+    return NextResponse.json(sanitizedProfile)
   } catch (err: any) {
     return NextResponse.json({ error: "Impossible de récupérer la configuration." }, { status: 500 })
   }

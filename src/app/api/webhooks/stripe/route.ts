@@ -20,15 +20,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing signature or secret' }, { status: 400 })
     }
     event = stripe.webhooks.constructEvent(body, sig, stripeWebhookSecret)
-  } catch (err: any) {
-    console.error(`[STRIPE WEBHOOK] Signature error: ${err.message}`)
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    console.error(`[STRIPE WEBHOOK] Signature error: ${errorMessage}`)
     // On utilise l'admin client typé pour logger l'erreur via RLS bypass
     await supabase.from('webhook_logs').insert({
       event_type: 'signature_failed',
-      error: err.message,
+      error: errorMessage,
       payload: { sig_prefix: sig?.substring(0, 10) }
     })
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
+    return NextResponse.json({ error: `Webhook Error: ${errorMessage}` }, { status: 400 })
   }
 
 
@@ -202,9 +203,13 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ received: true })
-  } catch (err: any) {
-    console.error('[STRIPE WEBHOOK] Fatal processing error:', err?.message)
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    console.error(`[STRIPE WEBHOOK] Critical error: ${errorMessage}`)
+    return NextResponse.json(
+      { error: 'Webhook handler failed', details: errorMessage },
+      { status: 500 }
+    )
   }
 }
 

@@ -23,8 +23,6 @@ import {
   Loader2
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { jsPDF } from 'jspdf'
-import html2canvas from 'html2canvas'
 import { createClient } from '@/utils/supabase/client'
 
 interface QuotePublicViewProps {
@@ -115,6 +113,10 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
     setIsGeneratingPdf(true)
     
     try {
+      // Importation dynamique pour réduire le bundle initial (Audit Quick Win)
+      const { jsPDF } = await import('jspdf')
+      const html2canvas = (await import('html2canvas')).default
+
       const canvas = await html2canvas(printElement, {
         scale: 4,
         useCORS: true,
@@ -128,6 +130,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
       pdf.save(`Devis_${quote.number}.pdf`)
       toast.success("Téléchargement réussi !")
     } catch (e) {
+      console.error(e)
       toast.error("Erreur génération PDF")
     } finally {
       setIsGeneratingPdf(false)
