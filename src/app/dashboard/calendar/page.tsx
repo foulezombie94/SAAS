@@ -343,7 +343,7 @@ function CalendarContent() {
              )}
 
              <div className="p-10 bg-white rounded-[40px] border border-slate-100 shadow-sm flex flex-col items-center text-center gap-6">
-                <zap size={32} className="text-primary/10" />
+                <Zap size={32} className="text-primary/10" />
                 <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 leading-relaxed">
                   L'intelligence ArtisanFlow optimise votre planning pour une facturation instantanée.
                 </p>
