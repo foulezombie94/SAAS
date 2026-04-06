@@ -71,7 +71,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       
       const prefs = (profile as any)?.notification_preferences
       if (prefs) {
-        setPreferences(prefs)
+        setPreferences((prev: any) => ({ ...prev, ...prefs }))
       }
 
       // 2. Fetch Initial Notifications
@@ -108,17 +108,18 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           // Security check (Double redundant)
           if (newQuote.user_id !== userId) return
 
-          const isPaid = newQuote.status === 'paid' && oldQuote?.status !== 'paid'
-          const isAccepted = newQuote.status === 'accepted' && oldQuote?.status !== 'accepted'
-          const isExpired = newQuote.status === 'expired' && oldQuote?.status !== 'expired'
+          const isPaid = newQuote.status === 'paid' && (oldQuote?.status === undefined || oldQuote?.status !== 'paid')
+          const isAccepted = newQuote.status === 'accepted' && (oldQuote?.status === undefined || oldQuote?.status !== 'accepted')
+          const isExpired = newQuote.status === 'expired' && (oldQuote?.status === undefined || oldQuote?.status !== 'expired')
           const isViewed = newQuote.last_viewed_at !== oldQuote?.last_viewed_at && !!newQuote.last_viewed_at
 
           // 🧠 Check preferences via Ref to avoid resubscribe chain
           const prefs = preferencesRef.current
-          const shouldNotifyPaid = isPaid && prefs.payments_received
-          const shouldNotifyAccepted = isAccepted && prefs.quotes_accepted
-          const shouldNotifyExpired = isExpired && prefs.quotes_expired
-          const shouldNotifyViewed = isViewed && prefs.quotes_viewed
+          // Explicitly check for false to support default-to-true behavior safely
+          const shouldNotifyPaid = isPaid && prefs.payments_received !== false
+          const shouldNotifyAccepted = isAccepted && prefs.quotes_accepted !== false
+          const shouldNotifyExpired = isExpired && prefs.quotes_expired !== false
+          const shouldNotifyViewed = isViewed && prefs.quotes_viewed !== false
 
           if (shouldNotifyPaid || shouldNotifyAccepted || shouldNotifyExpired || shouldNotifyViewed) {
             setUnreadCount(prev => prev + 1)
@@ -167,7 +168,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
           const newPrefs = payload.new.notification_preferences
           if (newPrefs) {
-            setPreferences(newPrefs)
+            setPreferences((prev: any) => ({ ...prev, ...newPrefs }))
           }
 
           if (payload.new.plan !== payload.old.plan) {
