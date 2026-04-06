@@ -8,6 +8,7 @@ const cspHeader = `
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com;
     font-src 'self' data: https://fonts.gstatic.com;
+    media-src 'self' https://assets.mixkit.co;
     connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com;
     frame-src 'self' https://js.stripe.com https://hooks.stripe.com;
     object-src 'none';

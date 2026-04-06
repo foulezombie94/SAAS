@@ -3,10 +3,11 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
+import { QuoteNotification } from '@/types/dashboard'
 
 interface NotificationContextType {
   unreadCount: number
-  notifications: any[]
+  notifications: QuoteNotification[]
   markAllAsRead: () => void
   clearAllNotifications: () => void
 }
@@ -15,16 +16,15 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 interface NotificationProviderProps {
   children: React.ReactNode
-  userId: string // SECURITY: Now mandatory to restrict messages
+  userId: string 
 }
 
 export function NotificationProvider({ children, userId }: NotificationProviderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
-  const [notifications, setNotifications] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<QuoteNotification[]>([])
   const supabase = createClient()
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Initialize sound safely for browser
   useEffect(() => {
     if (typeof window !== 'undefined') {
       audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3')
@@ -35,26 +35,26 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
   useEffect(() => {
     if (!userId) return
 
-    // Fetch initial notifications (last 10 events)
+    // 🕒 INITIAL FETCH: All actionable events (Paid, Accepted, Expired)
     const fetchRecentActivity = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('quotes')
         .select('*, clients(*)')
         .eq('user_id', userId)
-        .in('status', ['paid', 'accepted'])
+        .in('status', ['paid', 'accepted', 'expired'])
         .order('updated_at', { ascending: false })
-        .limit(5)
+        .limit(8)
 
       if (data) {
-        setNotifications(data)
+        setNotifications(data as QuoteNotification[])
       }
     }
 
     fetchRecentActivity()
 
-    // 1. Setup Listener Restricted to THIS user's quotes
+    // 🚀 REALTIME: Supabase handles status updates (cron) or signatures
     const channel = supabase
-      .channel(`user-payments-${userId}`)
+      .channel(`user-activity-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -64,40 +64,36 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          const isPaid = payload.new.status === 'paid' && payload.old.status !== 'paid'
-          const isAccepted = payload.new.status === 'accepted' && payload.old.status !== 'accepted'
+          const newQuote = payload.new as QuoteNotification
+          const oldQuote = payload.old as QuoteNotification
 
-          if (isPaid || isAccepted) {
-            
+          const isPaid = newQuote.status === 'paid' && oldQuote.status !== 'paid'
+          const isAccepted = newQuote.status === 'accepted' && oldQuote.status !== 'accepted'
+          const isExpired = newQuote.status === 'expired' && oldQuote.status !== 'expired'
+
+          if (isPaid || isAccepted || isExpired) {
             setUnreadCount(prev => prev + 1)
             
-            // Prepend new notification and avoid duplicates if IDs match
             setNotifications(prev => {
-              const filtered = prev.filter(n => n.id !== payload.new.id)
-              return [payload.new, ...filtered].slice(0, 5)
+              const filtered = prev.filter(n => n.id !== newQuote.id)
+              return [newQuote, ...filtered].slice(0, 8)
             })
 
             if (isPaid) {
-              toast.success(`Paiement reçu !`, {
-                description: `Le devis ${payload.new.number} a été payé par carte.`,
-                duration: 8000,
-              })
-            } else {
-              toast.info(`Devis signé !`, {
-                description: `Le client a accepté et signé le devis ${payload.new.number}.`,
-                duration: 8000,
-              })
+              toast.success(`Paiement reçu !`, { description: `Devis ${newQuote.number} payé.` })
+            } else if (isAccepted) {
+              toast.info(`Devis signé !`, { description: `Acceptation du client pour ${newQuote.number}.` })
+            } else if (isExpired) {
+              toast.warning(`Lien expiré !`, { description: `Sécurité : Le lien ${newQuote.number} est désormais invalide.` })
             }
             
-            // Safe audio playback
             if (audioRef.current) {
-              audioRef.current.play().catch(e => console.warn('Audio playback blocked:', e))
+              audioRef.current.play().catch(() => {})
             }
           }
         }
       )
-      .subscribe((status) => {
-      })
+      .subscribe()
 
     return () => {
       supabase.removeChannel(channel)

@@ -1,6 +1,8 @@
 import { Database } from './supabase'
 
-export type QuoteStatus = Database['public']['Enums']['quote_status']
+export type QuoteStatus = 
+  | Database['public']['Enums']['quote_status']
+  | 'expired';
 
 export type Client = Database['public']['Tables']['clients']['Row']
 
@@ -11,10 +13,15 @@ export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'num
 
 export type QuoteItem = Database['public']['Tables']['quote_items']['Row']
 
-export type Quote = Database['public']['Tables']['quotes']['Row'] & {
+export type Quote = Omit<Database['public']['Tables']['quotes']['Row'], 'status'> & {
+  status: QuoteStatus
   clients: Client | null
   profiles?: Profile | null
   quote_items?: QuoteItem[] | null
+}
+
+export type QuoteNotification = Quote & {
+  isRecentlyCreated?: boolean
 }
 
 export type Invoice = Database['public']['Tables']['invoices']['Row'] & {

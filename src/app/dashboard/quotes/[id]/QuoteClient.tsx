@@ -34,6 +34,12 @@ import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 import { acceptQuoteAction, sendQuoteEmailAction, createInvoiceFromQuoteAction } from '../actions'
 import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 interface QuoteClientProps {
   quote: Quote
@@ -633,11 +639,27 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           </Button>
 
           <Button
-            variant="outline"
+            variant={currentQuote.status === 'expired' ? "tertiary" : "outline"}
             onClick={handleCopyShareLink}
-            className="flex-1 md:flex-none h-14 px-8 font-black uppercase tracking-widest text-[10px] gap-3 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 shadow-sm"
+            disabled={currentQuote.status === 'expired'}
+            className={cn(
+              "flex-1 md:flex-none h-14 px-8 font-black uppercase tracking-widest text-[10px] gap-3 shadow-sm transition-all duration-500",
+              currentQuote.status === 'expired' 
+                ? "bg-amber-500 text-white border-none hover:bg-amber-600 opacity-100 cursor-not-allowed scale-[0.98]" 
+                : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
+            )}
           >
-            <Share2 size={20} /> Lien Client
+            {currentQuote.status === 'expired' ? (
+              <>
+                <Clock size={20} className="animate-pulse" />
+                Lien Expiré
+              </>
+            ) : (
+              <>
+                <Share2 size={20} />
+                Lien Client
+              </>
+            )}
           </Button>
 
           {currentQuote.status === 'paid' && (

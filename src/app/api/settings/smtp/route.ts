@@ -10,7 +10,7 @@ const smtpSchema = z.object({
   port: z.union([z.string(), z.number()]).transform(v => parseInt(v.toString())),
   user: z.string().min(1, 'User is required'),
   pass: z.string().optional(),
-  from: z.string().email('Invalid email format').optional(),
+  from: z.string().email('Format email invalide').optional().or(z.literal('')),
 })
 
 export async function POST(request: Request) {

@@ -7,6 +7,12 @@ import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { useNotifications } from '@/components/providers/NotificationProvider'
 import { signOut } from '@/app/login/actions'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 interface TopNavBarProps {
   userEmail?: string
@@ -126,22 +132,37 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                         key={`${notif.id}-${i}`} 
                         href={`/dashboard/quotes/${notif.id}`}
                         onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-start gap-4 p-5 hover:bg-slate-50 transition-colors group"
+                        className={cn(
+                          "flex items-start gap-4 p-5 hover:bg-slate-50 transition-colors group",
+                          notif.status === 'expired' && "bg-amber-50/30 hover:bg-amber-50/50"
+                        )}
                       >
-                        <div className={`mt-1 p-2 rounded-xl flex-shrink-0 ${
-                          notif.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                        }`}>
-                          {notif.status === 'paid' ? <CreditCard size={18} /> : <CheckCircle2 size={18} />}
+                        <div className={cn(
+                          "mt-1 p-2 rounded-xl flex-shrink-0",
+                          notif.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 
+                          notif.status === 'expired' ? 'bg-amber-100 text-amber-600' : 'bg-blue-50 text-blue-600'
+                        )}>
+                          {notif.status === 'paid' ? <CreditCard size={18} /> : 
+                           notif.status === 'expired' ? <Bell size={18} className="animate-pulse" /> : <CheckCircle2 size={18} />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-black text-primary uppercase tracking-tight mb-1 truncate">
-                            {notif.status === 'paid' ? 'Paiement Encaissé' : 'Devis Signature reçue'}
+                          <p className={cn(
+                            "text-xs font-black uppercase tracking-tight mb-1 truncate",
+                            notif.status === 'expired' ? "text-amber-700" : "text-primary"
+                          )}>
+                            {notif.status === 'paid' ? 'Paiement Encaissé' : 
+                             notif.status === 'expired' ? 'Lien Expiré (Sécurité)' : 'Devis Signature reçue'}
                           </p>
                           <p className="text-[11px] font-bold text-slate-500 mb-2">
-                             Devis <span className="text-secondary">{notif.number}</span> par {notif.clients?.name || 'le client'}.
+                             Devis <span className={cn("text-secondary", notif.status === 'expired' && "text-amber-600 font-black")}>
+                               {notif.number}
+                             </span> {notif.status === 'expired' ? 'n\'est plus accessible.' : `par ${notif.clients?.name || 'le client'}.`}
                           </p>
                           <div className="flex items-center gap-2">
-                             <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Récent</span>
+                             <span className={cn(
+                               "text-[9px] font-black uppercase tracking-widest",
+                               notif.status === 'expired' ? "text-amber-400" : "text-slate-300"
+                             )}>{notif.status === 'expired' ? 'Expiré' : 'Récent'}</span>
                              <ChevronRight size={10} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
                           </div>
                         </div>
