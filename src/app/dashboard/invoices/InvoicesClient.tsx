@@ -68,10 +68,11 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
   // 3. Filtrage Haute Performance (0ms latence)
   const filteredInvoices = useMemo(() => {
     if (!searchTerm) return invoices
+    if (!Array.isArray(invoices)) return []
     const lowerSearch = searchTerm.toLowerCase()
-    return invoices.filter(inv => 
-      inv.number.toLowerCase().includes(lowerSearch) || 
-      inv.clients?.name?.toLowerCase().includes(lowerSearch)
+    return invoices.filter(invoice => 
+      (invoice.number || '').toLowerCase().includes(lowerSearch) || 
+      (invoice.clients?.name || '').toLowerCase().includes(lowerSearch)
     )
   }, [invoices, searchTerm])
 

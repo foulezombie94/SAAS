@@ -52,10 +52,11 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
   // 1. Filtrage instantané (God Tier)
   const filteredQuotes = useMemo(() => {
     if (!searchTerm) return quotes
+    if (!Array.isArray(quotes)) return []
     const lowerSearch = searchTerm.toLowerCase()
     return quotes.filter(q => 
-      q.number.toLowerCase().includes(lowerSearch) || 
-      q.clients?.name?.toLowerCase().includes(lowerSearch)
+      (q.number || '').toLowerCase().includes(lowerSearch) || 
+      (q.clients?.name || '').toLowerCase().includes(lowerSearch)
     )
   }, [quotes, searchTerm])
 

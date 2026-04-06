@@ -45,7 +45,7 @@ export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
     `clients-${userId}`, 
     initialClients, 
     fetcher,
-    { ttl: 1000 * 60 * 30, refreshInterval: 1000 * 60 * 5 } // Polling 5 min
+    { ttl: 1000 * 60 * 30, refreshInterval: 1000 * 60 * 5 }
   )
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -53,11 +53,12 @@ export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
   // 1. Filtrage instantané (God Tier)
   const filteredClients = useMemo(() => {
     if (!searchTerm) return clients
+    if (!Array.isArray(clients)) return []
     const lowerSearch = searchTerm.toLowerCase()
     return clients.filter(c => 
-      c.name.toLowerCase().includes(lowerSearch) || 
-      (c.email && c.email.toLowerCase().includes(lowerSearch)) ||
-      (c.city && c.city.toLowerCase().includes(lowerSearch))
+      (c.name || '').toLowerCase().includes(lowerSearch) || 
+      (c.email || '').toLowerCase().includes(lowerSearch) ||
+      (c.city || '').toLowerCase().includes(lowerSearch)
     )
   }, [clients, searchTerm])
 

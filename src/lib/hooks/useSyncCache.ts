@@ -13,23 +13,30 @@ interface CacheEnvelope<T> {
  * Hook de Synchronisation "God Tier" (SWR-style)
  * 🏎️ Affiche instantanément le cache local (Stale)
  * 🔄 Rafraîchit en arrière-plan depuis le serveur (Revalidate)
- * 🛡️ Gère l'expiration et le versionnage
+ * 🛡️ Résilience contre les sessions vides
  */
 export function useSyncCache<T>(
   key: string, 
   initialData: T, 
   fetcher: () => Promise<T>,
-  options = { 
-    ttl: DEFAULT_TTL,
-    refreshInterval: 0 // 0 = Pas de polling par défaut
-  }
+  options: { 
+    ttl?: number,
+    refreshInterval?: number,
+    enabled?: boolean
+  } = {}
 ): {
   data: T
   isSyncing: boolean
   lastUpdated: number | null
   revalidate: () => Promise<void>
 } {
-  // 1. Chargement initial du cache (Synchrone pour éviter le flash)
+  const { 
+    ttl = DEFAULT_TTL, 
+    refreshInterval = 0, 
+    enabled = true 
+  } = options
+
+  // 1. Initial State: Synch-Only (No Flash)
   const [state, setState] = useState<T>(() => {
     if (typeof window === 'undefined') return initialData
     
@@ -38,11 +45,10 @@ export function useSyncCache<T>(
       if (!stored) return initialData
       
       const envelope = JSON.parse(stored) as CacheEnvelope<T>
-      
-      // Validation du versionnage et de l'expiration
-      const isExpired = Date.now() - envelope.timestamp > options.ttl
+      const isExpired = Date.now() - envelope.timestamp > ttl
       const versionMatch = envelope.version === CACHE_VERSION
       
+      // Si on a des données valides, on les prend
       if (versionMatch && !isExpired) {
         return envelope.data
       }
@@ -57,13 +63,26 @@ export function useSyncCache<T>(
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const isFirstMount = useRef(true)
 
-  // 2. Fonction de revalidation (Source de vérité Serveur)
+  // 2. Revalidation (Background)
   const revalidate = useCallback(async () => {
+    if (!enabled) return // Ne pas forcer si désactivé
+    
     setIsSyncing(true)
     try {
       const freshData = await fetcher()
       
-      // Mise à jour de l'état et du cache atomique
+      // PROTECTION "GOD TIER": 
+      // Si on a déjà des données (Prop ou Cache) et qu'on reçoit du Vide au 1er sync
+      // Il y a de fortes chances que ce soit une erreur de session client/serveur.
+      // On n'écrase que s'il y a un changement réel ou apres confirmation session.
+      const hasActualData = Array.isArray(state) ? state.length > 0 : !!state
+      const receivedEmpty = Array.isArray(freshData) ? freshData.length === 0 : !freshData
+      
+      if (isFirstMount.current && hasActualData && receivedEmpty) {
+        console.warn(`[SyncCache] "${key}" suspecté de Session-Race condition. Update ignoré.`)
+        return
+      }
+
       const envelope: CacheEnvelope<T> = {
         data: freshData,
         timestamp: Date.now(),
@@ -78,26 +97,24 @@ export function useSyncCache<T>(
     } finally {
       setIsSyncing(false)
     }
-  }, [key, fetcher])
+  }, [key, fetcher, options.enabled, state])
 
-  // 3. Effet de synchronisation automatique au montage + Polling
+  // 3. Mount + Polling Cycle
   useEffect(() => {
+    if (!enabled) return
+
     if (isFirstMount.current) {
       revalidate()
       isFirstMount.current = false
     }
 
-    if (options.refreshInterval > 0) {
+    if (refreshInterval > 0) {
       const interval = setInterval(() => {
-        // On ne relance pas si une sync est déjà en cours
-        if (!isSyncing) {
-          revalidate()
-        }
-      }, options.refreshInterval)
-      
+        if (!isSyncing) revalidate()
+      }, refreshInterval)
       return () => clearInterval(interval)
     }
-  }, [revalidate, options.refreshInterval, isSyncing])
+  }, [revalidate, refreshInterval, isSyncing, enabled])
 
   return { data: state, isSyncing, lastUpdated, revalidate }
 }
