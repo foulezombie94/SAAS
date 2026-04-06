@@ -35,13 +35,12 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
   useEffect(() => {
     if (!userId) return
 
-    // 🕒 INITIAL FETCH: All actionable events (Paid, Accepted, Expired)
     const fetchRecentActivity = async () => {
       const { data } = await supabase
         .from('quotes')
         .select('*, clients(*)')
         .eq('user_id', userId)
-        .in('status', ['paid', 'accepted', 'expired'])
+        .in('status', ['paid', 'accepted', 'expired'] as any[])
         .order('updated_at', { ascending: false })
         .limit(8)
 
@@ -64,8 +63,8 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          const newQuote = payload.new as QuoteNotification
-          const oldQuote = payload.old as QuoteNotification
+          const newQuote = payload.new as any
+          const oldQuote = payload.old as any
 
           const isPaid = newQuote.status === 'paid' && oldQuote.status !== 'paid'
           const isAccepted = newQuote.status === 'accepted' && oldQuote.status !== 'accepted'

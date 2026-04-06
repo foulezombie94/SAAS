@@ -127,7 +127,9 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-50">
-                    {notifications.map((notif, i) => (
+                    {notifications.map((n, i) => {
+                      const notif = n as any
+                      return (
                       <Link 
                         key={`${notif.id}-${i}`} 
                         href={`/dashboard/quotes/${notif.id}`}
@@ -163,11 +165,11 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                                "text-[9px] font-black uppercase tracking-widest",
                                notif.status === 'expired' ? "text-amber-400" : "text-slate-300"
                              )}>{notif.status === 'expired' ? 'Expiré' : 'Récent'}</span>
-                             <ChevronRight size={10} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
                           </div>
                         </div>
                       </Link>
-                    ))}
+                    )
+                  })}
                   </div>
                 )}
               </div>

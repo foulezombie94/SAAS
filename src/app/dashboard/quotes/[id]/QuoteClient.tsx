@@ -639,17 +639,17 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           </Button>
 
           <Button
-            variant={currentQuote.status === 'expired' ? "tertiary" : "outline"}
+            variant={(currentQuote.status as any) === 'expired' ? "tertiary" : "outline"}
             onClick={handleCopyShareLink}
-            disabled={currentQuote.status === 'expired'}
+            disabled={(currentQuote.status as any) === 'expired'}
             className={cn(
               "flex-1 md:flex-none h-14 px-8 font-black uppercase tracking-widest text-[10px] gap-3 shadow-sm transition-all duration-500",
-              currentQuote.status === 'expired' 
+              (currentQuote.status as any) === 'expired' 
                 ? "bg-amber-500 text-white border-none hover:bg-amber-600 opacity-100 cursor-not-allowed scale-[0.98]" 
                 : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
             )}
           >
-            {currentQuote.status === 'expired' ? (
+            {(currentQuote.status as any) === 'expired' ? (
               <>
                 <Clock size={20} className="animate-pulse" />
                 Lien Expiré

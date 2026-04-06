@@ -1,0 +1,1 @@
+﻿src/components/providers/NotificationProvider.tsx(44,44): error TS2322: Type '"expired"' is not assignable to type '"draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid" | "overdue" | "cancelled" | null'.
