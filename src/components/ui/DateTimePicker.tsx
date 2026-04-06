@@ -114,7 +114,7 @@ export function DateTimePicker({ value, onChange, onClose }: DateTimePickerProps
                 type="time" 
                 value={timeValue}
                 onChange={handleTimeChange}
-                className="bg-transparent border-none outline-none font-black text-lg text-[#00236F] w-[80px] text-right"
+                className="bg-transparent border-none outline-none font-black text-xl text-[#00236F] w-[140px] text-right pr-2"
             />
         </div>
 
