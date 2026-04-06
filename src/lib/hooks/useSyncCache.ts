@@ -72,14 +72,6 @@ export function useSyncCache<T>(
     
     setIsSyncing(true)
     try {
-      // 🛡️ Double vérification de session avant de polluer le cache
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session && !isManual) {
-        // Si pas de session en arrière-plan, on ne fait rien pour ne pas écraser les données du serveur
-        console.warn(`[SyncTracker] Skip sync for "${key}": No active session.`)
-        return
-      }
-
       const freshData = await fetcher()
       const hasActualData = state && Array.isArray(state) && state.length > 0
       const receivedEmpty = Array.isArray(freshData) && freshData.length === 0
