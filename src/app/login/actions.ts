@@ -3,8 +3,17 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { rateLimit } from '@/lib/rate-limit'
+import { signupSchema } from '@/lib/validations/secure-inputs'
+import { z } from 'zod'
 
 export async function login(prevState: any, formData: FormData) {
+  // 1. ANTI-BRUTE FORCE (10 tentatives / minute par IP)
+  const limit = await rateLimit('auth-login', 10, 60000)
+  if (!limit.success) {
+    return { error: limit.message }
+  }
+
   const supabase = await createClient()
 
   const email = (formData.get('email') as string)?.trim()
@@ -43,21 +52,24 @@ export async function login(prevState: any, formData: FormData) {
 }
 
 export async function signup(prevState: any, formData: FormData) {
-  const supabase = await createClient()
-
-  const email = (formData.get('email') as string)?.trim()
-  const password = formData.get('password') as string
-  const first_name = (formData.get('first_name') as string)?.trim()
-  const last_name = (formData.get('last_name') as string)?.trim()
-  const company_name = (formData.get('company_name') as string)?.trim()
-  const phone = (formData.get('phone') as string)?.trim()
-  const num_contacts = (formData.get('num_contacts') as string)?.trim()
-  const annual_revenue = (formData.get('annual_revenue') as string)?.trim()
-  const preferred_language = (formData.get('preferred_language') as string)?.trim() || 'fr'
-
-  if (!email || !password || !first_name || !last_name || !company_name) {
-    return { error: 'Tous les champs marqués d\'une étoile sont obligatoires' }
+  // 1. ANTI-BRUTE Force (5 tentatives / minute par IP pour l'inscription)
+  const limit = await rateLimit('auth-signup', 5, 60000)
+  if (!limit.success) {
+    return { error: limit.message }
   }
+
+  // 2. VALIDATION STRICTE & ANTI-XSS
+  const rawData = Object.fromEntries(formData.entries())
+  const validatedFields = signupSchema.safeParse(rawData)
+
+  if (!validatedFields.success) {
+    return { error: validatedFields.error.issues[0].message }
+  }
+
+  const { email, password, first_name, last_name, company_name, ...extraData } = validatedFields.data
+  const { phone, num_contacts, annual_revenue, preferred_language = 'fr' } = extraData
+
+  const supabase = await createClient()
 
   const { data: { user }, error } = await supabase.auth.signUp({
     email,

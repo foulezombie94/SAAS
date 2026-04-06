@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sanitizeString } from './secure-inputs';
 
 export const PaymentDetailsSchema = z.object({
   method: z.enum(['card', 'transfer', 'cash']),
@@ -7,7 +8,7 @@ export const PaymentDetailsSchema = z.object({
 }).strict();
 
 export const QuoteItemInsertSchema = z.object({
-  description: z.string().min(1, "La description est requise"),
+  description: sanitizeString.min(1, "La description est requise"),
   quantity: z.number().min(1, "La quantité doit être au moins 1").max(1_000_000, "Quantité maximale dépassée"),
   unit_price: z.number().min(0, "Le prix unitaire doit être positif").max(1_000_000, "Prix maximal dépassé"),
   total_price: z.number().min(0).max(1_000_000),
@@ -35,6 +36,9 @@ export const QuoteItemInsertSchema = z.object({
 export const QuoteInsertSchema = z.object({
   client_id: z.string().uuid("L'ID client doit être un UUID valide"),
   status: z.enum(["draft", "sent", "accepted", "rejected", "invoiced", "paid", "overdue", "cancelled"]),
+  description: sanitizeString.optional(),
+  terms: sanitizeString.optional(),
+  notes: sanitizeString.optional(),
   total_ht: z.number().min(0).max(10_000_000),
   tax_rate: z.number().min(0).max(100),
   total_ttc: z.number().min(0).max(15_000_000),
