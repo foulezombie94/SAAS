@@ -35,6 +35,7 @@ import html2canvas from 'html2canvas'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 import { acceptQuoteAction, sendQuoteEmailAction, createInvoiceFromQuoteAction } from '../actions'
+import ExcelJS from 'exceljs'
 
 interface QuoteClientProps {
   quote: Quote
@@ -112,75 +113,119 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     }
   }
 
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async () => {
     try {
-      const sep = ';' // Standard for French Excel
-      const escapeCSV = (str: string | number | null | undefined) => {
-        const val = str === null || str === undefined ? '' : String(str)
-        if (val.includes(sep) || val.includes('"') || val.includes('\n')) {
-          return `"${val.replace(/"/g, '""')}"`
-        }
-        return val
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Devis')
+
+      // 1. Column Definitions & Styles
+      worksheet.columns = [
+        { header: 'DÉSIGNATION', key: 'description', width: 40 },
+        { header: 'UNITÉ', key: 'unit', width: 12 },
+        { header: 'QTÉ', key: 'quantity', width: 10 },
+        { header: 'PRIX UNIT HT', key: 'unit_price', width: 15 },
+        { header: 'TVA', key: 'tax_rate', width: 10 },
+        { header: 'TOTAL HT', key: 'total_price', width: 18 }
+      ]
+
+      // 2. Identification Header
+      worksheet.spliceRows(1, 0, 
+        ['DEVIS PROFESSIONNEL', '', '', '', '', ''],
+        [`Référence : ${quote.number}`, '', '', '', '', ''],
+        [`Artisan : ${quote.profiles?.company_name || 'N/A'}`, '', '', '', '', ''],
+        [`Client : ${quote.clients?.name || 'N/A'}`, '', `Date émission : ${new Date(quote.created_at).toLocaleDateString()}`, '', '', ''],
+        ['']
+      )
+
+      // Styling Identification
+      worksheet.mergeCells('A1:F1')
+      const mainTitle = worksheet.getCell('A1')
+      mainTitle.font = { name: 'Arial Black', size: 16, color: { argb: 'FF002878' } }
+      mainTitle.alignment = { horizontal: 'center' }
+
+      // 3. Table Header Stying (the row where headers are now, after splice)
+      const headerRow = worksheet.getRow(6)
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF002878' }
       }
+      headerRow.alignment = { horizontal: 'center', vertical: 'middle' }
 
-      const csvRows = []
-
-      // sep=; instruction for Excel to automatically detect the separator
-      csvRows.push([`sep=${sep}`])
-
-      // 1. Identification & Client Section (Full Horizontal)
-      csvRows.push(['RÉFÉRENCE', 'DATE ÉMISSION', 'CLIENT', 'EMAIL', 'TÉLÉPHONE', 'ADRESSE'])
-      csvRows.push([
-        escapeCSV(quote.number), 
-        new Date(quote.created_at).toLocaleDateString(),
-        escapeCSV(quote.clients?.name),
-        escapeCSV(quote.clients?.email),
-        escapeCSV(quote.clients?.phone),
-        escapeCSV(`${quote.clients?.address || ''}, ${quote.clients?.city || ''}`)
-      ])
-      csvRows.push([''])
-      csvRows.push([''])
-      
-      // 2. Body Section (Operational Data)
-      const headers = ['Désignation / Libellé', 'Unité', 'Quantité', 'Prix Unitaire HT', 'Taux TVA (%)', 'Total HT']
-      csvRows.push(headers)
-
+      // 4. Add Items
       if (quote.quote_items && quote.quote_items.length > 0) {
         quote.quote_items.forEach((item: QuoteItem) => {
-          csvRows.push([
-            escapeCSV(item.description),
-            'Unité', 
-            escapeCSV(item.quantity),
-            escapeCSV(item.unit_price),
-            escapeCSV(item.tax_rate || 20),
-            escapeCSV(item.total_price)
-          ])
+          const row = worksheet.addRow({
+            description: item.description,
+            unit: 'Unité',
+            quantity: Number(item.quantity),
+            unit_price: Number(item.unit_price),
+            tax_rate: `${item.tax_rate || 20}%`,
+            total_price: Number(item.total_price)
+          })
+
+          // Currency Formatting
+          row.getCell('unit_price').numFmt = '#,##0.00 €'
+          row.getCell('total_price').numFmt = '#,##0.00 €'
+          row.alignment = { vertical: 'middle' }
         })
       }
-      csvRows.push([''])
 
-      // 4. Financial Summary - Aligned to the right
-      csvRows.push(['', '', '', '', 'TOTAL GÉNÉRAL HT', escapeCSV(quote.total_ht)])
-      csvRows.push(['', '', '', '', 'MONTANT TVA (20%)', escapeCSV((quote.total_ht * 0.2).toFixed(2))])
-      csvRows.push(['', '', '', '', 'TOTAL TTC', escapeCSV(quote.total_ttc)])
+      // 5. Financial Summary
+      worksheet.addRow([])
+      const htRow = worksheet.addRow(['', '', '', '', 'TOTAL GÉNÉRAL HT', Number(quote.total_ht)])
+      const tvaRow = worksheet.addRow(['', '', '', '', 'MONTANT TVA (20%)', Number(quote.total_ht * 0.2)])
+      const ttcRow = worksheet.addRow(['', '', '', '', 'NET À PAYER TTC', Number(quote.total_ttc)])
 
-      const csvContent = csvRows.map(row => row.join(sep)).join('\n')
-      
-      // Use UTF-8 with BOM for Excel compatibility (accents support)
-      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      // Summary Styling
+      const summaryRows = [htRow, tvaRow, ttcRow]
+      summaryRows.forEach(row => {
+        const titleCell = row.getCell(5)
+        const valueCell = row.getCell(6)
+        titleCell.font = { bold: true }
+        titleCell.alignment = { horizontal: 'right' }
+        valueCell.numFmt = '#,##0.00 €'
+        valueCell.font = { bold: true }
+      })
+
+      ttcRow.getCell(6).font = { bold: true, size: 14, color: { argb: 'FF002878' } }
+      ttcRow.getCell(6).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF1F5F9' }
+      }
+
+      // Add Borders to all rows
+      worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        if (rowNumber >= 6) {
+          row.eachCell({ includeEmpty: false }, (cell) => {
+            cell.border = {
+              top: { style: 'thin' },
+              bottom: { style: 'thin' },
+              left: { style: 'thin' },
+              right: { style: 'thin' }
+            }
+          })
+        }
+      })
+
+      // 6. Generate & Download
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
       const link = document.body.appendChild(document.createElement('a'))
       const url = URL.createObjectURL(blob)
       
       link.href = url
-      link.download = `ArtisanFlow_Devis_${quote.number}.csv`
+      link.download = `ArtisanFlow_Devis_${quote.number}.xlsx`
       link.click()
       
       URL.revokeObjectURL(url)
       document.body.removeChild(link)
-      toast.success("Excel (CSV) généré avec succès !")
+      toast.success("Excel (.xlsx) professionnel généré !")
     } catch (e) {
-      console.error('Excel Export Error:', e)
-      toast.error("Erreur lors de l'export Excel")
+      console.error('ExcelJS Export Error:', e)
+      toast.error("Échec de l'export Excel Professionnel")
     }
   }
 
