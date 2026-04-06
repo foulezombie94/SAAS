@@ -18,8 +18,8 @@ export async function getCachedDashboardStats(): Promise<DashboardStats> {
         p_user_id: user.id 
       })
 
-      if (error) {
-        console.error('[STATS ERROR]', error)
+      if (error || !stats) {
+        console.error('[STATS ERROR]', error || 'No data returned')
         // Fallback vide mais typé
         return {
           revenue: 0,
@@ -32,7 +32,16 @@ export async function getCachedDashboardStats(): Promise<DashboardStats> {
         }
       }
 
-      return stats
+      // 🛡️ Final Safety Layer: Ensure all required fields exist
+      return {
+        revenue: Number(stats.revenue ?? 0),
+        revenue_change: Number(stats.revenue_change ?? 0),
+        unpaid: Number(stats.unpaid ?? 0),
+        unpaid_count: Number(stats.unpaid_count ?? 0),
+        acceptedCount: Number(stats.acceptedCount ?? 0),
+        quotes_change: Number(stats.quotes_change ?? 0),
+        history: Array.isArray(stats.history) ? stats.history : []
+      }
     },
     ['dashboard-stats', user.id],
     {
