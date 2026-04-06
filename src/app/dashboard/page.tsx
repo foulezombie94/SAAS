@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { getCachedDashboardStats, getCachedRecentQuotes } from '@/utils/supabase/cached-queries'
-import { Quote } from '@/types/dashboard'
+import { Quote, DashboardStats } from '@/types/dashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
@@ -28,7 +28,7 @@ export default async function DashboardPage({
 
   // 🚀 Fetch stats & activity with Intelligent Cache + Session Security (Grade 3)
   const [stats, quotes] = await Promise.all([
-    getCachedDashboardStats(),
+    getCachedDashboardStats() as Promise<DashboardStats>,
     getCachedRecentQuotes()
   ])
   
@@ -80,10 +80,10 @@ export default async function DashboardPage({
               <CreditCard size={20} />
             </div>
             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-              (stats as any).revenue_change >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
+              stats.revenue_change >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
             }`}>
-              <TrendingUp size={10} className={(stats as any).revenue_change < 0 ? 'rotate-180' : ''} /> 
-              {(stats as any).revenue_change >= 0 ? '+' : ''}{(stats as any).revenue_change}%
+              <TrendingUp size={10} className={stats.revenue_change < 0 ? 'rotate-180' : ''} /> 
+              {stats.revenue_change >= 0 ? '+' : ''}{stats.revenue_change}%
             </div>
           </div>
           <div>
@@ -99,7 +99,7 @@ export default async function DashboardPage({
               <Clock size={20} />
             </div>
             <div className="flex items-center gap-1 bg-[#433228]/10 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest text-[#433228]">
-              {(stats as any).unpaid_count || 0} en attente
+              {stats.unpaid_count || 0} en attente
             </div>
           </div>
           <div>
@@ -115,9 +115,9 @@ export default async function DashboardPage({
               <CheckCircle2 size={20} />
             </div>
             <div className={`text-[0.625rem] font-black uppercase tracking-widest ${
-              (stats as any).quotes_change >= 0 ? 'text-green-600' : 'text-red-600'
+              stats.quotes_change >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
-              {(stats as any).quotes_change >= 0 ? '+' : ''}{(stats as any).quotes_change}% vs mois dernier
+              {stats.quotes_change >= 0 ? '+' : ''}{stats.quotes_change}% vs mois dernier
             </div>
           </div>
           <div>
@@ -138,8 +138,8 @@ export default async function DashboardPage({
             </select>
           </div>
           <div className="h-48 flex items-end justify-between gap-2 px-2">
-            {(stats as any).history?.map((item: any, idx: number) => {
-              const maxRev = Math.max(...(stats as any).history.map((h: any) => h.revenue), 1000);
+            {stats.history?.map((item: any, idx: number) => {
+              const maxRev = Math.max(...stats.history.map((h: any) => h.revenue), 1000);
               const height = Math.max((item.revenue / maxRev) * 100, 5); // Min 5% height
               return (
                 <div 
@@ -157,7 +157,7 @@ export default async function DashboardPage({
             })}
           </div>
           <div className="flex justify-between mt-4 text-[0.625rem] font-black uppercase tracking-[0.2em] text-slate-400">
-            {(stats as any).history?.map((item: any, idx: number) => (
+            {stats.history?.map((item: any, idx: number) => (
               <span key={idx}>{item.month}</span>
             ))}
           </div>

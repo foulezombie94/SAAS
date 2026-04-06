@@ -1,11 +1,12 @@
 import { unstable_cache } from 'next/cache'
 import { createClient } from './server'
+import { DashboardStats } from '@/types/dashboard'
 
 /**
  * Récupère les statistiques du dashboard avec cache serveur.
  * 🛡️ GRADE 3 : Sécurisation par session et agrégation atomique (prochainement RPC).
  */
-export async function getCachedDashboardStats() {
+export async function getCachedDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Unauthorized access")
@@ -13,7 +14,7 @@ export async function getCachedDashboardStats() {
   return unstable_cache(
     async () => {
       // 🏎️ GRADE 3 : Agrégation atomique côté SQL (Ultra-Performance)
-      const { data: stats, error } = await supabase.rpc('get_dashboard_analytics', { 
+      const { data: stats, error } = await (supabase as any).rpc('get_dashboard_analytics', { 
         p_user_id: user.id 
       })
 

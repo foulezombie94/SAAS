@@ -77,3 +77,18 @@ export interface Quote {
   payment_method?: 'card' | 'virement' | string
   payment_details?: any
 }
+
+export interface DashboardHistory {
+  month: string
+  revenue: number
+}
+
+export interface DashboardStats {
+  revenue: number
+  revenue_change: number
+  unpaid: number
+  unpaid_count: number
+  acceptedCount: number
+  quotes_change: number
+  history: DashboardHistory[]
+}
