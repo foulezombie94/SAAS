@@ -426,7 +426,7 @@ function CalendarContent() {
                   </button>
 
                   {pickerType === 'end' && (
-                    <div className="absolute top-[100%] right-0 md:right-auto md:left-0 z-[110] mt-4">
+                    <div className="absolute top-[100%] right-0 z-[110] mt-4">
                       <DateTimePicker 
                         value={formData.end_time}
                         onChange={(val) => setFormData({...formData, end_time: val})}
