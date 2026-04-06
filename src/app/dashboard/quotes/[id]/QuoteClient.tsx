@@ -50,8 +50,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [emailForm, setEmailForm] = useState({
-    subject: `Votre Devis ${quote.number} - ${quote.profiles?.company_name || 'ArtisanFlow'}`,
-    message: `Bonjour ${quote.clients?.name},\n\nVeuillez trouver ci-joint notre proposition commerciale concernant votre projet.\n\nVous pouvez consulter, signer et payer ce devis directement en ligne via le bouton sécurisé ci-dessous.\n\nRestant à votre disposition pour toute question.`
+    subject: `Votre Devis ${currentQuote.number} - ${currentQuote.profiles?.company_name || 'ArtisanFlow'}`,
+    message: `Bonjour ${currentQuote.clients?.name},\n\nVeuillez trouver ci-joint notre proposition commerciale concernant votre projet.\n\nVous pouvez consulter, signer et payer ce devis directement en ligne via le bouton sécurisé ci-dessous.\n\nRestant à votre disposition pour toute question.`
   })
   const quoteRef = useRef<HTMLDivElement>(null)
 
@@ -355,24 +355,24 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         {/* Header Section */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '80px' }}>
           <div>
-            <h2 style={{ fontSize: '14px', fontWeight: '900', color: '#002878', letterSpacing: '0.2em', textTransform: 'uppercase', margin: '0 0 4px 0' }}>{quote.profiles?.company_name || 'Professional Systems'}</h2>
+            <h2 style={{ fontSize: '14px', fontWeight: '900', color: '#002878', letterSpacing: '0.2em', textTransform: 'uppercase', margin: '0 0 4px 0' }}>{currentQuote.profiles?.company_name || 'Professional Systems'}</h2>
             <p style={{ fontSize: '13px', fontWeight: '600', color: '#64748b', margin: 0 }}>ArtisanFlow SaaS Integration</p>
           </div>
           <div style={{ textAlign: 'right', fontSize: '14px', color: '#64748b', lineHeight: '1.6' }}>
-            <p style={{ margin: 0 }}>{quote.profiles?.address || 'Adresse non renseignée'}</p>
+            <p style={{ margin: 0 }}>{currentQuote.profiles?.address || 'Adresse non renseignée'}</p>
             <p style={{ margin: 0 }}>France</p>
-            <p style={{ margin: 0, fontWeight: 'bold', color: '#10172a' }}>{quote.profiles?.phone || quote.profiles?.email}</p>
+            <p style={{ margin: 0, fontWeight: 'bold', color: '#10172a' }}>{currentQuote.profiles?.phone || currentQuote.profiles?.email}</p>
           </div>
         </div>
 
         {/* Title & Ref */}
         <div style={{ marginBottom: '4px' }}>
           <h1 style={{ fontSize: '56px', fontWeight: '900', color: '#002878', margin: 0, letterSpacing: '-0.04em' }}>
-            {quote.status === 'paid' ? 'Facture' : 'Devis'} #{quote.number}
+            {currentQuote.status === 'paid' ? 'Facture' : 'Devis'} #{currentQuote.number}
           </h1>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '10px' }}>
             <p style={{ fontSize: '18px', fontWeight: '700', color: '#64748b', margin: 0 }}>
-              Référence Projet : Rénovation Loft - {quote.clients?.city}
+              Référence Projet : Rénovation Loft - {currentQuote.clients?.city}
             </p>
             <div style={{
               backgroundColor: '#fef3c7',
@@ -385,7 +385,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               letterSpacing: '0.1em',
               borderLeft: '4px solid #f59e0b'
             }}>
-              Statut : {quote.status === 'accepted' ? 'Validé' : 'En Attente'}
+              Statut : {currentQuote.status === 'accepted' ? 'Validé' : 'En Attente'}
             </div>
           </div>
         </div>
@@ -397,17 +397,17 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           {/* Client Box */}
           <div style={{ flex: 1, backgroundColor: '#f8fafc', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
             <p style={{ fontSize: '11px', fontWeight: '900', color: '#002878', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>Destinataire</p>
-            <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1e293b', margin: '0 0 16px 0' }}>{quote.clients?.name}</h3>
+            <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1e293b', margin: '0 0 16px 0' }}>{currentQuote.clients?.name}</h3>
             <p style={{ fontSize: '14px', color: '#64748b', fontWeight: '600', margin: '0 0 4px 0' }}>Adresse de chantier :</p>
-            <p style={{ fontSize: '16px', color: '#334155', fontWeight: '700', margin: 0 }}>{quote.clients?.site_address || quote.clients?.address || '42 Quai de Saône'}</p>
-            <p style={{ fontSize: '16px', color: '#334155', fontWeight: '700', margin: 0 }}>{quote.clients?.postal_code} {quote.clients?.city}</p>
+            <p style={{ fontSize: '16px', color: '#334155', fontWeight: '700', margin: 0 }}>{currentQuote.clients?.site_address || currentQuote.clients?.address || '42 Quai de Saône'}</p>
+            <p style={{ fontSize: '16px', color: '#334155', fontWeight: '700', margin: 0 }}>{currentQuote.clients?.postal_code} {currentQuote.clients?.city}</p>
           </div>
 
           {/* Details block */}
           <div style={{ width: '350px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignContent: 'start' }}>
             <div>
               <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Date d'émission</p>
-              <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>{new Date(quote.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>{new Date(currentQuote.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             </div>
             <div>
               <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Date de validité</p>
@@ -432,16 +432,16 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             </tr>
           </thead>
           <tbody>
-            {quote.quote_items?.map((item: QuoteItem) => (
+            {currentQuote.quote_items?.map((item: QuoteItem) => (
               <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '30px' }}>
                   <p style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: '0 0 6px 0' }}>{item.description}</p>
                   <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', margin: 0 }}>Prestation certifiée ArtisanFlow - Finition premium.</p>
                 </td>
-                <td style={{ textAlign: 'center', fontSize: '16px', fontWeight: '700', color: '#475569' }}>{item.quantity?.toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontSize: '16px', fontWeight: '700', color: '#475569' }}>{(item.quantity || 0).toFixed(2)}</td>
                 <td style={{ textAlign: 'center', fontSize: '14px', fontWeight: '700', color: '#475569' }}>Unit</td>
-                <td style={{ textAlign: 'right', fontSize: '16px', fontWeight: '700', color: '#475569' }}>{item.unit_price?.toLocaleString('fr-FR')} €</td>
-                <td style={{ textAlign: 'right', paddingRight: '30px', fontSize: '18px', fontWeight: '900', color: '#1e293b' }}>{item.total_price?.toLocaleString('fr-FR')} €</td>
+                <td style={{ textAlign: 'right', fontSize: '16px', fontWeight: '700', color: '#475569' }}>{(item.unit_price || 0).toLocaleString('fr-FR')} €</td>
+                <td style={{ textAlign: 'right', paddingRight: '30px', fontSize: '18px', fontWeight: '900', color: '#1e293b' }}>{(item.total_price || 0).toLocaleString('fr-FR')} €</td>
               </tr>
             ))}
           </tbody>
@@ -464,15 +464,15 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
             <div style={{ width: '400px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', color: '#64748b' }}>
               <span>Total Hors Taxes</span>
-              <span>{quote.total_ht?.toLocaleString('fr-FR')} €</span>
+              <span>{currentQuote.total_ht?.toLocaleString('fr-FR')} €</span>
             </div>
             <div style={{ width: '400px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', color: '#64748b', paddingBottom: '20px', borderBottom: '2px solid #e2e8f0' }}>
               <span>TVA (20%)</span>
-              <span>{(quote.total_ht * 0.2).toLocaleString('fr-FR')} €</span>
+              <span>{(currentQuote.total_ht * 0.2).toLocaleString('fr-FR')} €</span>
             </div>
             <div style={{ width: '500px', marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '16px', fontWeight: '900', color: '#002878', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Net à Payer TTC</span>
-              <span style={{ fontSize: '48px', fontWeight: '900', color: '#002878', letterSpacing: '-0.04em' }}>{quote.total_ttc?.toLocaleString('fr-FR')} €</span>
+              <span style={{ fontSize: '48px', fontWeight: '900', color: '#002878', letterSpacing: '-0.04em' }}>{currentQuote.total_ttc?.toLocaleString('fr-FR')} €</span>
             </div>
           </div>
         </div>
@@ -482,21 +482,21 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', lineHeight: '1.8' }}>
             <div style={{ flex: 1 }}>
               <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Informations Légales</p>
-              <p style={{ margin: 0 }}>SIRET : {quote.profiles?.siret || 'En cours d\'immatriculation'}</p>
-              <p style={{ margin: 0 }}>ID Artisan : {quote.profiles?.id.split('-')[0].toUpperCase()}</p>
+              <p style={{ margin: 0 }}>SIRET : {currentQuote.profiles?.siret || 'En cours d\'immatriculation'}</p>
+              <p style={{ margin: 0 }}>ID Artisan : {currentQuote.profiles?.id.split('-')[0].toUpperCase()}</p>
               <p style={{ margin: 0 }}>Document généré par ArtisanFlow SaaS.</p>
             </div>
             <div style={{ flex: 1, textAlign: 'right' }}>
               <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Règlement</p>
-              {quote.status === 'paid' ? (
+              {currentQuote.status === 'paid' ? (
                 <p style={{ margin: 0, color: '#059669', fontWeight: '900' }}>PAIEMENT PAR CARTE BANCAIRE (ENCAISSÉ)</p>
               ) : (
                 <>
                   <p style={{ margin: 0 }}>Paiement par Carte Bancaire</p>
-                  {quote.profiles?.iban && (
+                  {currentQuote.profiles?.iban && (
                     <p style={{ margin: '8px 0 0 0', fontSize: '10px', opacity: 0.8 }}>
-                      IBAN : {quote.profiles.iban}<br />
-                      Bank : {quote.profiles.bank_name || 'Standard'}
+                      IBAN : {currentQuote.profiles.iban}<br />
+                      Bank : {currentQuote.profiles.bank_name || 'Standard'}
                     </p>
                   )}
                 </>
