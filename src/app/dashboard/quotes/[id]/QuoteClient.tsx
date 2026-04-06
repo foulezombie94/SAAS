@@ -30,12 +30,10 @@ import {
   X,
   FileCheck2
 } from 'lucide-react'
-import { jsPDF } from 'jspdf'
-import html2canvas from 'html2canvas'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 import { acceptQuoteAction, sendQuoteEmailAction, createInvoiceFromQuoteAction } from '../actions'
-import ExcelJS from 'exceljs'
+import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 
 interface QuoteClientProps {
   quote: Quote
@@ -65,11 +63,13 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'quotes', filter: `id=eq.${quote.id}` },
-        (payload: any) => {
+        (payload: RealtimePostgresUpdatePayload<Quote>) => {
           const updated = payload.new as Quote
           setCurrentQuote(prev => ({ ...prev, ...updated }))
           if (updated.status === 'paid') {
-             toast.success("Le client vient de payer !")
+             toast.success("Le client vient de payer !", {
+               description: "Le devis est maintenant marqué comme payé en temps réel."
+             })
           }
         }
       )
@@ -85,14 +85,19 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     setIsGeneratingPdf(true)
 
     try {
+      // ⚡ OPTIMISATION : Lazy loading des bibliothèques lourdes
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
+
       const canvas = await html2canvas(printElement, {
-        scale: 2, // Optimized for high-quality A4 without crashing mobile RAM
+        scale: 1.5, // Équilibré pour ne pas crasher sur mobile (RAM)
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 1200 // Assure un rendu consistent
       })
 
-      const imgData = canvas.toDataURL('image/png', 1.0)
+      const imgData = canvas.toDataURL('image/png', 0.8) // Légère compression pour la Rapidité
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -103,7 +108,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width
 
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST')
-      pdf.save(`ArtisanFlow_Devis_${quote.number}.pdf`)
+      pdf.save(`ArtisanFlow_Devis_${currentQuote.number}.pdf`)
       toast.success("PDF généré avec succès !")
     } catch (error) {
       console.error('PDF Error:', error)
@@ -115,6 +120,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
   const handleDownloadExcel = async () => {
     try {
+      // ⚡ OPTIMISATION : Lazy loading d'ExcelJS
+      const ExcelJS = (await import('exceljs')).default
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Devis')
 
@@ -131,9 +138,9 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       // 2. Identification Header
       worksheet.spliceRows(1, 0, 
         ['DEVIS PROFESSIONNEL', '', '', '', '', ''],
-        [`Référence : ${quote.number}`, '', '', '', '', ''],
-        [`Artisan : ${quote.profiles?.company_name || 'N/A'}`, '', '', '', '', ''],
-        [`Client : ${quote.clients?.name || 'N/A'}`, '', `Date émission : ${new Date(quote.created_at).toLocaleDateString()}`, '', '', ''],
+        [`Référence : ${currentQuote.number}`, '', '', '', '', ''],
+        [`Artisan : ${currentQuote.profiles?.company_name || 'N/A'}`, '', '', '', '', ''],
+        [`Client : ${currentQuote.clients?.name || 'N/A'}`, '', `Date émission : ${new Date(currentQuote.created_at).toLocaleDateString()}`, '', '', ''],
         ['']
       )
 
@@ -154,8 +161,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       headerRow.alignment = { horizontal: 'center', vertical: 'middle' }
 
       // 4. Add Items
-      if (quote.quote_items && quote.quote_items.length > 0) {
-        quote.quote_items.forEach((item: QuoteItem) => {
+      if (currentQuote.quote_items && currentQuote.quote_items.length > 0) {
+        currentQuote.quote_items.forEach((item: QuoteItem) => {
           const row = worksheet.addRow({
             description: item.description,
             unit: 'Unité',
@@ -174,9 +181,9 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
       // 5. Financial Summary
       worksheet.addRow([])
-      const htRow = worksheet.addRow(['', '', '', '', 'TOTAL GÉNÉRAL HT', Number(quote.total_ht)])
-      const tvaRow = worksheet.addRow(['', '', '', '', 'MONTANT TVA (20%)', Number(quote.total_ht * 0.2)])
-      const ttcRow = worksheet.addRow(['', '', '', '', 'NET À PAYER TTC', Number(quote.total_ttc)])
+      const htRow = worksheet.addRow(['', '', '', '', 'TOTAL GÉNÉRAL HT', Number(currentQuote.total_ht)])
+      const tvaRow = worksheet.addRow(['', '', '', '', 'MONTANT TVA (20%)', Number(currentQuote.total_ht * 0.2)])
+      const ttcRow = worksheet.addRow(['', '', '', '', 'NET À PAYER TTC', Number(currentQuote.total_ttc)])
 
       // Summary Styling
       const summaryRows = [htRow, tvaRow, ttcRow]
@@ -217,7 +224,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       const url = URL.createObjectURL(blob)
       
       link.href = url
-      link.download = `ArtisanFlow_Devis_${quote.number}.xlsx`
+      link.download = `ArtisanFlow_Devis_${currentQuote.number}.xlsx`
       link.click()
       
       URL.revokeObjectURL(url)
@@ -230,7 +237,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   }
 
   const handleCopyShareLink = () => {
-    const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${quote.public_token}`
+    const shareUrl = `${window.location.origin}/share/quotes/${currentQuote.id}?token=${currentQuote.public_token}`
     navigator.clipboard.writeText(shareUrl)
     toast.success("Lien de signature copié !", {
       description: "Vous pouvez l'envoyer par SMS ou Email à votre client."
@@ -244,7 +251,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   const handleSaveSignature = async (dataUrl: string) => {
     try {
       const result = await acceptQuoteAction({
-        quoteId: quote.id,
+        quoteId: currentQuote.id,
         signatureDataUrl: dataUrl
       });
 
@@ -263,7 +270,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     setIsPaying(true)
     try {
       // Pour l'artisan, "Activer Paiement" signifie maintenant copier le lien pour le client
-      const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${quote.public_token}`
+      const shareUrl = `${window.location.origin}/share/quotes/${currentQuote.id}?token=${currentQuote.public_token}`
       await navigator.clipboard.writeText(shareUrl)
 
       toast.success("Lien de paiement copié !", {
@@ -280,7 +287,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     setIsGeneratingInvoice(true)
     const toastId = toast.loading("Conversion en facture...")
     try {
-      const result = await createInvoiceFromQuoteAction(quote.id);
+      const result = await createInvoiceFromQuoteAction(currentQuote.id);
       
       if (!result.success) throw new Error(result.error);
 
@@ -298,7 +305,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     const toastId = toast.loading("Envoi de l'email en cours...")
     try {
       const result = await sendQuoteEmailAction({
-        quoteId: quote.id,
+        quoteId: currentQuote.id,
         subject: emailForm.subject,
         message: emailForm.message
       });
@@ -539,8 +546,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Destinataire</label>
                 <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                   <User size={18} className="text-slate-400" />
-                  <span className="font-black text-primary uppercase">{quote.clients?.name}</span>
-                  <span className="text-slate-400 font-bold ml-auto text-xs">{quote.clients?.email || 'Pas d\'email renseigné'}</span>
+                  <span className="font-black text-primary uppercase">{currentQuote.clients?.name}</span>
+                  <span className="text-slate-400 font-bold ml-auto text-xs">{currentQuote.clients?.email || 'Pas d\'email renseigné'}</span>
                 </div>
               </div>
 
@@ -578,7 +585,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 <Button 
                   onClick={handleSendEmail}
                   isLoading={isSendingEmail}
-                  disabled={!quote.clients?.email || isSendingEmail}
+                  disabled={!currentQuote.clients?.email || isSendingEmail}
                   className="flex-[2] h-16 rounded-2xl font-black uppercase tracking-widest text-[11px] gap-3 bg-primary text-white shadow-lg shadow-primary/20"
                 >
                   <Send size={18} /> Envoyer Maintenant
@@ -594,14 +601,14 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl font-black text-primary tracking-tighter uppercase leading-none">Gestion Devis</h1>
           <div className="flex items-center gap-3">
-            <span className="text-on-surface-variant font-bold uppercase tracking-widest text-[10px] opacity-60">Référence : {quote.number}</span>
+            <span className="text-on-surface-variant font-bold uppercase tracking-widest text-[10px] opacity-60">Référence : {currentQuote.number}</span>
             <div className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-sm ${
-                quote.status === 'paid' ? 'bg-emerald-500 text-white shadow-emerald-200' :
-                quote.status === 'accepted' ? 'bg-amber-400 text-white shadow-amber-100' :
-                quote.status === 'invoiced' ? 'bg-slate-900 text-white' :
+                currentQuote.status === 'paid' ? 'bg-emerald-500 text-white shadow-emerald-200' :
+                currentQuote.status === 'accepted' ? 'bg-amber-400 text-white shadow-amber-100' :
+                currentQuote.status === 'invoiced' ? 'bg-slate-900 text-white' :
                 'bg-slate-100 text-slate-500'
               }`}>
-              {quote.status === 'paid' ? 'PAYÉ' : quote.status}
+              {currentQuote.status === 'paid' ? 'PAYÉ' : currentQuote.status}
             </div>
           </div>
         </div>
@@ -680,7 +687,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               </div>
               <div className="text-right relative z-10">
                 <p className="text-4xl font-black uppercase tracking-tighter">DEVIS</p>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">REF: {quote.number}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">REF: {currentQuote.number}</p>
               </div>
             </div>
 
@@ -689,16 +696,16 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30">Facturer à</h4>
                   <div>
-                    <p className="text-2xl font-black text-primary uppercase tracking-tighter">{quote.clients?.name}</p>
+                    <p className="text-2xl font-black text-primary uppercase tracking-tighter">{currentQuote.clients?.name}</p>
                     <p className="text-sm font-bold text-on-surface-variant flex items-center gap-2 mt-2">
-                      <MapPin size={16} /> {quote.clients?.city}, France
+                      <MapPin size={16} /> {currentQuote.clients?.city}, France
                     </p>
                   </div>
                 </div>
                 <div className="text-right space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30">Détails</h4>
                   <div>
-                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Le {new Date(quote.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Le {new Date(currentQuote.created_at).toLocaleDateString()}</p>
                     <p className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest mt-1">Validité 30 jours</p>
                   </div>
                 </div>
@@ -711,7 +718,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                   <div className="col-span-2 text-right">Prix</div>
                   <div className="col-span-2 text-right">Total HT</div>
                 </div>
-                {quote.quote_items?.map((item: QuoteItem) => (
+                {currentQuote.quote_items?.map((item: QuoteItem) => (
                   <div key={item.id} className="grid grid-cols-12 gap-8 px-6 py-2 items-center">
                     <div className="col-span-6 font-black text-primary uppercase tracking-tight text-lg">{item.description}</div>
                     <div className="col-span-2 text-center font-bold text-on-surface-variant">{item.quantity}</div>
@@ -733,15 +740,15 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 <div className="flex flex-col items-end gap-3">
                   <div className="flex justify-between w-64 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40">
                     <span>Total Hors Taxes</span>
-                    <span>{quote.total_ht} €</span>
+                    <span>{currentQuote.total_ht} €</span>
                   </div>
                   <div className="flex justify-between w-64 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40 border-b border-slate-100 pb-3">
                     <span>TVA (20%)</span>
-                    <span>{(quote.total_ht * 0.2).toFixed(2)} €</span>
+                    <span>{(currentQuote.total_ht * 0.2).toFixed(2)} €</span>
                   </div>
                   <div className="flex justify-between w-96 mt-4 bg-primary text-on-primary p-8 rounded-3xl shadow-2xl shadow-primary/20">
                     <span className="font-black uppercase tracking-[0.2em] text-xs opacity-60">NET À PAYER TTC</span>
-                    <span className="text-4xl font-black tracking-tighter leading-none">{quote.total_ttc} €</span>
+                    <span className="text-4xl font-black tracking-tighter leading-none">{currentQuote.total_ttc} €</span>
                   </div>
                 </div>
               </div>
@@ -763,13 +770,13 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               <Button
                 onClick={handleCreatePayment}
                 isLoading={isPaying}
-                disabled={quote.status === 'paid' || quote.status === 'invoiced'}
+                disabled={currentQuote.status === 'paid' || currentQuote.status === 'invoiced'}
                 className="w-full h-16 bg-white text-primary hover:bg-slate-100 font-black uppercase tracking-widest text-xs gap-3"
               >
                 <CreditCard size={20} /> Activer Paiement
               </Button>
 
-              {!quote.profiles?.stripe_charges_enabled && (
+              {!currentQuote.profiles?.stripe_charges_enabled && (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
                   <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-2">Paiement par carte inactif</p>
                   <p className="text-[9px] font-bold text-amber-500/70 mb-3 uppercase leading-relaxed">Votre compte Stripe n'est pas encore prêt à recevoir des paiements.</p>
@@ -777,8 +784,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 </div>
               )}
 
-              {quote.status === 'accepted' && (
-                <Link href={`/dashboard/calendar?quote_id=${quote.id}&client_id=${quote.client_id}&title=Intervention : ${quote.number} - ${quote.clients?.name}`}>
+              {currentQuote.status === 'accepted' && (
+                <Link href={`/dashboard/calendar?quote_id=${currentQuote.id}&client_id=${currentQuote.client_id}&title=Intervention : ${currentQuote.number} - ${currentQuote.clients?.name}`}>
                   <Button
                     className="w-full h-16 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest text-xs gap-3 border border-white/10 mb-4"
                   >
@@ -787,7 +794,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 </Link>
               )}
 
-              {quote.status === 'accepted' && (
+              {currentQuote.status === 'accepted' && (
                 <Button
                   onClick={handleCreateInvoice}
                   isLoading={isGeneratingInvoice}
@@ -797,10 +804,10 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 </Button>
               )}
 
-              {quote.profiles?.is_pro && (
+              {currentQuote.profiles?.is_pro && (
                 <Button
                   onClick={() => setIsEmailModalOpen(true)}
-                  disabled={quote.status === 'paid' || quote.status === 'invoiced'}
+                  disabled={currentQuote.status === 'paid' || currentQuote.status === 'invoiced'}
                   className="w-full h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-500/20"
                 >
                   <Mail size={20} /> Envoyer par Email

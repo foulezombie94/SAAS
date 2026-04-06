@@ -96,48 +96,50 @@ export async function POST(req: Request) {
     const shareUrl = `${baseUrl}/share/quotes/${quote.id}?token=${quote.public_token}`
     const paymentUrl = `${shareUrl}&pay=true` // Triggers Stripe checkout immediately
 
-    // 3. Construct HTML Email
+    // 3. Construct HTML Email (Reinforced with Security Frame)
     const htmlEmail = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
-        <div style="background-color: #00236f; padding: 40px; border-radius: 16px 16px 0 0; text-align: center; color: white;">
-          <h1 style="margin: 0; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">${profile.company_name || 'ArtisanFlow'}</h1>
-          <p style="margin-top: 10px; opacity: 0.8; font-size: 14px;">Votre Devis Professionnel</p>
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+        <div style="background-color: #00236f; padding: 30px; text-align: center; color: white;">
+          <p style="margin: 0; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0.6;">Email Sécurisé via ArtisanFlow</p>
+          <h1 style="margin: 10px 0 0 0; font-size: 22px; font-weight: 800;">${profile.company_name || 'Votre Artisan'}</h1>
         </div>
         
-        <div style="padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 16px 16px;">
-          <h2 style="color: #00236f; font-size: 20px; font-weight: 700; margin-bottom: 20px;">Bonjour ${quote.clients.name},</h2>
-          
-          <div style="margin-bottom: 30px;">
-            <p style="white-space: pre-wrap;">${message}</p>
+        <div style="padding: 40px; background-color: #ffffff;">
+          <div style="border-left: 4px solid #00236f; padding-left: 20px; margin-bottom: 30px;">
+            <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 600;">Message de votre artisan :</p>
+            <p style="margin: 10px 0 0 0; font-size: 16px; color: #1e293b; white-space: pre-wrap;">${message}</p>
           </div>
 
           <div style="background-color: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-              <span style="font-weight: 600; color: #64748b;">Référence :</span>
-              <span style="font-weight: 700; color: #00236f;">${quote.number}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-              <span style="font-weight: 600; color: #64748b;">Montant Total :</span>
-              <span style="font-weight: 800; color: #00236f; font-size: 18px;">${(quote.total_ttc || 0).toLocaleString('fr-FR')} € TTC</span>
-            </div>
+            <p style="margin: 0 0 15px 0; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-size: 10px;">Détails du Devis #${quote.number}</p>
+            <table style="width: 100%; font-size: 14px;">
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">Client :</td>
+                <td style="text-align: right; font-weight: 700; color: #1e293b;">${quote.clients.name}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">Montant :</td>
+                <td style="text-align: right; font-weight: 800; color: #00236f; font-size: 18px;">${(quote.total_ttc || 0).toLocaleString('fr-FR')} € TTC</td>
+              </tr>
+            </table>
           </div>
 
-          <div style="text-align: center; margin-bottom: 40px;">
-            <a href="${shareUrl}" style="display: inline-block; background-color: #00236f; color: white; padding: 16px 32px; border-radius: 12px; font-weight: 800; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0, 35, 111, 0.2);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <a href="${shareUrl}" style="display: inline-block; background-color: #00236f; color: white; padding: 18px 40px; border-radius: 12px; font-weight: 800; text-decoration: none; text-transform: uppercase; letter-spacing: 1px;">
               Consulter et Signer le Devis
             </a>
           </div>
 
-          <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 30px;">
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;">Vous pouvez également procéder au paiement directement en ligne :</p>
-            <a href="${paymentUrl}" style="color: #00236f; font-weight: 700; font-size: 14px; text-decoration: underline;">
-              Effectuer le Paiement par Carte
+          <div style="text-align: center; padding: 20px; border-top: 1px solid #f1f5f9;">
+            <a href="${paymentUrl}" style="color: #00236f; font-weight: 700; font-size: 13px; text-decoration: underline;">
+              Payer l'acompte ou le solde par Carte Bancaire
             </a>
           </div>
         </div>
 
-        <div style="padding: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
-          <p>© ${new Date().getFullYear()} ${profile.company_name}. Propulsé par ArtisanFlow.</p>
+        <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0 0 5px 0;">Cet email a été envoyé par <strong>${profile.company_name}</strong> via la plateforme sécurisée <strong>ArtisanFlow</strong>.</p>
+          <p style="margin: 0;">© ${new Date().getFullYear()} ArtisanFlow. Tous droits réservés.</p>
         </div>
       </div>
     `
