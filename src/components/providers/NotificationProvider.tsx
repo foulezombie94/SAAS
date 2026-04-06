@@ -105,8 +105,32 @@ export function NotificationProvider({ children, userId }: NotificationProviderP
       )
       .subscribe()
 
+    // 🚀 PROTECTION GRADE 4: Instant Session Revocation
+    // We watch the 'profiles' table for plan changes to force JWT refresh
+    const profileChannel = supabase
+      .channel(`profile-sync-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userId}`
+        },
+        (payload: any) => {
+          if (payload.new.plan !== payload.old.plan) {
+            // Force a session refresh to get a new JWT with updated app_metadata
+            supabase.auth.refreshSession().then(() => {
+              window.location.reload()
+            })
+          }
+        }
+      )
+      .subscribe()
+
     return () => {
       supabase.removeChannel(channel)
+      supabase.removeChannel(profileChannel)
     }
   }, [supabase, userId])
 
