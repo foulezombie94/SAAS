@@ -2,7 +2,7 @@ import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 
 /**
- * Distributed Rate Limiter using Upstash Redis for Next.js App Router (optimized for Vercel/Serverless)
+ * Distributed Rate Limiter using Upstash Redis for Next.js App Router (Level 10 Polish)
  */
 
 export interface RateLimitResult {
@@ -12,10 +12,15 @@ export interface RateLimitResult {
   reset: number;
   retryAfter: number; // Delta in seconds
   message?: string;
-  headers?: {
+  headers: {
+    // Legacy/Common
     'X-RateLimit-Limit': string;
     'X-RateLimit-Remaining': string;
     'X-RateLimit-Reset': string;
+    // Modern Standards (IETF-like)
+    'RateLimit-Limit': string;
+    'RateLimit-Remaining': string;
+    'RateLimit-Reset': string;
     'Retry-After'?: string;
   };
 }
@@ -26,9 +31,6 @@ interface RateLimitStore {
   resetTime: number;
 }
 const localStores = new Map<string, RateLimitStore>();
-
-// Removed setInterval for serverless compatibility (Vercel)
-// Instances are ephemeral; passive cleanup happens on access.
 
 // Initialize Redis only if environment variables are available
 const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
@@ -47,18 +49,21 @@ const ratelimitCache = new Map<string, Ratelimit>();
 function getRatelimit(limit: number, windowMs: number): Ratelimit | null {
   if (!redis) return null;
   
-  const key = `cfg:${limit}:${windowMs}`;
-  const existing = ratelimitCache.get(key);
+  // Improvement: Scale to seconds for more robust parsing in Upstash
+  const windowSeconds = Math.ceil(windowMs / 1000);
+  const cfgKey = `cfg:${limit}:${windowSeconds}`;
+  
+  const existing = ratelimitCache.get(cfgKey);
   if (existing) return existing;
 
   const instance = new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(limit, `${windowMs} ms`),
+    limiter: Ratelimit.slidingWindow(limit, `${windowSeconds} s`),
     analytics: true,
     prefix: 'artisan-flow:ratelimit',
   });
   
-  ratelimitCache.set(key, instance);
+  ratelimitCache.set(cfgKey, instance);
   return instance;
 }
 
@@ -73,16 +78,23 @@ export async function rateLimit(
   limit: number = 5, 
   windowMs: number = 60000
 ): Promise<RateLimitResult> {
+  // Validation: Security and DX
+  if (!identifier) {
+    throw new Error('Rate limit identifier is required');
+  }
+
   const now = Date.now();
   
-  // Improvement: Granular key generation to avoid collisions across different configs
+  // Improvement 1: Granular key generation captures BOTH the resource and the config
+  // This prevents config leakage (e.g., 5/min logic sharing a bucket with 100/hr)
   const granularKey = `rl:${identifier}:${limit}:${windowMs}`;
 
   // If Redis is configured, use it for distributed rate limiting
   const ratelimit = getRatelimit(limit, windowMs);
   if (ratelimit) {
     try {
-      const { success, limit: totalLimit, remaining, reset } = await ratelimit.limit(identifier);
+      // Improvement 2: Use granularKey for Redis as well to maintain consistency with memory fallback
+      const { success, limit: totalLimit, remaining, reset } = await ratelimit.limit(granularKey);
       const retryAfter = Math.max(0, Math.ceil((reset - now) / 1000));
       
       const result: RateLimitResult = {
@@ -95,12 +107,15 @@ export async function rateLimit(
           'X-RateLimit-Limit': totalLimit.toString(),
           'X-RateLimit-Remaining': remaining.toString(),
           'X-RateLimit-Reset': reset.toString(),
+          'RateLimit-Limit': totalLimit.toString(),
+          'RateLimit-Remaining': remaining.toString(),
+          'RateLimit-Reset': reset.toString(),
         },
       };
 
       if (!success) {
         result.message = `Trop de requêtes. Veuillez réessayer dans ${retryAfter} secondes.`;
-        result.headers!['Retry-After'] = retryAfter.toString();
+        result.headers['Retry-After'] = retryAfter.toString();
       }
 
       return result;
@@ -110,10 +125,10 @@ export async function rateLimit(
     }
   }
 
-  // Local In-Memory Fallback (Active only if Redis fails or is unconfigured)
+  // Local In-Memory Fallback
   let store = localStores.get(granularKey);
   
-  // Passive cleanup for serverless safety
+  // Passive cleanup
   if (!store || now > store.resetTime) {
     store = {
       count: 0,
@@ -136,12 +151,15 @@ export async function rateLimit(
       'X-RateLimit-Limit': limit.toString(),
       'X-RateLimit-Remaining': remaining.toString(),
       'X-RateLimit-Reset': store.resetTime.toString(),
+      'RateLimit-Limit': limit.toString(),
+      'RateLimit-Remaining': remaining.toString(),
+      'RateLimit-Reset': store.resetTime.toString(),
     },
   };
 
   if (!result.success) {
     result.message = `Trop de requêtes. Veuillez réessayer dans ${retryAfter} secondes.`;
-    result.headers!['Retry-After'] = retryAfter.toString();
+    result.headers['Retry-After'] = retryAfter.toString();
   }
   
   return result;
