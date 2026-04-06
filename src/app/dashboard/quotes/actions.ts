@@ -192,3 +192,26 @@ export async function trackQuoteViewAction(quoteId: string, publicToken: string)
     return { success: false }
   }
 }
+
+export async function generateQuoteTokenAction(quoteId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { success: false, error: "Non autorisé" };
+
+  try {
+    const newToken = crypto.randomUUID()
+    const { error } = await supabase
+      .from('quotes')
+      .update({ public_token: newToken } as any)
+      .eq('id', quoteId)
+      .eq('user_id', user.id) // Security: double check ownership
+
+    if (error) throw error
+
+    revalidatePath(`/dashboard/quotes/${quoteId}`)
+    return { success: true, token: newToken }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+}

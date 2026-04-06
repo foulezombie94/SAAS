@@ -32,7 +32,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
-import { acceptQuoteAction, sendQuoteEmailAction, createInvoiceFromQuoteAction } from '../actions'
+import { acceptQuoteAction, sendQuoteEmailAction, createInvoiceFromQuoteAction, generateQuoteTokenAction } from '../actions'
 import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -52,6 +52,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false)
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [signature, setSignature] = useState<string | null>(quote.signature_url || null)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
@@ -242,12 +243,35 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     }
   }
 
-  const handleCopyShareLink = () => {
-    const shareUrl = `${window.location.origin}/share/quotes/${currentQuote.id}?token=${currentQuote.public_token}`
-    navigator.clipboard.writeText(shareUrl)
-    toast.success("Lien de signature copié !", {
-      description: "Vous pouvez l'envoyer par SMS ou Email à votre client."
-    })
+  const handleCopyShareLink = async () => {
+    try {
+      let token = currentQuote.public_token
+      
+      // If no token exists, generate it now 🚀
+      if (!token) {
+        setIsGeneratingLink(true)
+        const result = await generateQuoteTokenAction(currentQuote.id)
+        setIsGeneratingLink(false)
+        
+        if (!result.success) {
+          toast.error("Échec de la génération du lien")
+          return
+        }
+        
+        token = result.token || null
+        setCurrentQuote(prev => ({ ...prev, public_token: token }))
+        toast.success("Lien de signature généré !")
+      }
+
+      const shareUrl = `${window.location.origin}/share/quotes/${currentQuote.id}?token=${token}`
+      await navigator.clipboard.writeText(shareUrl)
+      toast.success(currentQuote.public_token ? "Lien copié !" : "Lien généré et copié !", {
+        description: "Vous pouvez l'envoyer par SMS ou Email à votre client."
+      })
+    } catch (err) {
+      setIsGeneratingLink(false)
+      toast.error("Une erreur est survenue")
+    }
   }
 
   const handlePrint = () => {
@@ -641,7 +665,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           <Button
             variant={(currentQuote.status as any) === 'expired' ? "tertiary" : "outline"}
             onClick={handleCopyShareLink}
-            disabled={(currentQuote.status as any) === 'expired'}
+            disabled={(currentQuote.status as any) === 'expired' || isGeneratingLink}
             className={cn(
               "flex-1 md:flex-none h-14 px-8 font-black uppercase tracking-widest text-[10px] gap-3 shadow-sm transition-all duration-500",
               (currentQuote.status as any) === 'expired' 
@@ -653,6 +677,11 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               <>
                 <Clock size={20} className="animate-pulse" />
                 Lien Expiré
+              </>
+            ) : isGeneratingLink ? (
+              <>
+                <Loader size={20} className="animate-spin" />
+                Génération...
               </>
             ) : (
               <>
