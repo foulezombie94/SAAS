@@ -207,7 +207,7 @@ export async function POST(req: Request) {
           })
           revalidatePath('/dashboard', 'layout')
         }
-        break
+    break
       }
 
       case 'invoice.payment_failed': {
@@ -216,6 +216,58 @@ export async function POST(req: Request) {
           event_type: 'invoice.payment_failed',
           payload: { customer: invoice.customer, invoice_id: invoice.id } as any
         })
+        break
+      }
+
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account
+        const userId = account.metadata?.userId
+ 
+        if (userId) {
+          await supabase
+            .from('profiles')
+            .update({
+              stripe_details_submitted: account.details_submitted,
+              stripe_charges_enabled: account.charges_enabled,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+          
+          revalidatePath('/dashboard/settings')
+        }
+        break
+      }
+
+      case 'checkout.session.expired': {
+        const session = event.data.object as Stripe.Checkout.Session
+        await supabase.from('webhook_logs').insert({
+          event_type: 'checkout.session.expired',
+          payload: { session_id: session.id, metadata: session.metadata } as any
+        })
+        break
+      }
+
+      case 'capability.updated': {
+        const capability = event.data.object as any // Stripe.Capability
+        const accountId = (event as any).account
+        
+        if (accountId) {
+          // On récupère le compte complet pour avoir le userId dans les metadata
+          const account = await stripe.accounts.retrieve(accountId)
+          const userId = account.metadata?.userId
+          
+          if (userId) {
+             await supabase
+              .from('profiles')
+              .update({
+                stripe_charges_enabled: account.charges_enabled,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', userId)
+            
+            revalidatePath('/dashboard/settings')
+          }
+        }
         break
       }
 

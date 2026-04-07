@@ -259,6 +259,8 @@ export type Database = {
           updated_at: string | null
           last_seen_notifications_at: string | null
           notification_preferences: Json | null
+          business_description: string | null
+          statement_descriptor: string | null
         }
         Insert: {
           address?: string | null
@@ -292,6 +294,8 @@ export type Database = {
           updated_at?: string | null
           last_seen_notifications_at?: string | null
           notification_preferences?: Json | null
+          business_description?: string | null
+          statement_descriptor?: string | null
         }
         Update: {
           address?: string | null
@@ -325,6 +329,8 @@ export type Database = {
           updated_at?: string | null
           last_seen_notifications_at?: string | null
           notification_preferences?: Json | null
+          business_description?: string | null
+          statement_descriptor?: string | null
         }
         Relationships: []
       }

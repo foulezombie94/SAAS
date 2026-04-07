@@ -13,7 +13,7 @@ export async function getProfile(): Promise<Profile | null> {
   // SÉCURITÉ : Filtrage strict des champs identité (Grade 3) 🛡️
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language, notification_preferences')
+    .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language, notification_preferences, business_description, statement_descriptor')
     .eq('id', user.id)
     .single()
 
@@ -73,6 +73,8 @@ export async function updateProfile(formData: ProfileInput) {
       num_contacts: validatedData.num_contacts,
       annual_revenue: validatedData.annual_revenue,
       preferred_language: validatedData.preferred_language,
+      business_description: validatedData.business_description,
+      statement_descriptor: validatedData.statement_descriptor,
     })
     .eq('id', user.id)
 

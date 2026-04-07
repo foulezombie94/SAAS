@@ -25,7 +25,9 @@ export default function SettingsPage() {
       quotes_accepted: true,
       payments_received: true,
       quotes_expired: true
-    }
+    },
+    business_description: '',
+    statement_descriptor: '',
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -86,6 +88,8 @@ export default function SettingsPage() {
         num_contacts: profile.num_contacts || null,
         annual_revenue: profile.annual_revenue || null,
         preferred_language: (profile.preferred_language as 'fr' | 'en' | 'es') || 'fr',
+        business_description: profile.business_description || '',
+        statement_descriptor: profile.statement_descriptor || '',
       })
       if (result.success) {
         toast.success('Paramètres enregistrés avec succès')
@@ -233,6 +237,16 @@ export default function SettingsPage() {
                 value={profile.address || ''}
                 onChange={(e) => setProfile({...profile, address: e.target.value})}
               />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Description des Services</label>
+              <textarea 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm resize-none" 
+                placeholder="Décrivez vos services et produits..." 
+                rows={3}
+                value={profile.business_description || ''}
+                onChange={(e) => setProfile({...profile, business_description: e.target.value})}
+              ></textarea>
             </div>
             <div className="space-y-2">
               <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Numéro de Téléphone</label>
@@ -461,6 +475,26 @@ export default function SettingsPage() {
                 Inactif
               </div>
             )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Libellé de relevé bancaire</label>
+              <span className={`text-[10px] font-bold ${(profile.statement_descriptor?.length || 0) > 22 ? 'text-red-500' : 'text-slate-400'}`}>
+                {profile.statement_descriptor?.length || 0}/22
+              </span>
+            </div>
+            <input 
+              className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-3 text-sm transition-all font-medium" 
+              placeholder="Ex: ARTISANFLOW" 
+              type="text"
+              maxLength={22}
+              value={profile.statement_descriptor || ''}
+              onChange={(e) => setProfile({...profile, statement_descriptor: e.target.value.toUpperCase().replace(/[^A-Z0-9\s.-]/g, '')})}
+            />
+            <p className="text-[10px] text-slate-500 italic">
+              Ce nom apparaîtra sur les relevés bancaires de vos clients. Soyez clair pour éviter les litiges.
+            </p>
           </div>
           
           <div className="mt-auto flex flex-col gap-3">

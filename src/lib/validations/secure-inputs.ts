@@ -32,3 +32,22 @@ export const signupSchema = z.object({
   annual_revenue: z.string().optional(),
   preferred_language: z.enum(['fr', 'en']).default('fr'),
 });
+
+/**
+ * Schéma spécifique pour le libellé de relevé bancaire (Stripe).
+ * Doit faire entre 5 et 22 caractères.
+ * Uniquement alphanumérique, points, tirets et espaces.
+ */
+export const statementDescriptorSchema = sanitizeString
+  .min(5, "Le libellé doit faire au moins 5 caractères")
+  .max(22, "Le libellé ne peut pas dépasser 22 caractères")
+  .refine((val) => /^[a-zA-Z0-9\s.-]+$/.test(val), {
+    message: "Seuls les caractères alphanumériques, les points, les tirets et les espaces sont autorisés.",
+  });
+
+/**
+ * Schéma pour la description de l'activité commerciale.
+ */
+export const businessDescriptionSchema = sanitizeString
+  .max(500, "La description ne doit pas dépasser 500 caractères")
+  .optional();

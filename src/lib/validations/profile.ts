@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { sanitizeString } from './secure-inputs';
+import { sanitizeString, businessDescriptionSchema, statementDescriptorSchema } from './secure-inputs';
 
 export const profileSchema = z.object({
   company_name: sanitizeString.min(1, "Le nom de l'entreprise est obligatoire"),
@@ -11,6 +11,8 @@ export const profileSchema = z.object({
   num_contacts: z.string().optional().nullable(),
   annual_revenue: z.string().optional().nullable(),
   preferred_language: z.enum(['fr', 'en', 'es']).default('fr'),
+  business_description: businessDescriptionSchema,
+  statement_descriptor: statementDescriptorSchema.optional().nullable(),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
