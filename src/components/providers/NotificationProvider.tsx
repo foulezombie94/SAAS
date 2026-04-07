@@ -1,16 +1,17 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { Database } from '@/types/supabase'
+import { quoteWithClientSchema } from '@/lib/validations/database'
 
-interface QuoteNotification {
-  id: string
-  number: string
-  status: string
-  updated_at: string
-  last_viewed_at?: string
+type QuoteRow = Database['public']['Tables']['quotes']['Row']
+type ProfileRow = Database['public']['Tables']['profiles']['Row']
+
+// Enriched type for UI
+interface QuoteNotification extends QuoteRow {
   clients?: {
     name: string
   } | null
@@ -21,6 +22,7 @@ interface NotificationContextType {
   notifications: QuoteNotification[]
   markAllAsRead: () => void
   clearAllNotifications: () => void
+  refetchUnreadCount: () => Promise<void>
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -31,6 +33,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   const [supabase] = useState(() => createClient())
   const [notifications, setNotifications] = useState<QuoteNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [lastSeen, setLastSeen] = useState<string | null>(null)
   const [preferences, setPreferences] = useState<any>({
     quotes_expired: true,
     quotes_viewed: true,
@@ -40,13 +43,38 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const preferencesRef = useRef(preferences)
-  const processedRef = useRef(new Set<string>())
+  const processedRef = useRef<string[]>([]) // 🚀 FIFO Deduplication
   const lastPlayedRef = useRef(0)
 
-  // 🔄 Sync Ref with state
+  // 🔄 Sync Ref with state for closure safety in callbacks
   useEffect(() => {
     preferencesRef.current = preferences
   }, [preferences])
+
+  // 🔄 Sync lastSeen for refetch query
+  const lastSeenRef = useRef(lastSeen)
+  useEffect(() => {
+    lastSeenRef.current = lastSeen
+  }, [lastSeen])
+
+  // 🚀 Refetch unreadCount (Grade 10 Reliability)
+  const refetchUnreadCount = useCallback(async () => {
+    if (!userId || !supabase) return
+
+    const { count, error } = await supabase
+      .from('quotes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .in('status', ['paid', 'accepted', 'expired'] as any[])
+      .gt('updated_at', lastSeenRef.current || '1970-01-01')
+    
+    if (error) {
+      console.warn('[NOTIFICATIONS] Unread count refetch failed:', error.message)
+      return
+    }
+    
+    setUnreadCount(count || 0)
+  }, [userId, supabase])
 
   // 🔊 Audio Warmup mechanism
   useEffect(() => {
@@ -57,9 +85,8 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           if (audioRef.current) audioRef.current.currentTime = 0
         }).catch(() => {})
       }
-      window.removeEventListener('click', warmup)
     }
-    window.addEventListener('click', warmup)
+    window.addEventListener('click', warmup, { once: true })
     return () => window.removeEventListener('click', warmup)
   }, [])
 
@@ -68,20 +95,25 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
     const fetchInitialData = async () => {
       // 1. Fetch Profile (Preferences & Last Seen)
-      const { data: profile } = await supabase
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('notification_preferences, last_seen_notifications_at')
         .eq('id', userId)
         .single()
       
-      const lastSeen = profile?.last_seen_notifications_at
-      const prefs = (profile as any)?.notification_preferences
-      if (prefs) {
-        setPreferences((prev: any) => ({ ...prev, ...prefs }))
+      if (profileErr) {
+        console.warn('[NOTIFICATIONS] Profile fetch failed:', profileErr.message)
+      } else {
+        const lastSeenVal = profile?.last_seen_notifications_at
+        setLastSeen(lastSeenVal)
+        const prefs = (profile as any)?.notification_preferences
+        if (prefs) {
+          setPreferences((prev: any) => ({ ...prev, ...prefs }))
+        }
       }
 
       // 2. Fetch Initial Notifications
-      const { data: quotes } = await supabase
+      const { data: quotes, error: quotesErr } = await supabase
         .from('quotes')
         .select('*, clients(name)')
         .eq('user_id', userId)
@@ -89,24 +121,22 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         .order('updated_at', { ascending: false })
         .limit(8)
       
-      if (quotes) {
+      if (quotesErr) {
+        console.warn('[NOTIFICATIONS] Initial quotes fetch failed:', quotesErr.message)
+      } else if (quotes) {
         setNotifications(quotes as QuoteNotification[])
       }
 
-      // 3. Calculate persistent unread count from DB
-      const { count } = await supabase
-        .from('quotes')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .in('status', ['paid', 'accepted', 'expired'] as any[])
-        .gt('updated_at', lastSeen || '1970-01-01')
-      
-      setUnreadCount(count || 0)
+      // 3. Initial count sync
+      await refetchUnreadCount()
     }
 
     fetchInitialData()
 
-    // 🛡️ REALTIME: Advanced Multi-Event Listener
+    // 🕒 Periodical sync (Every 5 minutes) to ensure consistency
+    const interval = setInterval(refetchUnreadCount, 5 * 60 * 1000)
+
+    // 🛡️ REALTIME: Advanced Multi-Event Listener with FULL REPLICA IDENTITY
     const channel = supabase
       .channel(`user-activity-v5-${userId}`)
       .on(
@@ -118,20 +148,16 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           filter: `user_id=eq.${userId}`
         },
         async (payload) => {
-          const newQuote = payload.new as any
-          const oldQuote = payload.old as any
+          const newQuote = payload.new as QuoteRow
+          const oldQuote = payload.old as QuoteRow 
 
-          // 🧠 Reliable Deduplication (id + updated_at)
           const key = `${newQuote.id}-${newQuote.updated_at}`
-          if (processedRef.current.has(key)) return
-          processedRef.current.add(key)
-          if (processedRef.current.size > 50) {
-            const firstKey = processedRef.current.values().next().value
-            if (firstKey) processedRef.current.delete(firstKey)
+          if (processedRef.current.includes(key)) return
+          
+          processedRef.current.push(key)
+          if (processedRef.current.length > 50) {
+            processedRef.current.shift()
           }
-
-          // Security check
-          if (newQuote.user_id !== userId) return
 
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
@@ -145,20 +171,34 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           const shouldNotifyViewed = isViewed && prefs.quotes_viewed !== false
 
           if (shouldNotifyPaid || shouldNotifyAccepted || shouldNotifyExpired || shouldNotifyViewed) {
-            // 🚀 Reliable data refetch (Supabase realtime doesn't include relations like clients)
-            const { data: fullQuote } = await supabase
+            // 🚀 Reliable data refetch (Realtime relations) + Zod Validation (Grade 10)
+            const { data: fullQuote, error: fetchErr } = await supabase
               .from('quotes')
               .select('*, clients(name)')
               .eq('id', newQuote.id)
               .single()
 
-            const enriched = (fullQuote || newQuote) as QuoteNotification
+            if (fetchErr) {
+               console.warn('[NOTIFICATIONS] Rich refetch failed:', fetchErr.message)
+               return
+            }
+
+            // 🛡️ Runtime Validation
+            const validation = quoteWithClientSchema.safeParse(fullQuote)
+            if (!validation.success) {
+              console.error('[RUNTIME VALIDATION ERROR] Notification payload invalid:', validation.error.format())
+              return
+            }
+
+            const validatedData = validation.data as unknown as QuoteNotification
             
-            setUnreadCount(prev => prev + 1)
             setNotifications(prev => {
-              const filtered = prev.filter(n => n.id !== enriched.id)
-              return [enriched, ...filtered].slice(0, 8)
+              const filtered = prev.filter(n => n.id !== validatedData.id)
+              return [validatedData, ...filtered].slice(0, 8)
             })
+
+            // 🚀 Consistent count update from DB
+            await refetchUnreadCount()
 
             // 🔊 Audio cooldown (1s)
             const now = Date.now()
@@ -199,8 +239,12 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
           const newPrefs = payload.new.notification_preferences
           if (newPrefs) {
-            console.log('🔄 Prefs Synced Realtime:', newPrefs)
             setPreferences((prev: any) => ({ ...prev, ...newPrefs }))
+          }
+
+          if (payload.new.last_seen_notifications_at !== payload.old.last_seen_notifications_at) {
+             setLastSeen(payload.new.last_seen_notifications_at)
+             refetchUnreadCount()
           }
 
           if (payload.new.plan !== payload.old.plan) {
@@ -215,16 +259,19 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     return () => {
       supabase.removeChannel(channel)
       supabase.removeChannel(profileChannel)
+      clearInterval(interval)
     }
-  }, [supabase, userId, router])
+  }, [supabase, userId, router, refetchUnreadCount])
 
   const markAllAsRead = async () => {
     setUnreadCount(0)
+    const now = new Date().toISOString()
+    setLastSeen(now)
     if (!userId) return
     // 🚀 Persist "seen" state to DB
     await supabase
       .from('profiles')
-      .update({ last_seen_notifications_at: new Date().toISOString() })
+      .update({ last_seen_notifications_at: now })
       .eq('id', userId)
   }
 
@@ -234,7 +281,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   }
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, notifications, markAllAsRead, clearAllNotifications }}>
+    <NotificationContext.Provider value={{ unreadCount, notifications, markAllAsRead, clearAllNotifications, refetchUnreadCount }}>
       {children}
       <audio ref={audioRef} src="/sounds/notification.mp3" preload="auto" />
     </NotificationContext.Provider>

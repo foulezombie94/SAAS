@@ -174,7 +174,7 @@ export type Database = {
           id: string
           number: string
           quote_id: string | null
-          status: Database["public"]["Enums"]["quote_status"] | null
+          status: Database["public"]["Enums"]["invoice_status"] | null
           stripe_session_id: string | null
           tax_rate: number | null
           total_ht: number | null
@@ -188,7 +188,7 @@ export type Database = {
           id?: string
           number: string
           quote_id?: string | null
-          status?: Database["public"]["Enums"]["quote_status"] | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
           stripe_session_id?: string | null
           tax_rate?: number | null
           total_ht?: number | null
@@ -202,7 +202,7 @@ export type Database = {
           id?: string
           number?: string
           quote_id?: string | null
-          status?: Database["public"]["Enums"]["quote_status"] | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
           stripe_session_id?: string | null
           tax_rate?: number | null
           total_ht?: number | null
@@ -258,6 +258,7 @@ export type Database = {
           stripe_subscription_id: string | null
           updated_at: string | null
           last_seen_notifications_at: string | null
+          notification_preferences: Json | null
         }
         Insert: {
           address?: string | null
@@ -290,6 +291,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string | null
           last_seen_notifications_at?: string | null
+          notification_preferences?: Json | null
         }
         Update: {
           address?: string | null
@@ -322,6 +324,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string | null
           last_seen_notifications_at?: string | null
+          notification_preferences?: Json | null
         }
         Relationships: []
       }
@@ -392,6 +395,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           valid_until: string | null
+          last_viewed_at: string | null
         }
         Insert: {
           client_id: string
@@ -412,6 +416,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           valid_until?: string | null
+          last_viewed_at?: string | null
         }
         Update: {
           client_id?: string
@@ -432,6 +437,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           valid_until?: string | null
+          last_viewed_at?: string | null
         }
         Relationships: [
           {
@@ -563,6 +569,8 @@ export type Database = {
         | "paid"
         | "overdue"
         | "cancelled"
+        | "expired"
+      invoice_status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -686,20 +694,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-export const Constants = {
-  public: {
-    Enums: {
-      quote_status: [
-        "draft",
-        "sent",
-        "accepted",
-        "rejected",
-        "invoiced",
-        "paid",
-        "overdue",
-        "cancelled",
-      ],
-    },
-  },
-} as const
