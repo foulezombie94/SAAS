@@ -169,105 +169,68 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           table: 'quotes',
           filter: `user_id=eq.${userId}`
         },
-        async (payload) => {
+        (payload) => {
           const newQuote = payload.new as QuoteRow
           const oldQuote = payload.old as QuoteRow 
 
-          const updateTime = newQuote.updated_at || new Date().toISOString()
-          const key = `${newQuote.id}-${updateTime}`
-          
-          // 🚀 HIGH-PRECISION DEDUPLICATION
-          if (processedRef.current.includes(key)) return
-          
-          processedRef.current.push(key)
-          // Limit memory usage
-          if (processedRef.current.length > 50) {
-            processedRef.current.shift()
-          }
-
+          // 🚀 IMMEDIATE DETECTION (Zero-Latency)
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
-          const isExpired = newQuote.status === 'expired' && (!oldQuote || oldQuote.status !== 'expired')
-          // 🚀 FIX: Only notify if it's the FIRST view (transition from null/undefined to a timestamp)
-          const isViewed = !!newQuote.last_viewed_at && !oldQuote?.last_viewed_at
+          const isViewed = !!newQuote.last_viewed_at && (!oldQuote || !oldQuote.last_viewed_at)
+          
+          if (!isPaid && !isAccepted && !isViewed) return
+
+          // 🚀 HIGH-PRECISION DEDUPLICATION
+          const updateTime = newQuote.updated_at || new Date().toISOString()
+          const key = `${newQuote.id}-${newQuote.status}-${newQuote.last_viewed_at || ''}`
+          if (processedRef.current.includes(key)) return
+          processedRef.current.push(key)
+          if (processedRef.current.length > 50) processedRef.current.shift()
 
           const prefs = preferencesRef.current
-          const shouldNotifyPaid = isPaid && prefs.payments_received !== false
-          const shouldNotifyAccepted = isAccepted && prefs.quotes_accepted !== false
-          const shouldNotifyExpired = isExpired && prefs.quotes_expired !== false
-          const shouldNotifyViewed = isViewed && prefs.quotes_viewed !== false
+          // If prefs are not loaded yet, we default to TRUE to not miss critical alerts
+          const getPref = (k: keyof typeof prefs) => prefs[k] !== false
 
-          if (shouldNotifyPaid || shouldNotifyAccepted || shouldNotifyExpired || shouldNotifyViewed) {
-            // 🚀 Reliable data refetch (Realtime relations) + Zod Validation (Grade 10)
-            const { data: fullQuote, error: fetchErr } = await supabase
+          const triggerNotification = async () => {
+            // 1. Show an immediate "Low-Fidelity" Toast for extreme speed
+            if (isViewed) toast.info("👀 Devis consulté !", { description: `Un client vient d'ouvrir votre devis #${newQuote.number || '...'}` })
+            if (isPaid) toast.success("🎉 Paiement reçu !", { description: `Le devis #${newQuote.number || '...'} a été réglé.` })
+            if (isAccepted) toast.success("✍️ Devis signé !", { description: `Le devis #${newQuote.number || '...'} a été accepté.` })
+
+            // 🔊 Audio alert
+            const now = Date.now()
+            if (now - lastPlayedRef.current > 2000) {
+              audioRef.current?.play().catch(() => {})
+              lastPlayedRef.current = now
+            }
+
+            // 2. Fetch rich data (Client name, etc.) for the dropdown list
+            const { data: fullQuote } = await supabase
               .from('quotes')
               .select('*, clients(name)')
               .eq('id', newQuote.id)
               .single()
 
-            if (fetchErr) {
-               console.warn('[NOTIFICATIONS] Rich refetch failed:', fetchErr.message)
-               return
+            if (fullQuote) {
+              const validated = {
+                ...fullQuote,
+                clients: Array.isArray(fullQuote.clients) ? fullQuote.clients[0] : fullQuote.clients
+              } as QuoteNotification
+              
+              setNotifications(prev => {
+                const filtered = prev.filter(n => n.id !== validated.id)
+                return [validated, ...filtered].slice(0, 10)
+              })
+              await refetchUnreadCount()
             }
+          }
 
-            // 🛡️ Runtime Validation & Normalization
-            const validation = quoteWithClientSchema.safeParse(fullQuote)
-            if (!validation.success) {
-              console.error('[RUNTIME VALIDATION ERROR] Notification payload invalid:', validation.error.format())
-              return
-            }
-
-            const rawData = validation.data as any
-            const validatedData: QuoteNotification = {
-              ...rawData,
-              clients: Array.isArray(rawData.clients) ? rawData.clients[0] : rawData.clients
-            }
-            
-            setNotifications(prev => {
-              const filtered = prev.filter(n => n.id !== validatedData.id)
-              return [validatedData, ...filtered].slice(0, 8)
-            })
-
-            // 🚀 Consistent count update from DB
-            await refetchUnreadCount()
-
-            // 🔊 Audio cooldown (1s)
-            const now = Date.now()
-            if (now - lastPlayedRef.current > 1000) {
-              if (audioRef.current) {
-                audioRef.current.play().catch(() => {})
-                lastPlayedRef.current = now
-              }
-            }
-
-            if (shouldNotifyPaid || shouldNotifyAccepted || shouldNotifyExpired || shouldNotifyViewed) {
-              // 🚀 Message construction with Client Name
-              const clientName = validatedData.clients?.name || 'Un client'
-              const quoteNum = validatedData.number
-
-              if (shouldNotifyPaid) {
-                toast.success(`🎉 Paiement reçu !`, { 
-                  description: `${clientName} a réglé le devis ${quoteNum}.`,
-                  duration: 6000
-                })
-              } else if (shouldNotifyAccepted) {
-                toast.success(`🖋️ Signature reçue !`, { 
-                  description: `${clientName} a signé le devis ${quoteNum}.`,
-                  duration: 8000,
-                  style: { borderLeft: '4px solid #10b981' }
-                })
-              } else if (shouldNotifyExpired) {
-                toast.warning(`⏳ Devis expiré`, { 
-                  description: `Le devis ${quoteNum} pour ${clientName} n'est plus valide.`
-                })
-              } else if (shouldNotifyViewed) {
-                toast.info(`👀 Devis consulté`, { 
-                  description: `${clientName} est en train de lire le devis ${quoteNum}.`,
-                  icon: '👁️',
-                  duration: 4000
-                })
-              }
-            }
+          if (
+            (isPaid && getPref('payments_received')) ||
+            (isAccepted && getPref('quotes_accepted')) ||
+            (isViewed && getPref('quotes_viewed'))
+          ) {
+            triggerNotification()
           }
         }
       )
