@@ -5,8 +5,11 @@ import { createAdminClient } from '@/utils/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 
 const CreateSessionSchema = z.object({
-  invoiceId: z.string().uuid("ID de facture invalide"),
-}).strict()
+  invoiceId: z.string().uuid().optional(),
+  quoteId: z.string().uuid().optional(),
+}).refine(data => data.invoiceId || data.quoteId, {
+  message: "ID de facture ou de devis requis"
+})
 
 export async function POST(req: Request) {
   try {
@@ -17,41 +20,72 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
     }
 
-    const { invoiceId } = result.data
-    
-    // Use origin from headers or fallback to env for the redirect URL
+    const { invoiceId, quoteId } = result.data
     const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || ''
 
-    // 0. RATE LIMITING (5 requests per minute per IP)
     const ip = req.headers.get('x-forwarded-for') || 'anonymous'
-    const limit = await rateLimit(`public-payment-${ip}`, 5, 60000)
+    const limit = await rateLimit(`public-payment-${ip}`, 10, 60000)
     if (!limit.success) {
       return NextResponse.json({ error: limit.message }, { status: 429 })
     }
 
-    // We use the Admin client here because the client is public (unauthenticated)
-    // The invoiceId (UUID) acts as the secret token.
     const supabase = createAdminClient()
-
-    const { data: invoice, error } = await supabase
-      .from('invoices')
-      .select('*, clients(name, email), profiles(stripe_account_id)')
-      .eq('id', invoiceId)
-      .single()
-
-    if (error || !invoice) {
-      console.error('Invoice search error:', error?.message)
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+    let paymentData: {
+      amount: number,
+      name: string,
+      email?: string,
+      stripeAccountId?: string,
+      metadata: Record<string, string>
+      successUrl: string,
+      cancelUrl: string
     }
 
-    // Prevent paying for already paid invoices
-    if (invoice.status === 'paid') {
-      return NextResponse.json({ error: 'Invoice is already paid' }, { status: 400 })
+    if (invoiceId) {
+      const { data: invoice, error } = await supabase
+        .from('invoices')
+        .select('*, clients(name, email), profiles(stripe_account_id)')
+        .eq('id', invoiceId)
+        .single()
+
+      if (error || !invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      if (invoice.status === 'paid') return NextResponse.json({ error: 'Invoice already paid' }, { status: 400 })
+
+      paymentData = {
+        amount: Math.round((invoice.total_ttc || 0) * 100),
+        name: `Facture #${invoice.number}`,
+        email: invoice.clients?.email || undefined,
+        stripeAccountId: (invoice as any).profiles?.stripe_account_id,
+        metadata: {
+          facture_id: invoice.id,
+          quoteId: invoice.quote_id || '',
+        },
+        successUrl: `${origin}/share/quotes/${invoice.quote_id}?payment=success`,
+        cancelUrl: `${origin}/share/quotes/${invoice.quote_id}?payment=canceled`,
+      }
+    } else {
+      const { data: quote, error } = await supabase
+        .from('quotes')
+        .select('*, clients(name, email), profiles(stripe_account_id)')
+        .eq('id', quoteId!)
+        .single()
+
+      if (error || !quote) return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
+      if (quote.status === 'paid') return NextResponse.json({ error: 'Quote already paid' }, { status: 400 })
+
+      paymentData = {
+        amount: Math.round((quote.total_ttc || 0) * 100),
+        name: `Devis #${quote.number}`,
+        email: quote.clients?.email || undefined,
+        stripeAccountId: (quote as any).profiles?.stripe_account_id,
+        metadata: {
+          quoteId: quote.id,
+          devisId: quote.id,
+        },
+        successUrl: `${origin}/share/quotes/${quote.id}?payment=success`,
+        cancelUrl: `${origin}/share/quotes/${quote.id}?payment=canceled`,
+      }
     }
 
-    const customerEmail = invoice.clients?.email || undefined
-    const stripeAccountId = (invoice as any).profiles?.stripe_account_id
-    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'link', 'sepa_debit'],
       line_items: [
@@ -59,33 +93,21 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `Réglage Facture #${invoice.number}`,
-              description: `ArtisanFlow - Prestation de services professionnelle`,
+              name: paymentData.name,
+              description: `ArtisanFlow - Prestation professionnelle`,
             },
-            unit_amount: Math.round((invoice.total_ttc || 0) * 100),
+            unit_amount: paymentData.amount,
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      // Redirect back to the public shared page (where the quote is shown)
-      // Since invoice is linked to quote, we redirect back to quote page for consistent UX
-      success_url: `${origin}/share/quotes/${invoice.quote_id}?payment=success`,
-      cancel_url: `${origin}/share/quotes/${invoice.quote_id}?payment=canceled`,
-      customer_email: customerEmail,
-      metadata: {
-        // SÉCURITÉ : Ces IDs proviennent de la base de données (invoice) 
-        // récupérée via un ID d'objet (UUID) secret, et non via des entrées utilisateurs arbitraires.
-        facture_id: invoice.id,
-        quoteId: invoice.quote_id || '',
-        devisId: invoice.quote_id || '',
-      },
-      payment_intent_data: stripeAccountId ? {
-        application_fee_amount: 0,
-        transfer_data: {
-          destination: stripeAccountId,
-        },
-      } : undefined,
+      success_url: paymentData.successUrl,
+      cancel_url: paymentData.cancelUrl,
+      customer_email: paymentData.email,
+      metadata: paymentData.metadata,
+    }, {
+      stripeAccount: paymentData.stripeAccountId || undefined
     })
 
     return NextResponse.json({ url: session.url })

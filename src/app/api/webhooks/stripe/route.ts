@@ -97,7 +97,7 @@ export async function POST(req: Request) {
           }
         }
 
-        // B. LOGIQUE DEVIS / FACTURE (EXISTANTE)
+        // B. LOGIQUE DEVIS / FACTURE (AUTOMATISATION)
         if (factureId || quoteId) {
           const connectedAccountId = (event as any).account
           let method = 'card' 
@@ -113,8 +113,25 @@ export async function POST(req: Request) {
             method = 'virement'
           }
 
-          if (factureId) {
-            await supabase.from('invoices').update({ status: 'paid', stripe_session_id: session.id }).eq('id', factureId)
+          let finalFactureId = factureId
+
+          // 🚀 AUTOMATISATION : Si on a un devis mais pas encore de facture, on la crée maintenant !
+          if (quoteId && !finalFactureId) {
+             const { data: rpcData, error: rpcError } = await supabase.rpc('create_invoice_from_quote_v2', {
+                p_quote_id: quoteId
+             });
+             
+             if (!rpcError && (rpcData as any)?.invoiceId) {
+                finalFactureId = (rpcData as any).invoiceId
+             }
+          }
+
+          if (finalFactureId) {
+            await supabase.from('invoices').update({ 
+               status: 'paid', 
+               stripe_session_id: session.id,
+               updated_at: new Date().toISOString()
+            }).eq('id', finalFactureId)
           }
 
           if (quoteId) {

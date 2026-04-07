@@ -175,17 +175,15 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
   }
 
   const handlePayment = async () => {
-    if (!invoiceId) {
-      toast.error("Facture non trouvée. Veuillez réessayer ou contacter l'artisan.")
-      return
-    }
+    // 🚀 NEW: We can now pay a Quote directly, which will auto-generate the invoice!
+    const payload = invoiceId ? { invoiceId } : { quoteId: quote.id }
 
     setIsPaying(true)
     try {
       const response = await fetch('/api/payments/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoiceId })
+        body: JSON.stringify(payload)
       })
       const data = await response.json()
       if (data.url) {
