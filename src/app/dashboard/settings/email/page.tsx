@@ -211,7 +211,12 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Mot de passe (ou mdp d'application)</label>
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Mot de passe (ou mdp d'application)</label>
+                  {hasStoredPass && config.pass === '••••••••' && (
+                    <span className="text-[8px] font-bold text-primary/40 italic uppercase tracking-wider animate-pulse">🔒 Masqué pour votre sécurité (8 points)</span>
+                  )}
+                </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00236f] transition-colors" size={18} />
                   <input 
