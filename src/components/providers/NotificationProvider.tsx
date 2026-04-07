@@ -94,8 +94,12 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     if (!userId || !supabase) return
 
     const fetchInitialData = async () => {
+      // 🚀 RESTORE: Load from LocalStorage first for instant consistency
+      const localLastSeen = typeof window !== 'undefined' ? localStorage.getItem(`last_seen_${userId}`) : null
+      
       // 1. Fetch Profile (Preferences & Last Seen)
-      let lastSeenVal: string | null = null
+      let lastSeenVal: string | null = localLastSeen
+      
       const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('notification_preferences, last_seen_notifications_at')
@@ -105,7 +109,12 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       if (profileErr) {
         console.warn('[NOTIFICATIONS] Profile fetch failed:', profileErr.message)
       } else {
-        lastSeenVal = profile?.last_seen_notifications_at ?? null
+        const dbLastSeen = profile?.last_seen_notifications_at ?? null
+        // 🚀 LOGIC: Use the most recent of either DB or LocalStorage
+        if (dbLastSeen && (!lastSeenVal || new Date(dbLastSeen) > new Date(lastSeenVal))) {
+          lastSeenVal = dbLastSeen
+        }
+        
         setLastSeen(lastSeenVal)
         const prefs = (profile as any)?.notification_preferences
         if (prefs) {
@@ -290,10 +299,16 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     setNotifications([])
     setUnreadCount(0)
     
-    // 🚀 FIX: Add a 5s safety buffer to ensure database eventual consistency and network latency
+    // 🚀 FIX: Add a 5s safety buffer
     const nowWithBuffer = new Date(Date.now() + 5000).toISOString()
     setLastSeen(nowWithBuffer)
+    
     if (!userId) return
+
+    // 🚀 SYNC: LocalStorage for immediate F5 protection
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`last_seen_${userId}`, nowWithBuffer)
+    }
 
     // 🚀 Persist "seen" state to DB
     const { error } = await supabase
