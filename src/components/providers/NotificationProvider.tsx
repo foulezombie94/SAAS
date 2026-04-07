@@ -286,7 +286,10 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   }, [supabase, userId, router, refetchUnreadCount])
 
   const markAllAsRead = async () => {
+    // 🚀 RADICAL CLEANUP: Clear local state instantly for 'delete' effect
+    setNotifications([])
     setUnreadCount(0)
+    
     // 🚀 FIX: Add a 5s safety buffer to ensure database eventual consistency and network latency
     const nowWithBuffer = new Date(Date.now() + 5000).toISOString()
     setLastSeen(nowWithBuffer)

@@ -85,18 +85,23 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
 
         <div className="flex items-center gap-3 relative" ref={dropdownRef}>
           <button 
+            id="notifications-trigger"
             onClick={() => {
               setIsDropdownOpen(!isDropdownOpen)
-              if (!isDropdownOpen && unreadCount > 0) markAllAsRead()
-            }}
-            className={`p-3 transition-all rounded-full relative ${
-              isDropdownOpen ? "bg-slate-100 text-primary" : "text-slate-500 hover:bg-slate-50"
-            }`}
+            }} 
+            className={cn(
+              "relative p-2.5 rounded-2xl transition-all duration-300",
+              isDropdownOpen 
+                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" 
+                : unreadCount > 0
+                  ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
+                  : "bg-slate-50 text-slate-400 hover:bg-slate-100"
+            )}
           >
-            <Bell size={22} className={unreadCount > 0 ? "text-primary animate-bounce-subtle" : ""} />
+            <Bell size={20} className={cn(unreadCount > 0 && "animate-pulse")} />
             {unreadCount > 0 && (
-              <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-error text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white ring-2 ring-error/20">
-                {unreadCount}
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[10px] font-black text-white ring-4 ring-white shadow-sm">
+                {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
@@ -141,12 +146,11 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                         )}
                       >
                         <div className={cn(
-                          "mt-1 p-2 rounded-xl flex-shrink-0",
-                          notif.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 
-                          notif.status === 'expired' ? 'bg-amber-100 text-amber-600' : 'bg-blue-50 text-blue-600'
+                          "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
+                          notif.status === 'paid' ? "bg-emerald-50 text-emerald-600" :
+                          notif.status === 'expired' ? "bg-amber-50 text-amber-600" : "bg-primary/5 text-primary"
                         )}>
-                            {notif.status === 'expired' ? <Bell size={18} className="animate-pulse" /> : 
-                             notif.status === 'paid' ? <CreditCard size={18} /> : <CheckCircle2 size={18} />}
+                          {notif.status === 'paid' ? <CheckCircle2 size={20} /> : <div className="p-2 border-2 border-current rounded-lg" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={cn(
@@ -193,16 +197,6 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                   })}
                   </div>
                 )}
-              </div>
-              
-              <div className="p-4 bg-slate-50/30 border-t border-slate-100">
-                <Link 
-                  href="/dashboard/quotes"
-                  onClick={() => setIsDropdownOpen(false)}
-                  className="block w-full text-center py-2 text-[10px] font-black text-primary/40 uppercase tracking-widest hover:text-primary transition-colors"
-                >
-                  Voir toute l'activité
-                </Link>
               </div>
             </div>
           )}
