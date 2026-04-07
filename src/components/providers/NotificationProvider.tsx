@@ -95,6 +95,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
     const fetchInitialData = async () => {
       // 1. Fetch Profile (Preferences & Last Seen)
+      let lastSeenVal: string | null = null
       const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('notification_preferences, last_seen_notifications_at')
@@ -104,7 +105,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       if (profileErr) {
         console.warn('[NOTIFICATIONS] Profile fetch failed:', profileErr.message)
       } else {
-        const lastSeenVal = profile?.last_seen_notifications_at
+        lastSeenVal = profile?.last_seen_notifications_at ?? null
         setLastSeen(lastSeenVal)
         const prefs = (profile as any)?.notification_preferences
         if (prefs) {
@@ -112,12 +113,19 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         }
       }
 
-      // 2. Fetch Initial Notifications
-      const { data: quotes, error: quotesErr } = await supabase
+      // 2. Fetch Initial Notifications (only unread — after lastSeen)
+      let quotesQuery = supabase
         .from('quotes')
         .select('*, clients(name)')
         .eq('user_id', userId)
         .in('status', ['paid', 'accepted', 'expired'] as any[])
+      
+      // 🚀 FIX: Only fetch notifications newer than lastSeen to prevent re-appearing on reload
+      if (lastSeenVal) {
+        quotesQuery = quotesQuery.gt('updated_at', lastSeenVal)
+      }
+
+      const { data: quotes, error: quotesErr } = await quotesQuery
         .order('updated_at', { ascending: false })
         .limit(8)
       

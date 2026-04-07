@@ -47,14 +47,14 @@ export async function getSensitiveProfileData() {
 import { profileSchema, ProfileInput } from '@/lib/validations/profile'
 
 export async function updateProfile(formData: ProfileInput) {
-  const supabase = createClient()
-  const { data: { user } } = await (await supabase).auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   // 🛡️ BASTION DE SÉCURITÉ : Validation Schema Zod + Anti-XSS (Grade 3)
   const validatedData = profileSchema.parse(formData)
 
-  const { error } = await (await supabase)
+  const { error } = await supabase
     .from('profiles')
     .update({
       company_name: validatedData.company_name,
@@ -84,8 +84,8 @@ export async function updateProfile(formData: ProfileInput) {
 }
 
 export async function createStripeAccount() {
-  const supabase = createClient()
-  const { data: { user } } = await (await supabase).auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non authentifié')
 
   const profile = await getProfile()
@@ -108,7 +108,7 @@ export async function createStripeAccount() {
   })
 
   // Store the accountId in the profile
-  const { error } = await (await supabase)
+  const { error } = await supabase
     .from('profiles')
     .update({ stripe_account_id: account.id })
     .eq('id', user.id)
@@ -119,8 +119,8 @@ export async function createStripeAccount() {
 }
 
 export async function createStripeOnboardingLink(returnPath?: string) {
-  const supabase = createClient()
-  const { data: { user } } = await (await supabase).auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non authentifié')
 
   const accountId = await createStripeAccount()
@@ -140,11 +140,11 @@ export async function createStripeOnboardingLink(returnPath?: string) {
 }
 
 export async function disconnectStripe() {
-  const supabase = createClient()
-  const { data: { user } } = await (await supabase).auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non authentifié')
 
-  const { error } = await (await supabase)
+  const { error } = await supabase
     .from('profiles')
     .update({ stripe_account_id: null })
     .eq('id', user.id)
@@ -189,11 +189,11 @@ export async function getStripeAccountStatus() {
 }
 
 export async function updateNotificationPreferences(preferences: any) {
-  const supabase = createClient()
-  const { data: { user } } = await (await supabase).auth.getUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non authentifié')
 
-  const { error } = await (await supabase)
+  const { error } = await supabase
     .from('profiles')
     .update({ 
       notification_preferences: preferences 
