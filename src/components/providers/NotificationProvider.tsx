@@ -159,10 +159,14 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           const newQuote = payload.new as QuoteRow
           const oldQuote = payload.old as QuoteRow 
 
-          const key = `${newQuote.id}-${newQuote.updated_at}`
+          const updateTime = newQuote.updated_at || new Date().toISOString()
+          const key = `${newQuote.id}-${updateTime}`
+          
+          // 🚀 HIGH-PRECISION DEDUPLICATION
           if (processedRef.current.includes(key)) return
           
           processedRef.current.push(key)
+          // Limit memory usage
           if (processedRef.current.length > 50) {
             processedRef.current.shift()
           }
@@ -273,14 +277,19 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
   const markAllAsRead = async () => {
     setUnreadCount(0)
-    const now = new Date().toISOString()
-    setLastSeen(now)
+    // 🚀 FIX: Add a 2s safety buffer to ensure we don't catch the event we just processed
+    const nowWithBuffer = new Date(Date.now() + 2000).toISOString()
+    setLastSeen(nowWithBuffer)
     if (!userId) return
+
     // 🚀 Persist "seen" state to DB
     await supabase
       .from('profiles')
-      .update({ last_seen_notifications_at: now })
+      .update({ last_seen_notifications_at: nowWithBuffer })
       .eq('id', userId)
+    
+    // Refresh unread count immediately to sync UI
+    setTimeout(refetchUnreadCount, 500)
   }
 
   const clearAllNotifications = () => {

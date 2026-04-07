@@ -149,22 +149,38 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={cn(
-                            "text-xs font-black uppercase tracking-tight mb-1 truncate",
+                            "text-[10px] font-black uppercase tracking-widest mb-0.5 truncate",
                             notif.status === 'expired' ? "text-amber-600" : "text-primary"
                           )}>
-                            {notif.status === 'paid' ? 'Paiement Encaissé' : 
-                             notif.status === 'expired' ? 'Lien Expiré (Sécurité)' : 'Devis Signature reçue'}
+                             {(() => {
+                               switch(notif.status) {
+                                 case 'paid': return 'Paiement Reçu'
+                                 case 'accepted': return 'Signature Reçue'
+                                 case 'sent': return 'Devis Envoyé'
+                                 case 'expired': return 'Lien Expiré'
+                                 case 'invoiced': return 'Facture Créée'
+                                 default: return 'Activité Devis'
+                               }
+                             })()}
                           </p>
-                          <p className="text-[11px] font-bold text-slate-500 mb-2">
-                             Devis <span className={cn("text-secondary", notif.status === 'expired' && "text-amber-500 font-black")}>
+                          <p className="text-[11px] font-bold text-slate-600 mb-1.5 leading-tight">
+                             {notif.status === 'paid' ? 'Le règlement a été validé' : 
+                              notif.status === 'accepted' ? 'Le client a signé le document' : 
+                              notif.status === 'expired' ? 'Document inaccessible' : 'Action effectuée'} pour{' '}
+                             <span className={cn("text-secondary font-black", notif.status === 'expired' && "text-amber-500")}>
                                {notif.number}
-                             </span> {notif.status === 'expired' ? 'n\'est plus accessible.' : `par ${notif.clients?.name || 'le client'}.`}
+                             </span>
                           </p>
                           <div className="flex items-center gap-2">
-                             <span className={cn(
-                               "text-[9px] font-black uppercase tracking-widest",
-                               notif.status === 'expired' ? "text-amber-500" : "text-slate-300"
-                             )}>{notif.status === 'expired' ? 'Expiré' : 'Récent'}</span>
+                             <div className="flex items-center gap-1.5">
+                               <div className="w-1 h-1 rounded-full bg-slate-300" />
+                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                 {notif.clients?.name || 'Client inconnu'}
+                               </span>
+                             </div>
+                             {notif.status === 'paid' && (
+                               <span className="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter">SUCCESS</span>
+                             )}
                           </div>
                         </div>
                       </Link>
