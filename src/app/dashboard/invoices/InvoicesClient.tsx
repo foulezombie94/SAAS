@@ -84,15 +84,12 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
       <header className="flex flex-col md:flex-row md:items-end justify-between self-stretch gap-8">
         <div>
           <h2 className="text-4xl font-black text-primary tracking-tighter uppercase leading-none mb-3 italic">Factures & Flux</h2>
-          <p className="text-on-surface-variant font-bold uppercase tracking-widest text-[10px] opacity-60 flex items-center gap-2">
+          <p className="text-on-surface-variant font-bold uppercase tracking-widest text-[10px] opacity-60 flex items-center gap-3">
              {totals.count} documents {searchTerm ? 'filtrés' : 'détectés'} • 
-             {isSyncing ? (
-               <span className="flex items-center gap-1.5 text-primary animate-pulse">
-                 <Loader2 size={10} className="animate-spin" /> Synchronisation...
-               </span>
-             ) : (
-               <span className="text-emerald-500">Flux à jour</span>
-             )}
+             <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-sm">
+               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+               Flux en direct
+             </span>
           </p>
         </div>
         
@@ -117,18 +114,6 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
         <Card className="p-8 border-none shadow-diffused bg-surface-container-lowest border-2 border-primary/5 group hover:border-primary/20 transition-all">
           <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 mb-8">Nombre de factures</p>
           <div className="flex items-center gap-4 w-full md:w-auto">
-           {isSyncing && (
-             <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-100 animate-pulse">
-               <Loader2 size={14} className="animate-spin text-blue-600" />
-               <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Sinc. en cours...</span>
-             </div>
-           )}
-           <button 
-             onClick={() => revalidate()}
-             className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-primary transition-all active:scale-95 ${isSyncing ? 'animate-spin border-primary text-primary' : ''}`}
-           >
-             <RefreshCw size={20} />
-           </button>
            <span className="text-4xl font-black tracking-tighter text-primary group-hover:scale-110 transition-transform">{totals.count}</span>
           </div>
         </Card>
