@@ -167,6 +167,19 @@ export async function createStripeOnboardingLink(returnPath?: string) {
   }
 }
 
+export async function createStripeDashboardLink() {
+  try {
+    const profile = await getProfile()
+    if (!profile?.stripe_account_id) throw new Error('Compte Stripe non trouvé')
+
+    const loginLink = await stripe.accounts.createLoginLink(profile.stripe_account_id)
+    return { url: loginLink.url }
+  } catch (err: any) {
+    console.error('Stripe Dashboard Link Error:', err)
+    return { error: err.message || 'Erreur lors de la création du lien Stripe' }
+  }
+}
+
 export async function disconnectStripe() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

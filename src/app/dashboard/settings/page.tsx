@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe, getStripeAccountStatus, updateNotificationPreferences } from './actions'
+import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe, getStripeAccountStatus, updateNotificationPreferences, createStripeDashboardLink } from './actions'
 import { Profile } from '@/types/dashboard'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -110,6 +110,22 @@ export default function SettingsPage() {
       loadProfile()
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la déconnexion')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
+  const handleManageStripe = async () => {
+    setIsConnecting(true)
+    try {
+      const result = await createStripeDashboardLink()
+      if (result.url) {
+        window.open(result.url, '_blank')
+      } else if (result.error) {
+        toast.error(result.error)
+      }
+    } catch (err) {
+      toast.error('Erreur lors de l’accès au dashboard Stripe')
     } finally {
       setIsConnecting(false)
     }
@@ -437,15 +453,42 @@ export default function SettingsPage() {
                 {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Link2 className="w-5 h-5" />}
                 CONNECTER STRIPE
               </button>
+            ) : !stripeStatus.isReady ? (
+              <div className="space-y-3">
+                <button 
+                  onClick={handleConnectStripe}
+                  disabled={isConnecting}
+                  className="w-full h-14 bg-amber-500 text-white font-black rounded-lg hover:bg-amber-600 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-lg shadow-amber-500/20"
+                >
+                  {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <ExternalLink className="w-5 h-5" />}
+                  TERMINER LA CONFIGURATION
+                </button>
+                <button 
+                  onClick={handleDisconnectStripe}
+                  disabled={isConnecting}
+                  className="w-full h-10 text-slate-400 font-bold text-xs hover:text-red-500 transition-colors"
+                >
+                  DÉCONNECTER STRIPE (ANNULER)
+                </button>
+              </div>
             ) : (
-              <button 
-                onClick={handleDisconnectStripe}
-                disabled={isConnecting}
-                className="h-14 bg-red-50 text-red-700 font-bold rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
-              >
-                {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <Unlink className="w-4 h-4" />}
-                DÉCONNECTER STRIPE
-              </button>
+              <div className="space-y-3">
+                <button 
+                  onClick={handleManageStripe}
+                  disabled={isConnecting}
+                  className="w-full h-14 bg-[#635BFF] text-white font-black rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                >
+                  {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <ShieldCheck className="w-5 h-5" />}
+                  GÉRER MON COMPTE STRIPE
+                </button>
+                <button 
+                  onClick={handleDisconnectStripe}
+                  disabled={isConnecting}
+                  className="w-full h-10 text-slate-400 font-bold text-xs hover:text-red-500 transition-colors"
+                >
+                  DÉCONNECTER STRIPE
+                </button>
+              </div>
             )}
           </div>
         </div>
