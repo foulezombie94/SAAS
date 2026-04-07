@@ -61,6 +61,9 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     message: `Bonjour ${currentQuote.clients?.name},\n\nVeuillez trouver ci-joint notre proposition commerciale concernant votre projet.\n\nVous pouvez consulter, signer et payer ce devis directement en ligne via le bouton sécurisé ci-dessous.\n\nRestant à votre disposition pour toute question.`
   })
   const quoteRef = useRef<HTMLDivElement>(null)
+  
+  // 🛡️ SECURITY GRADE 3 : Technical vs Commercial expiration
+  const isTokenExpired = currentQuote.public_token_expires_at && new Date(currentQuote.public_token_expires_at) < new Date()
 
   // Real-time synchronization for the artisan
   React.useEffect(() => {
@@ -259,7 +262,11 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         }
         
         token = result.token || null
-        setCurrentQuote(prev => ({ ...prev, public_token: token }))
+        setCurrentQuote(prev => ({ 
+          ...prev, 
+          public_token: token,
+          public_token_expires_at: result.expiresAt || null
+        }))
         toast.success("Lien de signature généré !")
       }
 
@@ -663,17 +670,17 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           </Button>
 
           <Button
-            variant={(currentQuote.status as any) === 'expired' ? "tertiary" : "outline"}
+            variant={isTokenExpired ? "tertiary" : "outline"}
             onClick={handleCopyShareLink}
-            disabled={(currentQuote.status as any) === 'expired' || isGeneratingLink}
+            disabled={isTokenExpired || isGeneratingLink}
             className={cn(
               "flex-1 md:flex-none h-14 px-8 font-black uppercase tracking-widest text-[10px] gap-3 shadow-sm transition-all duration-500",
-              (currentQuote.status as any) === 'expired' 
+              isTokenExpired 
                 ? "bg-amber-500 text-white border-none hover:bg-amber-600 opacity-100 cursor-not-allowed scale-[0.98]" 
                 : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
             )}
           >
-            {(currentQuote.status as any) === 'expired' ? (
+            {isTokenExpired ? (
               <>
                 <Clock size={20} className="animate-pulse" />
                 Lien Expiré
