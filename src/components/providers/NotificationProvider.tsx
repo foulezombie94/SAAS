@@ -240,19 +240,42 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
               }
             }
 
-            if (shouldNotifyPaid) {
-              toast.success(`Paiement reçu !`, { description: `Règlement pour le devis ${newQuote.number}.` })
-            } else if (shouldNotifyAccepted) {
-              toast.info(`Signature reçue !`, { description: `Acceptation pour ${newQuote.number}.` })
-            } else if (shouldNotifyExpired) {
-              toast.warning(`Lien expiré !`, { description: `Le devis ${newQuote.number} est expiré.` })
-            } else if (shouldNotifyViewed) {
-              toast.message(`Devis ouvert !`, { description: `Le client consulte le devis ${newQuote.number}.`, icon: '👁️' })
+            if (shouldNotifyPaid || shouldNotifyAccepted || shouldNotifyExpired || shouldNotifyViewed) {
+              // 🚀 Message construction with Client Name
+              const clientName = validatedData.clients?.name || 'Un client'
+              const quoteNum = validatedData.number
+
+              if (shouldNotifyPaid) {
+                toast.success(`🎉 Paiement reçu !`, { 
+                  description: `${clientName} a réglé le devis ${quoteNum}.`,
+                  duration: 6000
+                })
+              } else if (shouldNotifyAccepted) {
+                toast.success(`🖋️ Signature reçue !`, { 
+                  description: `${clientName} a signé le devis ${quoteNum}.`,
+                  duration: 8000,
+                  style: { borderLeft: '4px solid #10b981' }
+                })
+              } else if (shouldNotifyExpired) {
+                toast.warning(`⏳ Devis expiré`, { 
+                  description: `Le devis ${quoteNum} pour ${clientName} n'est plus valide.`
+                })
+              } else if (shouldNotifyViewed) {
+                toast.info(`👀 Devis consulté`, { 
+                  description: `${clientName} est en train de lire le devis ${quoteNum}.`,
+                  icon: '👁️',
+                  duration: 4000
+                })
+              }
             }
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[NOTIFICATIONS] Realtime connected successfully')
+        }
+      })
 
     // 🚀 PROTECTION: Session & Prefs Sync
     const profileChannel = supabase
