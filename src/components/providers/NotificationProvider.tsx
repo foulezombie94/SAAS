@@ -181,10 +181,10 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           
           if (!isPaid && !isAccepted && !isViewed) return
 
-          // 🚀 HIGH-PRECISION DEDUPLICATION (State + Time)
-          // We use a shorter window for 'Viewed' to allow repeat views but prevent bounce spam
+          // 🚀 HIGH-PRECISION DEDUPLICATION (State-Based)
+          // We don't include updated_at here to avoid repeats for the SAME event
           const eventType = isPaid ? 'paid' : isAccepted ? 'signed' : 'viewed'
-          const key = `${newQuote.id}-${eventType}-${newQuote.updated_at}`
+          const key = `${newQuote.id}-${eventType}-${eventType === 'viewed' ? newQuote.last_viewed_at : newQuote.status}`
           if (processedRef.current.includes(key)) return
           processedRef.current.push(key)
           if (processedRef.current.length > 50) processedRef.current.shift()
