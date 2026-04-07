@@ -7,10 +7,13 @@ import { z } from 'zod'
 
 const smtpSchema = z.object({
   host: z.string().min(1, 'Host is required'),
-  port: z.union([z.string(), z.number()]).transform(v => parseInt(v.toString())),
+  port: z.union([z.string(), z.number()]).transform(v => {
+    const p = parseInt(v.toString());
+    return isNaN(p) ? 0 : p;
+  }).refine(v => v > 0, 'Port invalide'),
   user: z.string().min(1, 'User is required'),
   pass: z.string().optional(),
-  from: z.string().email('Format email invalide').optional().or(z.literal('')),
+  from: z.string().max(100, 'Nom trop long').optional().or(z.literal('')),
 })
 
 export async function POST(request: Request) {
