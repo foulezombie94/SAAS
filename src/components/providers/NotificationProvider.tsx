@@ -173,42 +173,48 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           const newQuote = payload.new as QuoteRow
           const oldQuote = payload.old as QuoteRow 
 
-          // 🚀 IMMEDIATE DETECTION (Zero-Latency)
+          // 🚀 IMMEDIATE DETECTION (State Transition Guard)
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
-          // Consultation is true if last_viewed_at was null/different
-          const isViewed = !!newQuote.last_viewed_at && (!oldQuote || oldQuote.last_viewed_at !== newQuote.last_viewed_at)
+          // Zero-Trust View: Only if it was NULL/undefined before
+          const isViewed = !!newQuote.last_viewed_at && (!oldQuote || !oldQuote.last_viewed_at)
           
           if (!isPaid && !isAccepted && !isViewed) return
 
-          // 🚀 HIGH-PRECISION DEDUPLICATION (State-Based)
-          // We don't include updated_at here to avoid repeats for the SAME event
+          // 🛡️ STATIC TERMINAL DEDUPLICATION
+          // Key format: [ID]-[EVENT] (e.g. "uuid-viewed")
+          // This guarantees ONE toast per event type per quote, FOREVER in this session.
           const eventType = isPaid ? 'paid' : isAccepted ? 'signed' : 'viewed'
-          const key = `${newQuote.id}-${eventType}-${eventType === 'viewed' ? newQuote.last_viewed_at : newQuote.status}`
-          if (processedRef.current.includes(key)) return
-          processedRef.current.push(key)
-          if (processedRef.current.length > 50) processedRef.current.shift()
+          const staticKey = `${newQuote.id}-${eventType}`
+          
+          if (processedRef.current.includes(staticKey)) {
+             // console.log('[NOTIFICATIONS] Blocked duplicate event for:', staticKey)
+             return
+          }
+          
+          processedRef.current.push(staticKey)
+          if (processedRef.current.length > 100) processedRef.current.shift()
 
           const prefs = preferencesRef.current
           const getPref = (k: keyof typeof prefs) => prefs[k] !== false
 
           const triggerNotification = async () => {
-            // 🛡️ SONNER DEDUPLICATION : Explicit ID prevents same toast appearing twice
-            const toastId = `${newQuote.id}-${eventType}`
+            // 🛡️ SONNER LOCK: Explicit unique ID for this specific event
+            const toastId = staticKey
 
-            // 1. Show an immediate "Low-Fidelity" Toast
-            if (isViewed) toast.info("👀 Devis consulté !", { id: toastId, description: `Un client vient d'ouvrir votre devis #${newQuote.number || '...'}` })
-            if (isPaid) toast.success("🎉 Paiement reçu !", { id: toastId, description: `Le devis #${newQuote.number || '...'} a été réglé.` })
+            // 1. Show immediate high-precision Toast
+            if (isViewed) toast.info("👀 Devis consulté !", { id: toastId, description: `Le client vient de consulter le devis #${newQuote.number || '...'}` })
+            if (isPaid) toast.success("🎉 Paiement reçu !", { id: toastId, description: `Le devis #${newQuote.number || '...'} a été payé.` })
             if (isAccepted) toast.success("✍️ Devis signé !", { id: toastId, description: `Le devis #${newQuote.number || '...'} a été accepté.` })
 
-            // 🔊 Audio alert
+            // 🔊 Controlled Audio
             const now = Date.now()
-            if (now - lastPlayedRef.current > 2000) {
+            if (now - lastPlayedRef.current > 3000) {
               audioRef.current?.play().catch(() => {})
               lastPlayedRef.current = now
             }
 
-            // 2. Fetch rich data
+            // 2. Refresh count and list
             const { data: fullQuote } = await supabase
               .from('quotes')
               .select('*, clients(name)')
@@ -222,8 +228,6 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
               } as QuoteNotification
               
               setNotifications(prev => {
-                // 🚀 HISTORY PRESERVATION: We only filter out EXACT matches (same ID + same STATUS)
-                // This allows 'Consulted' and 'Signed' for the SAME quote to stay in the list.
                 const filtered = prev.filter(n => !(n.id === validated.id && n.status === validated.status))
                 return [validated, ...filtered].slice(0, 15)
               })
