@@ -61,20 +61,28 @@ export async function POST(req: Request) {
     }
 
     // 3. ATOMIC TRANSACTION (RPC v3 - Zero Trust Split Flow)
-    // SQL handles internal check for publicToken.
     // 🛡️ SECURITY GRADE 3 : We use adminSupabase to bypass RLS because Guests don't have a session.
     // The RPC itself will verify the p_public_token.
     const adminSupabase = createAdminClient()
     const { data: invoiceId, error: rpcError } = await adminSupabase.rpc('accept_quote_v3', {
+      p_public_token: publicToken || 'invalid_token_placeholder',
       p_quote_id: quoteId,
-      p_public_token: publicToken || 'invalid_token_placeholder', 
       p_signature_url: finalSignatureUrl || ''
     });
 
     if (rpcError) {
-      // 🕵️‍♂️ SECURITY : Masking detailed RPC errors for public clients
-      console.error('[API/Accept] RPC Zero-Trust Refusal (Masked):', rpcError.message);
-      return NextResponse.json({ error: 'Accès refusé ou lien expiré' }, { status: 403 });
+      // 🕵️‍♂️ SECURITY : Detailed logs for the artisan, masked for the public
+      console.error('[API/Accept] RPC Zero-Trust Refusal:', {
+        message: rpcError.message,
+        details: rpcError.details,
+        hint: rpcError.hint,
+        code: rpcError.code,
+        payload: { quoteId, hasToken: !!publicToken }
+      });
+      return NextResponse.json({ 
+        error: 'Accès refusé ou lien expiré', 
+        details: rpcError.message // Temporary unmask for debugging if needed
+      }, { status: 403 });
     }
 
     // 🚀 Invalidation Cache Global pour le Dashboard

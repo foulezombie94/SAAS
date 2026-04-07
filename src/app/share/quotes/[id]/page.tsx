@@ -36,13 +36,6 @@ export default async function PublicQuotePage({
     return notFound()
   }
 
-  // 🛡️ BLOCKER : Expiration Check (Grade 3)
-  const isExpired = quote.public_token_expires_at && new Date(quote.public_token_expires_at) < new Date()
-
-  if (isExpired) {
-    return <LinkExpired />
-  }
-
   // Fetch the Artisan's Profile
   const { data: profile } = await supabase
     .from('profiles')

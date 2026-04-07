@@ -137,7 +137,10 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
     }
   }
 
+  const [isSavingSignature, setIsSavingSignature] = useState(false)
+
   const handleSaveSignature = async (dataUrl: string) => {
+    setIsSavingSignature(true)
     try {
       // 1. Send signature to storage & update (via API)
       const response = await fetch('/api/quotes/accept', {
@@ -151,19 +154,23 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
         })
       })
 
+      const result = await response.json()
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Erreur serveur")
+        // En cas d'erreur 403, on affiche le code d'erreur RPC (ex: PUB-404, EXP-403)
+        throw new Error(result.error + (result.details ? ` (${result.details})` : ""))
       }
       
-      const { signatureUrl, invoiceId: newInvoiceId } = await response.json()
-      setSignature(signatureUrl)
-      if (newInvoiceId) setInvoiceId(newInvoiceId)
+      setSignature(result.signatureUrl)
+      if (result.invoiceId) setInvoiceId(result.invoiceId)
       setIsSigning(false)
       setIsDone(true)
       toast.success("Devis signé avec succès !")
     } catch (e: any) {
+      console.error('[Signature] Save failed:', e)
       toast.error("Échec : " + e.message)
+    } finally {
+      setIsSavingSignature(false)
     }
   }
 
@@ -277,6 +284,11 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
                  </div>
               </div>
               <div className="pr-0 md:pr-14 space-y-1">
+                 {/* 🛡️ SECURITY GRADE 3 : Technical vs Commercial expiration
+  // Use a 10-minute buffer to match server-side safety logic
+  const bufferMs = 10 * 60 * 1000
+  const isTokenExpired = currentQuote.public_token_expires_at && 
+    (new Date(currentQuote.public_token_expires_at).getTime() + bufferMs) < new Date().getTime() */}
                  <p className="text-sm font-bold text-slate-600 italic leading-relaxed">{currentQuote.clients?.address}, {currentQuote.clients?.city}</p>
               </div>
             </div>
@@ -338,7 +350,12 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
                      <ShieldCheck className="text-green-600" size={18} />
                      <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Devis Signé Numériquement</p>
                   </div>
-                  <img src={signature} alt="Client Signature" className="h-24 object-contain mix-blend-multiply opacity-80 relative z-10" />
+                  <img 
+                    src={signature} 
+                    alt="Client Signature" 
+                    crossOrigin="anonymous"
+                    className="h-24 object-contain mix-blend-multiply opacity-80 relative z-10" 
+                  />
                   <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">Accord contractuel validé le {new Date().toLocaleDateString()}</p>
                   
                   {/* NEW: Payment button directly on the invoice */}
@@ -502,7 +519,12 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
               {signature && (
                  <div style={{ textAlign: 'left' }}>
                     <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '10px' }}>Approuvé par le client</p>
-                    <img src={signature} alt="Client Signature" style={{ height: '100px', mixBlendMode: 'multiply' }} />
+                    <img 
+                      src={signature} 
+                      alt="Client Signature" 
+                      crossOrigin="anonymous"
+                      style={{ height: '100px', mixBlendMode: 'multiply' }} 
+                    />
                     <p style={{ fontSize: '9px', fontStyle: 'italic', marginTop: '5px', color: '#94a3b8' }}>Signé numériquement le {new Date().toLocaleDateString()}</p>
                  </div>
               )}
@@ -589,6 +611,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
            <SignaturePad 
              onSave={handleSaveSignature} 
              onCancel={() => setIsSigning(false)} 
+             isLoading={isSavingSignature}
            />
         </div>
       )}

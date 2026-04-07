@@ -35,7 +35,7 @@ export function LinkExpired() {
           </h1>
 
           <p className="text-slate-500 font-medium text-lg mb-10 leading-relaxed max-w-sm mx-auto">
-            Pour garantir la sécurité de vos devis, les liens ArtisanFlow expirent après <span className="text-[#002878] font-bold underline decoration-orange-200 underline-offset-4">1 minute</span>.
+            Pour garantir la sécurité de vos devis, les liens ArtisanFlow expirent après <span className="text-[#002878] font-bold underline decoration-orange-200 underline-offset-4">30 jours</span>.
           </p>
 
           {/* Action Area */}

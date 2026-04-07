@@ -790,7 +790,13 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 <div className="flex-1">
                   {signature && (
                     <div className="w-72">
-                      <img src={signature} alt="Client Signature" className="h-24 object-contain mix-blend-multiply opacity-80" />
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Signature Client</p>
+                      <img 
+                        src={signature} 
+                        alt="Signature" 
+                        crossOrigin="anonymous"
+                        className="h-24 object-contain mix-blend-multiply opacity-80" 
+                      />
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mt-4 text-left">Bond Electronique - Signé le {new Date().toLocaleDateString()}</p>
                     </div>
                   )}
@@ -810,7 +816,6 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
