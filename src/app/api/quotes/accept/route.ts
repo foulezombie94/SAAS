@@ -61,8 +61,11 @@ export async function POST(req: Request) {
     }
 
     // 3. ATOMIC TRANSACTION (RPC v3 - Zero Trust Split Flow)
-    // SQL handles internal check for publicToken (Hexa 32-bytes) vs auth.uid()
-    const { data: invoiceId, error: rpcError } = await supabase.rpc('accept_quote_v3', {
+    // SQL handles internal check for publicToken.
+    // 🛡️ SECURITY GRADE 3 : We use adminSupabase to bypass RLS because Guests don't have a session.
+    // The RPC itself will verify the p_public_token.
+    const adminSupabase = createAdminClient()
+    const { data: invoiceId, error: rpcError } = await adminSupabase.rpc('accept_quote_v3', {
       p_quote_id: quoteId,
       p_public_token: publicToken || 'invalid_token_placeholder', 
       p_signature_url: finalSignatureUrl || ''
