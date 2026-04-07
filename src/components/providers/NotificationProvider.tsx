@@ -176,26 +176,30 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           // 🚀 IMMEDIATE DETECTION (Zero-Latency)
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
-          const isViewed = !!newQuote.last_viewed_at && (!oldQuote || !oldQuote.last_viewed_at)
+          // Consultation is true if last_viewed_at was null/different
+          const isViewed = !!newQuote.last_viewed_at && (!oldQuote || oldQuote.last_viewed_at !== newQuote.last_viewed_at)
           
           if (!isPaid && !isAccepted && !isViewed) return
 
-          // 🚀 HIGH-PRECISION DEDUPLICATION
-          const updateTime = newQuote.updated_at || new Date().toISOString()
-          const key = `${newQuote.id}-${newQuote.status}-${newQuote.last_viewed_at || ''}`
+          // 🚀 HIGH-PRECISION DEDUPLICATION (State + Time)
+          // We use a shorter window for 'Viewed' to allow repeat views but prevent bounce spam
+          const eventType = isPaid ? 'paid' : isAccepted ? 'signed' : 'viewed'
+          const key = `${newQuote.id}-${eventType}-${newQuote.updated_at}`
           if (processedRef.current.includes(key)) return
           processedRef.current.push(key)
           if (processedRef.current.length > 50) processedRef.current.shift()
 
           const prefs = preferencesRef.current
-          // If prefs are not loaded yet, we default to TRUE to not miss critical alerts
           const getPref = (k: keyof typeof prefs) => prefs[k] !== false
 
           const triggerNotification = async () => {
-            // 1. Show an immediate "Low-Fidelity" Toast for extreme speed
-            if (isViewed) toast.info("👀 Devis consulté !", { description: `Un client vient d'ouvrir votre devis #${newQuote.number || '...'}` })
-            if (isPaid) toast.success("🎉 Paiement reçu !", { description: `Le devis #${newQuote.number || '...'} a été réglé.` })
-            if (isAccepted) toast.success("✍️ Devis signé !", { description: `Le devis #${newQuote.number || '...'} a été accepté.` })
+            // 🛡️ SONNER DEDUPLICATION : Explicit ID prevents same toast appearing twice
+            const toastId = `${newQuote.id}-${eventType}`
+
+            // 1. Show an immediate "Low-Fidelity" Toast
+            if (isViewed) toast.info("👀 Devis consulté !", { id: toastId, description: `Un client vient d'ouvrir votre devis #${newQuote.number || '...'}` })
+            if (isPaid) toast.success("🎉 Paiement reçu !", { id: toastId, description: `Le devis #${newQuote.number || '...'} a été réglé.` })
+            if (isAccepted) toast.success("✍️ Devis signé !", { id: toastId, description: `Le devis #${newQuote.number || '...'} a été accepté.` })
 
             // 🔊 Audio alert
             const now = Date.now()
@@ -204,7 +208,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
               lastPlayedRef.current = now
             }
 
-            // 2. Fetch rich data (Client name, etc.) for the dropdown list
+            // 2. Fetch rich data
             const { data: fullQuote } = await supabase
               .from('quotes')
               .select('*, clients(name)')
@@ -218,8 +222,10 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
               } as QuoteNotification
               
               setNotifications(prev => {
-                const filtered = prev.filter(n => n.id !== validated.id)
-                return [validated, ...filtered].slice(0, 10)
+                // 🚀 HISTORY PRESERVATION: We only filter out EXACT matches (same ID + same STATUS)
+                // This allows 'Consulted' and 'Signed' for the SAME quote to stay in the list.
+                const filtered = prev.filter(n => !(n.id === validated.id && n.status === validated.status))
+                return [validated, ...filtered].slice(0, 15)
               })
               await refetchUnreadCount()
             }
