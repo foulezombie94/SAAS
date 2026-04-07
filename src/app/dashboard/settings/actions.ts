@@ -49,10 +49,16 @@ import { profileSchema, ProfileInput } from '@/lib/validations/profile'
 export async function updateProfile(formData: ProfileInput) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  if (!user) return { success: false, error: 'Non authentifié' }
 
   // 🛡️ BASTION DE SÉCURITÉ : Validation Schema Zod + Anti-XSS (Grade 3)
-  const validatedData = profileSchema.parse(formData)
+  let validatedData: ProfileInput
+  try {
+    validatedData = profileSchema.parse(formData)
+  } catch (e: any) {
+    const message = e?.errors?.[0]?.message || 'Données invalides'
+    return { success: false, error: message }
+  }
 
   const { error } = await supabase
     .from('profiles')
@@ -72,12 +78,11 @@ export async function updateProfile(formData: ProfileInput) {
 
   if (error) {
     console.error('Error updating profile:', error)
-    throw new Error('Failed to update profile')
+    return { success: false, error: 'Échec de la sauvegarde' }
   }
 
   // ♻️ REVALIDATION SYNCHRONISÉE (Grade 3)
   revalidatePath('/dashboard/settings')
-  // Force le rafraîchissement global du dashboard
   revalidatePath('/dashboard')
   
   return { success: true }
@@ -119,24 +124,29 @@ export async function createStripeAccount() {
 }
 
 export async function createStripeOnboardingLink(returnPath?: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Non authentifié')
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Non authentifié' }
 
-  const accountId = await createStripeAccount()
+    const accountId = await createStripeAccount()
 
-  // 2. Create an account link for onboarding
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-  const basePath = returnPath || '/dashboard/settings'
-  
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${origin}${basePath}?stripe=refresh`,
-    return_url: `${origin}${basePath}?stripe=success`,
-    type: 'account_onboarding',
-  })
+    // 2. Create an account link for onboarding
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const basePath = returnPath || '/dashboard/settings'
+    
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${origin}${basePath}?stripe=refresh`,
+      return_url: `${origin}${basePath}?stripe=success`,
+      type: 'account_onboarding',
+    })
 
-  return { url: accountLink.url }
+    return { url: accountLink.url }
+  } catch (err: any) {
+    console.error('Stripe Onboarding Link Error:', err)
+    return { error: err.message || 'Erreur lors de la création du lien Stripe' }
+  }
 }
 
 export async function disconnectStripe() {

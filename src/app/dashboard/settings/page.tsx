@@ -56,7 +56,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      await updateProfile({
+      const result = await updateProfile({
         company_name: profile.company_name || '',
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
@@ -67,9 +67,13 @@ export default function SettingsPage() {
         annual_revenue: profile.annual_revenue || null,
         preferred_language: (profile.preferred_language as 'fr' | 'en' | 'es') || 'fr',
       })
-      toast.success('Paramètres enregistrés avec succès')
+      if (result.success) {
+        toast.success('Paramètres enregistrés avec succès')
+      } else {
+        toast.error(result.error || 'Erreur lors de la sauvegarde')
+      }
     } catch (err: any) {
-      toast.error(err.message || 'Erreur lors de la sauvegarde')
+      toast.error('Erreur lors de la sauvegarde')
     } finally {
       setIsSaving(false)
     }
@@ -83,12 +87,14 @@ export default function SettingsPage() {
   const handleConnectStripe = async () => {
     setIsConnecting(true)
     try {
-      const { url } = await createStripeOnboardingLink()
-      if (url) {
-        window.location.href = url
+      const result = await createStripeOnboardingLink()
+      if (result.url) {
+        window.location.href = result.url
+      } else if (result.error) {
+        toast.error(result.error)
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erreur lors de la connexion Stripe')
+      toast.error('Erreur lors de la connexion Stripe')
     } finally {
       setIsConnecting(false)
     }

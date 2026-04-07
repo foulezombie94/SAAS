@@ -2,9 +2,11 @@ import { z } from 'zod';
 
 /**
  * Regex blindé pour détecter toute tentative d'injection HTML ou de script.
- * Elle cible les balises HTML basiques comme <script>, <b>, <div> etc.
+ * ⚠️ IMPORTANT: Ne PAS utiliser le flag 'g' ici. Les regex globales en JS
+ * conservent un état interne (lastIndex) qui cause des faux positifs
+ * aléatoires sur les appels successifs de .test().
  */
-const noHtmlRegex = /<[^>]*>?/gm;
+const noHtmlRegex = /<[^>]*>?/;
 
 /**
  * Validateur Zod réutilisable pour assainir et sécuriser les entrées texte.
