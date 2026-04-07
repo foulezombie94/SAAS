@@ -63,8 +63,8 @@ export default function SettingsPage() {
         siret: profile.siret || '',
         address: profile.address || '',
         phone: profile.phone || '',
-        num_contacts: profile.num_contacts ? Number(profile.num_contacts) : null,
-        annual_revenue: profile.annual_revenue ? Number(profile.annual_revenue) : null,
+        num_contacts: profile.num_contacts || null,
+        annual_revenue: profile.annual_revenue || null,
         preferred_language: (profile.preferred_language as 'fr' | 'en' | 'es') || 'fr',
       })
       toast.success('Paramètres enregistrés avec succès')
@@ -218,10 +218,10 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, num_contacts: e.target.value})}
               >
                 <option value="">Sélectionnez...</option>
-                <option value="0-50">0 à 50</option>
-                <option value="51-200">51 à 200</option>
-                <option value="201-500">201 à 500</option>
-                <option value="500+">Plus de 500</option>
+                <option value="range_0_50">0 à 50</option>
+                <option value="range_51_200">51 à 200</option>
+                <option value="range_201_500">201 à 500</option>
+                <option value="range_501_plus">Plus de 500</option>
               </select>
             </div>
             <div className="space-y-2">
@@ -232,10 +232,10 @@ export default function SettingsPage() {
                 onChange={(e) => setProfile({...profile, annual_revenue: e.target.value})}
               >
                 <option value="">Sélectionnez...</option>
-                <option value="< 50k">&lt; 50 000 €</option>
-                <option value="50k-100k">50k - 100 000 €</option>
-                <option value="100k-250k">100k - 250 000 €</option>
-                <option value="250k+">Plus de 250 000 €</option>
+                <option value="range_under_50k">&lt; 50 000 €</option>
+                <option value="range_50k_100k">50k - 100 000 €</option>
+                <option value="range_100k_250k">100k - 250 000 €</option>
+                <option value="range_250k_plus">Plus de 250 000 €</option>
               </select>
             </div>
             <div className="space-y-2">

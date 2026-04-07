@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
 interface QuoteNotification {
@@ -25,6 +26,8 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
 export function NotificationProvider({ children, userId }: { children: React.ReactNode, userId: string | null }) {
+  const router = useRouter()
+  // 🚀 Best practice: Singleton-safe initialization
   const [supabase] = useState(() => createClient())
   const [notifications, setNotifications] = useState<QuoteNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -37,6 +40,8 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const preferencesRef = useRef(preferences)
+  const processedRef = useRef(new Set<string>())
+  const lastPlayedRef = useRef(0)
 
   // 🔄 Sync Ref with state
   useEffect(() => {
@@ -62,20 +67,21 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     if (!userId || !supabase) return
 
     const fetchInitialData = async () => {
-      // 1. Fetch Preferences
+      // 1. Fetch Profile (Preferences & Last Seen)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('notification_preferences')
+        .select('notification_preferences, last_seen_notifications_at')
         .eq('id', userId)
         .single()
       
+      const lastSeen = profile?.last_seen_notifications_at
       const prefs = (profile as any)?.notification_preferences
       if (prefs) {
         setPreferences((prev: any) => ({ ...prev, ...prefs }))
       }
 
       // 2. Fetch Initial Notifications
-      const { data } = await supabase
+      const { data: quotes } = await supabase
         .from('quotes')
         .select('*, clients(name)')
         .eq('user_id', userId)
@@ -83,9 +89,19 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         .order('updated_at', { ascending: false })
         .limit(8)
       
-      if (data) {
-        setNotifications(data as QuoteNotification[])
+      if (quotes) {
+        setNotifications(quotes as QuoteNotification[])
       }
+
+      // 3. Calculate persistent unread count from DB
+      const { count } = await supabase
+        .from('quotes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .in('status', ['paid', 'accepted', 'expired'] as any[])
+        .gt('updated_at', lastSeen || '1970-01-01')
+      
+      setUnreadCount(count || 0)
     }
 
     fetchInitialData()
@@ -101,41 +117,56 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           table: 'quotes',
           filter: `user_id=eq.${userId}`
         },
-        (payload) => {
+        async (payload) => {
           const newQuote = payload.new as any
           const oldQuote = payload.old as any
 
-          // Security check (Double redundant)
+          // 🧠 Reliable Deduplication (id + updated_at)
+          const key = `${newQuote.id}-${newQuote.updated_at}`
+          if (processedRef.current.has(key)) return
+          processedRef.current.add(key)
+          if (processedRef.current.size > 50) {
+            const firstKey = processedRef.current.values().next().value
+            if (firstKey) processedRef.current.delete(firstKey)
+          }
+
+          // Security check
           if (newQuote.user_id !== userId) return
 
-          const isPaid = newQuote.status === 'paid' && (oldQuote?.status === undefined || oldQuote?.status !== 'paid')
-          const isAccepted = newQuote.status === 'accepted' && (oldQuote?.status === undefined || oldQuote?.status !== 'accepted')
-          const isExpired = newQuote.status === 'expired' && (oldQuote?.status === undefined || oldQuote?.status !== 'expired')
-          const isViewed = newQuote.last_viewed_at !== oldQuote?.last_viewed_at && !!newQuote.last_viewed_at
+          const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
+          const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
+          const isExpired = newQuote.status === 'expired' && (!oldQuote || oldQuote.status !== 'expired')
+          const isViewed = newQuote.last_viewed_at !== (oldQuote?.last_viewed_at || null) && !!newQuote.last_viewed_at
 
-          // 🧠 Check preferences via Ref to avoid resubscribe chain
           const prefs = preferencesRef.current
-          // Explicitly check for false to support default-to-true behavior safely
           const shouldNotifyPaid = isPaid && prefs.payments_received !== false
           const shouldNotifyAccepted = isAccepted && prefs.quotes_accepted !== false
           const shouldNotifyExpired = isExpired && prefs.quotes_expired !== false
           const shouldNotifyViewed = isViewed && prefs.quotes_viewed !== false
 
           if (shouldNotifyPaid || shouldNotifyAccepted || shouldNotifyExpired || shouldNotifyViewed) {
-            setUnreadCount(prev => prev + 1)
+            // 🚀 Reliable data refetch (Supabase realtime doesn't include relations like clients)
+            const { data: fullQuote } = await supabase
+              .from('quotes')
+              .select('*, clients(name)')
+              .eq('id', newQuote.id)
+              .single()
+
+            const enriched = (fullQuote || newQuote) as QuoteNotification
             
+            setUnreadCount(prev => prev + 1)
             setNotifications(prev => {
-              const existing = prev.find(n => n.id === newQuote.id)
-              const enriched: QuoteNotification = {
-                ...newQuote,
-                clients: newQuote.clients || existing?.clients || null
-              }
               const filtered = prev.filter(n => n.id !== enriched.id)
               return [enriched, ...filtered].slice(0, 8)
             })
 
-            if (audioRef.current) {
-              audioRef.current.play().catch(() => {})
+            // 🔊 Audio cooldown (1s)
+            const now = Date.now()
+            if (now - lastPlayedRef.current > 1000) {
+              if (audioRef.current) {
+                audioRef.current.play().catch(() => {})
+                lastPlayedRef.current = now
+              }
             }
 
             if (shouldNotifyPaid) {
@@ -168,11 +199,14 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
           const newPrefs = payload.new.notification_preferences
           if (newPrefs) {
+            console.log('🔄 Prefs Synced Realtime:', newPrefs)
             setPreferences((prev: any) => ({ ...prev, ...newPrefs }))
           }
 
           if (payload.new.plan !== payload.old.plan) {
-            supabase.auth.refreshSession().then(() => window.location.reload())
+            supabase.auth.refreshSession().then(() => {
+              router.refresh()
+            })
           }
         }
       )
@@ -182,9 +216,18 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       supabase.removeChannel(channel)
       supabase.removeChannel(profileChannel)
     }
-  }, [supabase, userId])
+  }, [supabase, userId, router])
 
-  const markAllAsRead = () => setUnreadCount(0)
+  const markAllAsRead = async () => {
+    setUnreadCount(0)
+    if (!userId) return
+    // 🚀 Persist "seen" state to DB
+    await supabase
+      .from('profiles')
+      .update({ last_seen_notifications_at: new Date().toISOString() })
+      .eq('id', userId)
+  }
+
   const clearAllNotifications = () => {
     setNotifications([])
     setUnreadCount(0)

@@ -229,7 +229,7 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
-          annual_revenue: number | null
+          annual_revenue: string | null
           bank_name: string | null
           bic: string | null
           company_name: string | null
@@ -241,7 +241,7 @@ export type Database = {
           id: string
           is_pro: boolean | null
           last_name: string | null
-          num_contacts: number | null
+          num_contacts: string | null
           phone: string | null
           plan: string | null
           preferred_language: string | null
@@ -257,10 +257,11 @@ export type Database = {
           stripe_details_submitted: boolean | null
           stripe_subscription_id: string | null
           updated_at: string | null
+          last_seen_notifications_at: string | null
         }
         Insert: {
           address?: string | null
-          annual_revenue?: number | null
+          annual_revenue?: string | null
           bank_name?: string | null
           bic?: string | null
           company_name?: string | null
@@ -272,7 +273,7 @@ export type Database = {
           id: string
           is_pro?: boolean | null
           last_name?: string | null
-          num_contacts?: number | null
+          num_contacts?: string | null
           phone?: string | null
           plan?: string | null
           preferred_language?: string | null
@@ -288,10 +289,11 @@ export type Database = {
           stripe_details_submitted?: boolean | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
+          last_seen_notifications_at?: string | null
         }
         Update: {
           address?: string | null
-          annual_revenue?: number | null
+          annual_revenue?: string | null
           bank_name?: string | null
           bic?: string | null
           company_name?: string | null
@@ -303,7 +305,7 @@ export type Database = {
           id?: string
           is_pro?: boolean | null
           last_name?: string | null
-          num_contacts?: number | null
+          num_contacts?: string | null
           phone?: string | null
           plan?: string | null
           preferred_language?: string | null
@@ -319,6 +321,7 @@ export type Database = {
           stripe_details_submitted?: boolean | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
+          last_seen_notifications_at?: string | null
         }
         Relationships: []
       }

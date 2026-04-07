@@ -64,8 +64,8 @@ export async function updateProfile(formData: ProfileInput) {
       siret: validatedData.siret,
       address: validatedData.address,
       phone: validatedData.phone,
-      num_contacts: validatedData.num_contacts ? Number(validatedData.num_contacts) : null,
-      annual_revenue: validatedData.annual_revenue ? Number(validatedData.annual_revenue) : null,
+      num_contacts: validatedData.num_contacts,
+      annual_revenue: validatedData.annual_revenue,
       preferred_language: validatedData.preferred_language,
     })
     .eq('id', user.id)

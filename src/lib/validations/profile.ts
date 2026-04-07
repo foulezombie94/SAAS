@@ -8,8 +8,8 @@ export const profileSchema = z.object({
   siret: sanitizeString.optional().nullable(),
   address: sanitizeString.optional().nullable(),
   phone: sanitizeString.optional().nullable(),
-  num_contacts: z.union([z.string(), z.number()]).optional().nullable(),
-  annual_revenue: z.union([z.string(), z.number()]).optional().nullable(),
+  num_contacts: z.string().optional().nullable(),
+  annual_revenue: z.string().optional().nullable(),
   preferred_language: z.enum(['fr', 'en', 'es']).default('fr'),
 });
 
