@@ -132,7 +132,12 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       if (quotesErr) {
         console.warn('[NOTIFICATIONS] Initial quotes fetch failed:', quotesErr.message)
       } else if (quotes) {
-        setNotifications(quotes as QuoteNotification[])
+        // 🚀 FIX: Handle Supabase jointure format (sometimes array, sometimes object)
+        const normalized = quotes.map(q => ({
+          ...q,
+          clients: Array.isArray(q.clients) ? q.clients[0] : q.clients
+        })) as unknown as QuoteNotification[]
+        setNotifications(normalized)
       }
 
       // 3. Initial count sync
@@ -174,7 +179,8 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
           const isExpired = newQuote.status === 'expired' && (!oldQuote || oldQuote.status !== 'expired')
-          const isViewed = newQuote.last_viewed_at !== (oldQuote?.last_viewed_at || null) && !!newQuote.last_viewed_at
+          // 🚀 FIX: Only notify if it's the FIRST view (transition from null/undefined to a timestamp)
+          const isViewed = !!newQuote.last_viewed_at && !oldQuote?.last_viewed_at
 
           const prefs = preferencesRef.current
           const shouldNotifyPaid = isPaid && prefs.payments_received !== false
@@ -195,14 +201,18 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
                return
             }
 
-            // 🛡️ Runtime Validation
+            // 🛡️ Runtime Validation & Normalization
             const validation = quoteWithClientSchema.safeParse(fullQuote)
             if (!validation.success) {
               console.error('[RUNTIME VALIDATION ERROR] Notification payload invalid:', validation.error.format())
               return
             }
 
-            const validatedData = validation.data as unknown as QuoteNotification
+            const rawData = validation.data as any
+            const validatedData: QuoteNotification = {
+              ...rawData,
+              clients: Array.isArray(rawData.clients) ? rawData.clients[0] : rawData.clients
+            }
             
             setNotifications(prev => {
               const filtered = prev.filter(n => n.id !== validatedData.id)
@@ -277,19 +287,23 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
   const markAllAsRead = async () => {
     setUnreadCount(0)
-    // 🚀 FIX: Add a 2s safety buffer to ensure we don't catch the event we just processed
-    const nowWithBuffer = new Date(Date.now() + 2000).toISOString()
+    // 🚀 FIX: Add a 5s safety buffer to ensure database eventual consistency and network latency
+    const nowWithBuffer = new Date(Date.now() + 5000).toISOString()
     setLastSeen(nowWithBuffer)
     if (!userId) return
 
     // 🚀 Persist "seen" state to DB
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ last_seen_notifications_at: nowWithBuffer })
       .eq('id', userId)
     
+    if (error) {
+      console.error('[NOTIFICATIONS] Mark all as read failed:', error.message)
+    }
+
     // Refresh unread count immediately to sync UI
-    setTimeout(refetchUnreadCount, 500)
+    await refetchUnreadCount()
   }
 
   const clearAllNotifications = () => {

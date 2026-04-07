@@ -153,33 +153,37 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                             notif.status === 'expired' ? "text-amber-600" : "text-primary"
                           )}>
                              {(() => {
+                               // 🚀 Prioritize 'Viewed' if it was triggered recently, or if status is still 'sent' but viewed
+                               if (notif.last_viewed_at && notif.status === 'sent') return 'Devis Consulté'
+                               
                                switch(notif.status) {
-                                 case 'paid': return 'Paiement Reçu'
+                                 case 'paid': return 'Paiement Encaissé'
                                  case 'accepted': return 'Signature Reçue'
-                                 case 'sent': return 'Devis Envoyé'
+                                 case 'sent': return 'Lien Envoyé'
                                  case 'expired': return 'Lien Expiré'
-                                 case 'invoiced': return 'Facture Créée'
-                                 default: return 'Activité Devis'
+                                 case 'invoiced': return 'Facturation Auto'
+                                 default: return 'Information Devis'
                                }
                              })()}
                           </p>
                           <p className="text-[11px] font-bold text-slate-600 mb-1.5 leading-tight">
-                             {notif.status === 'paid' ? 'Le règlement a été validé' : 
-                              notif.status === 'accepted' ? 'Le client a signé le document' : 
-                              notif.status === 'expired' ? 'Document inaccessible' : 'Action effectuée'} pour{' '}
+                             {notif.status === 'paid' ? 'Règlement validé avec succès' : 
+                              notif.status === 'accepted' ? 'Document signé électroniquement' : 
+                              (notif.last_viewed_at && notif.status === 'sent') ? 'Le client parcourt actuellement le devis' :
+                              notif.status === 'expired' ? 'Ce document n\'est plus accessible' : 'Nouvelle activité enregistrée'} pour{' '}
                              <span className={cn("text-secondary font-black", notif.status === 'expired' && "text-amber-500")}>
                                {notif.number}
                              </span>
                           </p>
                           <div className="flex items-center gap-2">
                              <div className="flex items-center gap-1.5">
-                               <div className="w-1 h-1 rounded-full bg-slate-300" />
-                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                 {notif.clients?.name || 'Client inconnu'}
+                               <div className={cn("w-1 h-1 rounded-full", notif.status === 'paid' ? "bg-emerald-400" : "bg-slate-300")} />
+                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                 {notif.clients?.name || 'Client ArtisanFlow'}
                                </span>
                              </div>
                              {notif.status === 'paid' && (
-                               <span className="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter">SUCCESS</span>
+                               <span className="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter">PAYÉ</span>
                              )}
                           </div>
                         </div>
