@@ -6,7 +6,7 @@ export type QuoteStatus =
 
 export type Client = Database['public']['Tables']['clients']['Row']
 
-export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'num_contacts' | 'annual_revenue'> & {
+export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'num_contacts' | 'annual_revenue' | 'notification_preferences'> & {
   num_contacts?: string | null
   annual_revenue?: string | null
   notification_preferences?: {
