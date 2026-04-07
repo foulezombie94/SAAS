@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut } from 'lucide-react'
+import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut, Check } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
@@ -110,11 +110,12 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation()
-                      clearAllNotifications()
+                      markAllAsRead()
                     }} 
-                    className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors"
+                    className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors group"
                   >
-                    Effacer
+                    <Check size={12} className="group-hover:scale-110 transition-transform" />
+                    Tout marquer comme lu
                   </button>
                 )}
               </div>
