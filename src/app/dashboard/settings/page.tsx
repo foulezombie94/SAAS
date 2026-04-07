@@ -5,7 +5,8 @@ import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe
 import { Profile } from '@/types/dashboard'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { RefreshCw, Mail, Verified, Building2, Award, CheckCircle2, Rocket, ShieldCheck, Wallet, Clock, Link2, Unlink, Save, ExternalLink, Bell, Eye } from 'lucide-react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { RefreshCw, Mail, Verified, Building2, Award, CheckCircle2, Rocket, ShieldCheck, Wallet, Clock, Link2, Unlink, Save, ExternalLink, Bell, Eye, AlertCircle } from 'lucide-react'
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Partial<Profile>>({
@@ -29,11 +30,30 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
-  const [stripeStatus, setStripeStatus] = useState<{ isReady: boolean; exists: boolean; detailsSubmitted?: boolean }>({ isReady: false, exists: false })
+  const [stripeStatus, setStripeStatus] = useState<{ isReady: boolean; exists: boolean; detailsSubmitted?: boolean; chargesEnabled?: boolean }>({ isReady: false, exists: false })
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
   useEffect(() => {
     loadProfile()
-  }, [])
+    
+    // 🛡️ Gestion des retours Stripe (Succès / Refresh)
+    const stripeParam = searchParams.get('stripe')
+    if (stripeParam === 'success') {
+      toast.success('Profil Stripe mis à jour avec succès !', {
+        icon: <CheckCircle2 className="text-green-500" />
+      })
+      // Clear the param to avoid repeated toasts on refresh
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    } else if (stripeParam === 'refresh') {
+      toast.warning('La session a expiré. Un nouveau lien sera généré au clic.', {
+        icon: <RefreshCw className="text-amber-500" />
+      })
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [searchParams])
 
   const loadProfile = async () => {
     try {
@@ -460,8 +480,8 @@ export default function SettingsPage() {
                   disabled={isConnecting}
                   className="w-full h-14 bg-amber-500 text-white font-black rounded-lg hover:bg-amber-600 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-lg shadow-amber-500/20"
                 >
-                  {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <ExternalLink className="w-5 h-5" />}
-                  TERMINER LA CONFIGURATION
+                  {isConnecting ? <RefreshCw className="animate-spin" size={18} /> : <AlertCircle className="w-5 h-5" />}
+                  COMPLÉTER MON PROFIL STRIPE
                 </button>
                 <button 
                   onClick={handleDisconnectStripe}
