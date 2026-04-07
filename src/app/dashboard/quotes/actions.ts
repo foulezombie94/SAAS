@@ -52,12 +52,15 @@ export async function createQuoteAction(rawData: unknown) {
       throw new Error(rpcError.message)
     }
 
-    // 🛡️ Neutralization: ensure no public_token is created automatically
-    // We force it to NULL so it can only be generated on-demand later
+    // 🛡️ Neutralization: ensure no public_token or expiration exists by default
+    // We force both to NULL so it can only be generated on-demand later
     if (quote) {
       await supabase
         .from('quotes')
-        .update({ public_token: null } as any)
+        .update({ 
+          public_token: null,
+          public_token_expires_at: null
+        } as any)
         .eq('id', quote as string);
     }
     
@@ -210,16 +213,23 @@ export async function generateQuoteTokenAction(quoteId: string) {
 
   try {
     const newToken = crypto.randomUUID()
+    // Set expiration to 30 days from now 🛡️
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 30)
+
     const { error } = await supabase
       .from('quotes')
-      .update({ public_token: newToken } as any)
+      .update({ 
+        public_token: newToken,
+        public_token_expires_at: expiresAt.toISOString()
+      } as any)
       .eq('id', quoteId)
-      .eq('user_id', user.id) // Security: double check ownership
+      .eq('user_id', user.id)
 
     if (error) throw error
 
     revalidatePath(`/dashboard/quotes/${quoteId}`)
-    return { success: true, token: newToken }
+    return { success: true, token: newToken, expiresAt: expiresAt.toISOString() }
   } catch (err: any) {
     return { success: false, error: err.message }
   }
