@@ -96,7 +96,21 @@ export async function createStripeAccount() {
   const profile = await getProfile()
   if (!profile) throw new Error('Profil non trouvé')
 
-  if (profile.stripe_account_id) return profile.stripe_account_id
+  if (profile.stripe_account_id) {
+    try {
+      // 🛡️ Vérifie si le compte existant est toujours valide sur Stripe
+      await stripe.accounts.retrieve(profile.stripe_account_id)
+      return profile.stripe_account_id
+    } catch (err: any) {
+      if (err.type === 'StripeInvalidRequestError' || err.statusCode === 404) {
+        console.warn(`[STRIPE] Compte ${profile.stripe_account_id} introuvable. Nettoyage de la DB...`)
+        // Efface l'ID invalide pour pouvoir en créer un nouveau
+        await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', user.id)
+      } else {
+        throw err
+      }
+    }
+  }
 
   const account = await stripe.accounts.create({
     type: 'express',
@@ -113,12 +127,16 @@ export async function createStripeAccount() {
   })
 
   // Store the accountId in the profile
-  const { error } = await supabase
+  const { error: updateErr } = await supabase
     .from('profiles')
-    .update({ stripe_account_id: account.id })
+    .update({ 
+      stripe_account_id: account.id,
+      stripe_details_submitted: false,
+      stripe_charges_enabled: false 
+    })
     .eq('id', user.id)
 
-  if (error) throw error
+  if (updateErr) throw updateErr
 
   return account.id
 }
@@ -192,8 +210,26 @@ export async function getStripeAccountStatus() {
       exists: true,
       accountId: profile.stripe_account_id
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error retrieving Stripe account:', err)
+
+    // 🛡️ AUTO-REPAIR: Si le compte n'existe plus sur Stripe, on nettoie notre DB
+    if (err.type === 'StripeInvalidRequestError' || err.statusCode === 404) {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        console.warn(`[STRIPE AUTO-REPAIR] Nettoyage de l'ID compte invalide: ${profile.stripe_account_id}`)
+        await supabase
+          .from('profiles')
+          .update({ 
+            stripe_account_id: null,
+            stripe_details_submitted: false,
+            stripe_charges_enabled: false 
+          })
+          .eq('id', user.id)
+      }
+    }
+
     return { isReady: false, exists: false }
   }
 }
