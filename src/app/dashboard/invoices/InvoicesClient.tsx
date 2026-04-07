@@ -16,7 +16,8 @@ import {
   Plus,
   ArrowRight,
   RefreshCw,
-  Loader2
+  Loader2,
+  User
 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Invoice } from '@/types/dashboard'
@@ -80,95 +81,114 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
   }), [filteredInvoices])
 
   return (
-    <div className="space-y-12 pb-20">
-      <header className="flex flex-col md:flex-row md:items-end justify-between self-stretch gap-8">
+    <div className="space-y-20 pb-32 mt-8">
+      <header className="flex flex-col md:flex-row md:items-end justify-between self-stretch gap-12">
         <div>
-          <h2 className="text-4xl font-black text-primary tracking-tighter uppercase leading-none mb-3 italic">Factures & Flux</h2>
-          <p className="text-on-surface-variant font-bold uppercase tracking-widest text-[10px] opacity-60 flex items-center gap-3">
-             {totals.count} documents {searchTerm ? 'filtrés' : 'détectés'} • 
-             <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-sm">
-               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-               Flux en direct
+          <h2 className="text-6xl font-black text-primary tracking-tighter uppercase leading-none mb-4 italic">Factures & Flux</h2>
+          <p className="text-on-surface-variant font-bold uppercase tracking-[0.3em] text-[10px] opacity-40 flex items-center gap-4">
+             <span className="flex items-center gap-2">
+                <Receipt size={14} className="text-primary/40" />
+                {totals.count} documents {searchTerm ? 'filtrés' : 'détectés'}
+             </span>
+             <span className="w-1 h-1 bg-slate-200 rounded-full" />
+             <span className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-sm font-black italic">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+                Flux en direct
              </span>
           </p>
         </div>
         
         <div className="flex gap-4">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-all" size={20} />
             <input 
-              className="bg-white border-2 border-slate-50 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 pl-12 pr-6 py-4 rounded-2xl shadow-diffused text-on-surface font-black placeholder:text-slate-300 transition-all uppercase text-[10px] tracking-widest w-72" 
+              className="bg-white border-2 border-slate-50 outline-none focus:ring-[12px] focus:ring-primary/5 focus:border-primary/20 pl-16 pr-8 h-16 rounded-2xl shadow-sm text-on-surface font-black placeholder:text-slate-200 transition-all uppercase text-[11px] tracking-widest w-96" 
               placeholder="Recherche instantanée..." 
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="h-14 px-6 font-black uppercase tracking-widest text-[10px] gap-2 border-slate-100">
-            <Filter size={16} /> Filtre
+          <Button variant="outline" className="h-16 px-8 font-black uppercase tracking-widest text-[10px] gap-3 border-slate-100 rounded-2xl hover:bg-slate-50">
+            <Filter size={18} /> Filtre
           </Button>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-8 border-none shadow-diffused bg-surface-container-lowest border-2 border-primary/5 group hover:border-primary/20 transition-all">
-          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 mb-8">Nombre de factures</p>
-          <div className="flex items-center gap-4 w-full md:w-auto">
-           <span className="text-4xl font-black tracking-tighter text-primary group-hover:scale-110 transition-transform">{totals.count}</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <Card className="p-10 border-none shadow-xl shadow-slate-100 bg-white border-2 border-transparent group hover:border-primary/10 transition-all rounded-[32px]">
+          <p className="text-[0.6875rem] font-black uppercase tracking-[0.3em] text-on-surface-variant/30 mb-10 flex items-center gap-2">
+            <Receipt size={14} /> Nombre de factures
+          </p>
+          <div className="flex items-center gap-4">
+            <span className="text-6xl font-black tracking-tighter text-primary group-hover:scale-105 transition-transform duration-500">{totals.count}</span>
+            <div className="w-12 h-1 bg-primary/10 rounded-full mt-4" />
           </div>
         </Card>
         
-        <Card className="p-8 bg-emerald-50/50 border-none shadow-sm flex flex-col justify-between group hover:bg-emerald-50 transition-all">
-          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-emerald-700/60 mb-8">CA Encaissé (TTC)</p>
-          <div className="flex items-baseline gap-2">
-             <span className="text-4xl font-black tracking-tighter text-emerald-700">{totals.paid.toLocaleString('fr-FR')}</span>
-             <span className="text-xl font-black text-emerald-700/40">€</span>
+        <Card className="p-10 bg-emerald-50/30 border-none shadow-xl shadow-emerald-900/5 flex flex-col justify-between group hover:bg-emerald-50 transition-all rounded-[32px] border border-emerald-100/50">
+          <p className="text-[0.6875rem] font-black uppercase tracking-[0.3em] text-emerald-700/40 mb-10 flex items-center gap-2">
+            <TrendingUp size={14} /> CA Encaissé (TTC)
+          </p>
+          <div className="flex items-baseline gap-3">
+             <span className="text-6xl font-black tracking-tighter text-emerald-700">{totals.paid.toLocaleString('fr-FR')}</span>
+             <span className="text-2xl font-black text-emerald-700/30 italic">€</span>
           </div>
         </Card>
 
-        <Card className="p-8 bg-primary/5 border-none shadow-diffused group hover:bg-primary/10 transition-all">
-          <p className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-primary/60 mb-8">En attente de paiement</p>
-          <div className="flex items-baseline gap-2 text-primary">
-             <span className="text-4xl font-black tracking-tighter">{totals.unpaid.toLocaleString('fr-FR')}</span>
-             <span className="text-xl font-black opacity-40">€</span>
+        <Card className="p-10 bg-primary/5 border-none shadow-xl shadow-blue-900/5 group hover:bg-primary/10 transition-all rounded-[32px] border border-primary/10">
+          <p className="text-[0.6875rem] font-black uppercase tracking-[0.3em] text-primary/40 mb-10 flex items-center gap-2">
+            <Clock size={14} /> En attente
+          </p>
+          <div className="flex items-baseline gap-3 text-primary">
+             <span className="text-6xl font-black tracking-tighter italic">{totals.unpaid.toLocaleString('fr-FR')}</span>
+             <span className="text-2xl font-black opacity-20 uppercase italic">€</span>
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
         {filteredInvoices?.map((invoice) => (
           <Link key={invoice.id} href={`/dashboard/invoices/${invoice.id}`} className="group">
-            <Card className="p-8 border-none shadow-sm hover:shadow-2xl transition-all bg-white relative overflow-hidden group-hover:scale-[1.02] active:scale-[0.98] rounded-3xl">
-              <div className={`absolute top-0 left-0 w-full h-1.5 ${
-                invoice.status === 'paid' ? 'bg-emerald-500' : 'bg-slate-200'
+            <Card className="p-10 border border-slate-100/50 shadow-lg shadow-slate-100 hover:shadow-[0_32px_64px_-12px_rgba(0,40,120,0.12)] transition-all bg-white relative overflow-hidden group-hover:scale-[1.02] active:scale-[0.98] rounded-[40px]">
+              <div className={`absolute top-0 left-0 w-full h-2 transition-all duration-500 group-hover:h-3 ${
+                invoice.status === 'paid' ? 'bg-emerald-500' : 'bg-primary'
               }`} />
 
-              <div className="flex justify-between items-start mb-10">
+              <div className="flex justify-between items-start mb-12">
                 <div>
-                    <h5 className="font-black text-primary tracking-tighter text-2xl uppercase group-hover:text-primary-container transition-colors">{invoice.number}</h5>
-                    <p className="text-[0.6875rem] font-black text-on-surface-variant/40 uppercase tracking-widest mt-1">
+                    <h5 className="font-black text-primary tracking-tighter text-4xl uppercase leading-none mb-3 italic">{invoice.number}</h5>
+                    <p className="text-[0.75rem] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 italic">
+                      <User size={12} className="opacity-30" />
                       {invoice.clients?.name}
                     </p>
                 </div>
-                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
-                  invoice.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                <div className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.15em] shadow-sm italic transition-all ${
+                  invoice.status === 'paid' 
+                    ? 'bg-emerald-500 text-white shadow-emerald-200' 
+                    : 'bg-primary/10 text-primary border border-primary/20'
                 }`}>
-                  {invoice.status}
+                  {invoice.status === 'paid' ? 'Payée' : 'Envoyée'}
                 </div>
               </div>
 
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-[0.6875rem] font-black uppercase tracking-widest text-on-surface-variant/30 mb-1">Montant TTC</p>
-                  <span className="text-3xl font-black text-primary tracking-tighter">{Number(invoice.total_ttc).toLocaleString('fr-FR')}€</span>
+                  <p className="text-[0.6875rem] font-black uppercase tracking-[0.3em] text-slate-300 mb-2">Montant Total TTC</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black text-primary tracking-tighter">{Number(invoice.total_ttc).toLocaleString('fr-FR')}</span>
+                    <span className="text-xl font-black text-primary/30 uppercase">€</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
-                 <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest group-hover:gap-4 transition-all">
-                    Détails facture <ArrowRight size={14} />
+              <div className="mt-10 pt-8 border-t border-slate-50 flex items-center justify-between">
+                 <div className="flex items-center gap-3 text-primary font-black text-[11px] uppercase tracking-[0.2em] group-hover:gap-6 transition-all italic">
+                    Détails facture <ArrowRight size={18} className="text-primary/40 group-hover:text-primary transition-colors" />
                  </div>
-                 <MoreVertical size={20} className="text-slate-100 group-hover:text-slate-300 transition-colors" />
+                 <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-200 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                    <ChevronRight size={20} />
+                 </div>
               </div>
             </Card>
           </Link>
@@ -176,13 +196,16 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
       </div>
       
       {filteredInvoices.length === 0 && (
-        <Card className="p-20 text-center flex flex-col items-center justify-center gap-6 bg-slate-50/50 border-dashed border-2 border-slate-200 rounded-3xl mt-12">
-           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-slate-200 shadow-sm">
-             <Search size={32} />
+        <Card className="p-32 text-center flex flex-col items-center justify-center gap-8 bg-slate-50/50 border-dashed border-4 border-slate-100 rounded-[48px] mt-20">
+           <div className="w-24 h-24 bg-white rounded-[32px] flex items-center justify-center text-slate-100 shadow-xl border border-slate-50">
+             <Search size={48} />
            </div>
-           <p className="text-sm font-black text-slate-400 uppercase tracking-widest leading-relaxed max-w-md">
-             Aucune trace de ce numéro ou client dans vos archives.
-           </p>
+           <div>
+              <p className="text-xl font-black text-[#002878] uppercase tracking-tighter mb-2 italic">Aucune Enregistrement</p>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] leading-relaxed max-w-sm mx-auto">
+                Vos archives ne contiennent aucune trace de ce numéro ou client.
+              </p>
+           </div>
         </Card>
       )}
     </div>
