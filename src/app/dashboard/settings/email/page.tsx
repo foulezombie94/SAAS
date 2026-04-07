@@ -214,7 +214,10 @@ export default function SettingsPage() {
                 <div className="flex justify-between items-center px-1">
                   <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Mot de passe (ou mdp d'application)</label>
                   {hasStoredPass && config.pass === '••••••••' && (
-                    <span className="text-[8px] font-bold text-primary/40 italic uppercase tracking-wider animate-pulse">🔒 Masqué pour votre sécurité (8 points)</span>
+                    <span className="text-[7px] font-bold text-primary/40 italic uppercase tracking-tighter animate-pulse text-right">
+                      🔒 Le nombre de caractères est masqué pour votre sécurité. <br/>
+                      Votre mot de passe ne fait pas forcément 8 caractères.
+                    </span>
                   )}
                 </div>
                 <div className="relative group">
