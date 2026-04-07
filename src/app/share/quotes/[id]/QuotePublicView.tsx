@@ -87,6 +87,31 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
     }
   }, [searchParams, quote.id, quote.status])
 
+  // 🚀 REAL-TIME VIEW RECORDING
+  useEffect(() => {
+    const recordView = async () => {
+      try {
+        const response = await fetch('/api/quotes/view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            quoteId: quote.id, 
+            publicToken 
+          })
+        })
+        if (!response.ok) console.warn('[View] Verification failed or token invalid')
+      } catch (err) {
+        console.error('[View] Error:', err)
+      }
+    }
+
+    if (quote.id && publicToken) {
+      // Small delay to ensure it's not a pre-render/accidental hit
+      const timer = setTimeout(recordView, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [quote.id, publicToken])
+
   // Real-time synchronization
   useEffect(() => {
     const supabase = createClient()

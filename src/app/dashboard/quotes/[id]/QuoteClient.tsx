@@ -28,7 +28,8 @@ import {
   Share2,
   Mail,
   X,
-  FileCheck2
+  FileCheck2,
+  Eye
 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
@@ -724,8 +725,50 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           )}
         </div>
       </div>
+ 
+       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <div className="lg:col-span-12">
+          <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-3xl p-8 mb-10 overflow-x-auto shadow-sm">
+            <div className="flex items-center justify-between min-w-[800px] relative px-4">
+              {/* Progress Line Background */}
+              <div className="absolute top-[26px] left-[60px] right-[60px] h-[2px] bg-slate-100 z-0"></div>
+              
+              {/* Dynamic Steps */}
+              {[
+                { id: 'created', label: 'Création', icon: FileText, date: currentQuote.created_at, color: 'bg-blue-500', active: true },
+                { id: 'sent', label: 'Envoyé', icon: Send, date: currentQuote.status !== 'draft' ? currentQuote.updated_at : null, color: 'bg-indigo-500', active: currentQuote.status !== 'draft' },
+                { id: 'viewed', label: 'Consulté', icon: Eye, date: currentQuote.last_viewed_at, color: 'bg-cyan-500', active: !!currentQuote.last_viewed_at },
+                { id: 'signed', label: 'Signé', icon: PenTool, date: currentQuote.status === 'accepted' || currentQuote.status === 'paid' || currentQuote.status === 'invoiced' ? currentQuote.updated_at : null, color: 'bg-emerald-500', active: ['accepted', 'paid', 'invoiced'].includes(currentQuote.status) },
+                { id: 'paid', label: 'Payé', icon: CreditCard, date: currentQuote.status === 'paid' || currentQuote.status === 'invoiced' ? currentQuote.updated_at : null, color: 'bg-amber-500', active: ['paid', 'invoiced'].includes(currentQuote.status) },
+                { id: 'invoiced', label: 'Facturé', icon: Receipt, date: currentQuote.status === 'invoiced' ? currentQuote.updated_at : null, color: 'bg-slate-900', active: currentQuote.status === 'invoiced' },
+              ].map((step, idx) => {
+                const Icon = step.icon
+                return (
+                  <div key={step.id} className="flex flex-col items-center gap-4 relative z-10">
+                    <div className={cn(
+                      "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-lg",
+                      step.active ? `${step.color} text-white scale-110` : "bg-white border-2 border-slate-100 text-slate-300"
+                    )}>
+                      <Icon size={idx === 2 ? 22 : 20} className={cn(step.active && "animate-in zoom-in duration-500")} />
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className={cn(
+                        "text-[10px] font-black uppercase tracking-widest",
+                        step.active ? "text-slate-900" : "text-slate-300"
+                      )}>{step.label}</p>
+                      {step.active && step.date && (
+                         <p className="text-[9px] font-bold text-slate-400 opacity-60 animate-in fade-in duration-700">
+                            {new Date(step.date).toLocaleDateString()}
+                         </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-8 space-y-10">
           {/* Document Preview Area (Display only) */}
           <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-outline-variant/5">
