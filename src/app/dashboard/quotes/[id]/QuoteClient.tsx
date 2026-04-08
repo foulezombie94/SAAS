@@ -141,8 +141,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         { header: 'DÉSIGNATION', key: 'description', width: 40 },
         { header: 'UNITÉ', key: 'unit', width: 12 },
         { header: 'QTÉ', key: 'quantity', width: 10 },
-        { header: 'PRIX UNIT HT', key: 'unit_price', width: 15 },
-        { header: 'TVA', key: 'tax_rate', width: 10 },
+        { header: 'PRIX UNIT HT', key: 'unit_price', width: 16 },
+        { header: 'TVA', key: 'tax_rate', width: 22 },
         { header: 'TOTAL HT', key: 'total_price', width: 18 }
       ]
 
@@ -202,9 +202,11 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         const titleCell = row.getCell(5)
         const valueCell = row.getCell(6)
         titleCell.font = { bold: true }
-        titleCell.alignment = { horizontal: 'right' }
+        titleCell.alignment = { horizontal: 'right', vertical: 'middle', wrapText: false, shrinkToFit: true }
         valueCell.numFmt = '#,##0.00 €'
         valueCell.font = { bold: true }
+        valueCell.alignment = { horizontal: 'right', vertical: 'middle' }
+        row.height = 18
       })
 
       ttcRow.getCell(6).font = { bold: true, size: 14, color: { argb: 'FF002878' } }
