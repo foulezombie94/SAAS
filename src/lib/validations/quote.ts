@@ -63,9 +63,15 @@ export const QuoteInsertSchema = z.object({
 // Schéma pour l'acceptation d'un devis (Signature)
 export const QuoteAcceptSchema = z.object({
   quoteId: z.string().uuid("ID de devis invalide"),
-  signatureDataUrl: z.string().startsWith('data:image/png;base64,', "Format de signature invalide (PNG attendu)"),
+  signatureDataUrl: z.string()
+    .regex(
+      /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/]+=*$/,
+      "Format de signature invalide (image base64 attendu)"
+    )
+    .min(100, "La signature semble vide"),
   publicToken: z.string().optional(), // Utilisé pour les signatures clients sans auth
 }).strict();
+
 
 // Schéma pour l'envoi d'un devis par email
 export const QuoteEmailSchema = z.object({

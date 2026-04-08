@@ -26,11 +26,14 @@ export async function POST(req: Request) {
     // 2. SIGNATURE UPLOAD (Anti-DoS Protection 2MB + Binary Validation)
     let finalSignatureUrl = signatureUrl
     if (signatureDataUrl) {
-      // 🛡️ SECURITY GRADE 3 : Validation du format
-      if (!signatureDataUrl.startsWith('data:image/png;base64,')) {
-        return NextResponse.json({ error: 'Format de signature invalide (PNG attendu)' }, { status: 400 })
+      // 🛡️ SECURITY GRADE 3 : Validation du format image base64 (PNG/JPEG/WebP mobile compatible)
+      const mimeMatch = signatureDataUrl.match(/^data:(image\/(png|jpeg|jpg|webp|gif));base64,/)
+      if (!mimeMatch) {
+        return NextResponse.json({ error: 'Format de signature invalide (image base64 attendu)' }, { status: 400 })
       }
 
+      const mimeType = mimeMatch[1]
+      const ext = mimeMatch[2]?.replace('jpeg', 'jpg') || 'png'
       const base64Data = signatureDataUrl.split(',')[1];
       if (!base64Data) throw new Error('Format de signature corrompu');
       
@@ -41,13 +44,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Signature trop volumineuse (max 2Mo)' }, { status: 413 })
       }
 
-      const fileName = `sig_${quoteId}_${Date.now()}.png`
+      const fileName = `sig_${quoteId}_${Date.now()}.${ext}`
       const adminSupabase = createAdminClient()
       
       const { error: uploadError } = await adminSupabase.storage
         .from('signatures')
         .upload(fileName, buffer, { 
-          contentType: 'image/png',
+          contentType: mimeType,
           upsert: true 
         })
 
@@ -59,6 +62,7 @@ export async function POST(req: Request) {
       
       finalSignatureUrl = publicUrl;
     }
+
 
     // 3. ATOMIC TRANSACTION (RPC v3 - Zero Trust Split Flow)
     // 🛡️ SECURITY GRADE 3 : We use adminSupabase to bypass RLS because Guests don't have a session.

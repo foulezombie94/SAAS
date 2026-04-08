@@ -92,13 +92,20 @@ export async function acceptQuoteAction(rawData: unknown) {
 
   try {
     const adminSupabase = createAdminClient();
+    
+    // Extract MIME type dynamically (mobile can produce jpeg/webp instead of png)
+    const mimeMatch = signatureDataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,/)
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/png'
+    const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png'
+    
     const base64Data = signatureDataUrl.split(',')[1];
     const buffer = Buffer.from(base64Data, 'base64');
-    const fileName = `sig_${quoteId}_${Date.now()}.png`;
+    const fileName = `sig_${quoteId}_${Date.now()}.${ext}`;
 
     const { error: uploadError } = await adminSupabase.storage
       .from('signatures')
-      .upload(fileName, buffer, { contentType: 'image/png', upsert: true });
+      .upload(fileName, buffer, { contentType: mimeType, upsert: true });
+
 
     if (uploadError) throw uploadError;
 
