@@ -374,7 +374,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   }, [isEmailModalOpen, currentQuote.clients?.name, currentQuote.number, currentQuote.profiles?.company_name])
 
   return (
-    <div className="flex flex-col gap-10 pb-32">
+    <div className="flex flex-col gap-4 pb-10">
       {/* 
         HIGH-FIDELITY PDF TEMPLATE (V4.1 Restore)
         Designed for pixel-perfection based on industry standards.
@@ -726,9 +726,9 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         </div>
       </div>
  
-       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-12">
-          <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-3xl p-8 mb-10 overflow-x-auto shadow-sm">
+          <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-3xl p-4 mb-4 overflow-x-auto shadow-sm">
             <div className="flex items-center justify-between min-w-[800px] relative px-4">
               {/* Progress Line Background */}
               <div className="absolute top-[26px] left-[60px] right-[60px] h-[2px] bg-slate-100 z-0"></div>
@@ -769,11 +769,11 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-8 space-y-10">
+        <div className="lg:col-span-8 space-y-6">
           {/* Document Preview Area (Display only) */}
           <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-outline-variant/5">
             {/* Header Stripe */}
-            <div className="h-32 bg-slate-900 flex items-center justify-between px-12 text-white relative overflow-hidden">
+            <div className="h-20 bg-slate-900 flex items-center justify-between px-8 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-10">
                 <TrendingUp size={120} />
               </div>
@@ -792,7 +792,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               </div>
             </div>
 
-            <div className="p-16 space-y-16">
+            <div className="p-8 space-y-8">
               <div className="grid grid-cols-2 gap-16">
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant/30">Facturer à</h4>
@@ -864,7 +864,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         </div>
 
         {/* Action Panel: Command Center */}
-        <div className="lg:col-span-4 space-y-8 sticky top-24">
+        <div className="lg:col-span-4 space-y-4 sticky top-24">
           <Card className="p-10 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Send size={150} />
