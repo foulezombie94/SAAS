@@ -635,7 +635,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl font-black text-primary tracking-tighter uppercase leading-none">Gestion Devis</h1>
           <div className="flex items-center gap-3">
@@ -655,18 +655,18 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           <Button
             variant="outline"
             onClick={handlePrint}
-            className="hidden md:flex h-14 px-6 font-black uppercase tracking-widest text-[10px] gap-3 border-slate-100 bg-white hover:bg-slate-50 shadow-sm"
+            className="hidden md:flex h-10 px-4 font-black uppercase tracking-widest text-[9px] gap-2 border-slate-100 bg-white hover:bg-slate-50 shadow-sm"
           >
-            <Printer size={18} /> Imprimer
+            <Printer size={14} /> Imprimer
           </Button>
 
           <Button
             variant="tertiary"
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
-            className="flex-1 md:flex-none h-14 px-8 font-black uppercase tracking-widest text-[10px] gap-3 bg-[#00236f] text-white hover:bg-[#001b54] shadow-lg shadow-blue-900/10"
+            className="flex-1 md:flex-none h-10 px-5 font-black uppercase tracking-widest text-[9px] gap-2 bg-[#00236f] text-white hover:bg-[#001b54] shadow-lg shadow-blue-900/10"
           >
-            {isGeneratingPdf ? <Loader className="animate-spin" size={20} /> : <Download size={20} />}
+            {isGeneratingPdf ? <Loader className="animate-spin" size={14} /> : <Download size={14} />}
             Format PDF
           </Button>
 
@@ -675,7 +675,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             onClick={handleCopyShareLink}
             disabled={isTokenExpired || isGeneratingLink}
             className={cn(
-              "flex-1 md:flex-none h-14 px-8 font-black uppercase tracking-widest text-[10px] gap-3 shadow-sm transition-all duration-500",
+              "flex-1 md:flex-none h-10 px-5 font-black uppercase tracking-widest text-[9px] gap-2 shadow-sm transition-all duration-500",
               isTokenExpired 
                 ? "bg-amber-500 text-white border-none hover:bg-amber-600 opacity-100 cursor-not-allowed scale-[0.98]" 
                 : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
@@ -683,17 +683,17 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           >
             {isTokenExpired ? (
               <>
-                <Clock size={20} className="animate-pulse" />
+                <Clock size={14} className="animate-pulse" />
                 Lien Expiré
               </>
             ) : isGeneratingLink ? (
               <>
-                <Loader size={20} className="animate-spin" />
+                <Loader size={14} className="animate-spin" />
                 Génération...
               </>
             ) : (
               <>
-                <Share2 size={20} />
+                <Share2 size={14} />
                 Lien Client
               </>
             )}
@@ -703,65 +703,59 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             <Button
               onClick={handleCreateInvoice}
               isLoading={isGeneratingInvoice}
-              className="flex-1 md:flex-none h-14 px-10 bg-emerald-600 hover:bg-emerald-700 font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-900/10"
+              className="flex-1 md:flex-none h-10 px-5 bg-emerald-600 hover:bg-emerald-700 font-black uppercase tracking-widest text-[9px] gap-2 shadow-lg shadow-emerald-900/10"
             >
-              <Receipt size={20} /> Convertir en Facture BDD
+              <Receipt size={14} /> Convertir en Facture
             </Button>
           )}
 
           {currentQuote.status === 'invoiced' && (
             <Button
               onClick={() => router.push('/dashboard/invoices')}
-              className="flex-1 md:flex-none h-14 px-8 bg-slate-900 font-black uppercase tracking-widest text-[10px] gap-3"
+              className="flex-1 md:flex-none h-10 px-5 bg-slate-900 font-black uppercase tracking-widest text-[9px] gap-2"
             >
-              <ArrowRight size={20} /> Accéder à la Facture
+              <ArrowRight size={14} /> Accéder à la Facture
             </Button>
           )}
 
           {!signature && currentQuote.status !== 'invoiced' && currentQuote.status !== 'paid' && (
-            <Button onClick={() => setIsSigning(true)} className="flex-1 md:flex-none h-14 px-10 font-black uppercase tracking-widest text-xs gap-3 shadow-diffused">
-              <PenTool size={20} /> Signer Devis
+            <Button onClick={() => setIsSigning(true)} className="flex-1 md:flex-none h-10 px-5 font-black uppercase tracking-widest text-[9px] gap-2 shadow-diffused">
+              <PenTool size={14} /> Signer Devis
             </Button>
           )}
         </div>
       </div>
  
-       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Main grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        {/* Timeline — full width */}
         <div className="lg:col-span-12">
-          <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-3xl p-4 mb-4 overflow-x-auto shadow-sm">
-            <div className="flex items-center justify-between min-w-[800px] relative px-4">
-              {/* Progress Line Background */}
-              <div className="absolute top-[26px] left-[60px] right-[60px] h-[2px] bg-slate-100 z-0"></div>
-              
-              {/* Dynamic Steps */}
+          <div className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-2xl py-2 px-4 overflow-x-auto shadow-sm">
+            <div className="flex items-center justify-between min-w-[600px] relative px-2">
+              {/* Progress Line */}
+              <div className="absolute top-[16px] left-[40px] right-[40px] h-[1px] bg-slate-100 z-0"></div>
               {[
-                { id: 'created', label: 'Création', icon: FileText, date: currentQuote.created_at, color: 'bg-blue-500', active: true },
-                { id: 'sent', label: 'Envoyé', icon: Send, date: currentQuote.status !== 'draft' ? currentQuote.updated_at : null, color: 'bg-indigo-500', active: currentQuote.status !== 'draft' },
-                { id: 'viewed', label: 'Consulté', icon: Eye, date: currentQuote.last_viewed_at, color: 'bg-cyan-500', active: !!currentQuote.last_viewed_at },
-                { id: 'signed', label: 'Signé', icon: PenTool, date: currentQuote.status === 'accepted' || currentQuote.status === 'paid' || currentQuote.status === 'invoiced' ? currentQuote.updated_at : null, color: 'bg-emerald-500', active: ['accepted', 'paid', 'invoiced'].includes(currentQuote.status) },
-                { id: 'paid', label: 'Payé', icon: CreditCard, date: currentQuote.status === 'paid' || currentQuote.status === 'invoiced' ? currentQuote.updated_at : null, color: 'bg-amber-500', active: ['paid', 'invoiced'].includes(currentQuote.status) },
-                { id: 'invoiced', label: 'Facturé', icon: Receipt, date: currentQuote.status === 'invoiced' ? currentQuote.updated_at : null, color: 'bg-slate-900', active: currentQuote.status === 'invoiced' },
-              ].map((step, idx) => {
+                { id: 'created', label: 'Création', icon: FileText, color: 'bg-blue-500', active: true },
+                { id: 'sent', label: 'Envoyé', icon: Send, color: 'bg-indigo-500', active: currentQuote.status !== 'draft' },
+                { id: 'viewed', label: 'Consulté', icon: Eye, color: 'bg-cyan-500', active: !!currentQuote.last_viewed_at },
+                { id: 'signed', label: 'Signé', icon: PenTool, color: 'bg-emerald-500', active: ['accepted', 'paid', 'invoiced'].includes(currentQuote.status) },
+                { id: 'paid', label: 'Payé', icon: CreditCard, color: 'bg-amber-500', active: ['paid', 'invoiced'].includes(currentQuote.status) },
+                { id: 'invoiced', label: 'Facturé', icon: Receipt, color: 'bg-slate-900', active: currentQuote.status === 'invoiced' },
+              ].map((step) => {
                 const Icon = step.icon
                 return (
-                  <div key={step.id} className="flex flex-col items-center gap-4 relative z-10">
+                  <div key={step.id} className="flex flex-col items-center gap-1.5 relative z-10">
                     <div className={cn(
-                      "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-lg",
+                      "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-700 shadow-md",
                       step.active ? `${step.color} text-white scale-110` : "bg-white border-2 border-slate-100 text-slate-300"
                     )}>
-                      <Icon size={idx === 2 ? 22 : 20} className={cn(step.active && "animate-in zoom-in duration-500")} />
+                      <Icon size={14} />
                     </div>
-                    <div className="text-center space-y-1">
-                      <p className={cn(
-                        "text-[10px] font-black uppercase tracking-widest",
-                        step.active ? "text-slate-900" : "text-slate-300"
-                      )}>{step.label}</p>
-                      {step.active && step.date && (
-                         <p className="text-[9px] font-bold text-slate-400 opacity-60 animate-in fade-in duration-700">
-                            {new Date(step.date).toLocaleDateString()}
-                         </p>
-                      )}
-                    </div>
+                    <p className={cn(
+                      "text-[8px] font-black uppercase tracking-widest",
+                      step.active ? "text-slate-900" : "text-slate-300"
+                    )}>{step.label}</p>
                   </div>
                 )
               })}
@@ -769,7 +763,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-8 space-y-6">
+        {/* Document Preview — 8 cols */}
+        <div className="lg:col-span-8">
           {/* Document Preview Area (Display only) */}
           <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-outline-variant/5">
             {/* Header Stripe */}
@@ -863,7 +858,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           </div>
         </div>
 
-        {/* Action Panel: Command Center */}
+        {/* Action Panel: Command Center — 4 cols */}
         <div className="lg:col-span-4 sticky top-24">
           <Card className="p-5 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10">
