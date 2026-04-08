@@ -864,22 +864,22 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         </div>
 
         {/* Action Panel: Command Center */}
-        <div className="lg:col-span-4 space-y-4 sticky top-24">
-          <Card className="p-10 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden">
+        <div className="lg:col-span-4 sticky top-24">
+          <Card className="p-5 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Send size={150} />
             </div>
 
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-10 relative z-10">Command Center</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-4 relative z-10">Command Center</h3>
 
-            <div className="space-y-6 relative z-10">
+            <div className="space-y-3 relative z-10">
               <Button
                 onClick={handleCreatePayment}
                 isLoading={isPaying}
                 disabled={currentQuote.status === 'paid' || currentQuote.status === 'invoiced'}
-                className="w-full h-16 bg-white text-primary hover:bg-slate-100 font-black uppercase tracking-widest text-xs gap-3"
+                className="w-full h-11 bg-white text-primary hover:bg-slate-100 font-black uppercase tracking-widest text-xs gap-2"
               >
-                <CreditCard size={20} /> Activer Paiement
+                <CreditCard size={16} /> Activer Paiement
               </Button>
 
               {!currentQuote.profiles?.stripe_charges_enabled && (
@@ -893,9 +893,9 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               {currentQuote.status === 'accepted' && (
                 <Link href={`/dashboard/calendar?quote_id=${currentQuote.id}&client_id=${currentQuote.client_id}&title=Intervention : ${currentQuote.number} - ${currentQuote.clients?.name}`}>
                   <Button
-                    className="w-full h-16 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest text-xs gap-3 border border-white/10 mb-4"
+                    className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest text-xs gap-2 border border-white/10"
                   >
-                    <Calendar size={20} /> Planifier l'Intervention
+                    <Calendar size={16} /> Planifier l'Intervention
                   </Button>
                 </Link>
               )}
@@ -904,9 +904,9 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 <Button
                   onClick={handleCreateInvoice}
                   isLoading={isGeneratingInvoice}
-                  className="w-full h-16 bg-primary text-white font-black uppercase tracking-widest text-xs gap-3 border border-white/10"
+                  className="w-full h-11 bg-primary text-white font-black uppercase tracking-widest text-xs gap-2 border border-white/10"
                 >
-                  <Receipt size={20} /> Clôturer & Facturer
+                  <Receipt size={16} /> Clôturer & Facturer
                 </Button>
               )}
 
@@ -914,45 +914,37 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 <Button
                   onClick={() => setIsEmailModalOpen(true)}
                   disabled={currentQuote.status === 'paid' || currentQuote.status === 'invoiced'}
-                  className="w-full h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-500/20"
+                  className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-emerald-500/20"
                 >
-                  <Mail size={20} /> Envoyer par Email
+                  <Mail size={16} /> Envoyer par Email
                 </Button>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
                   onClick={handleDownloadExcel}
-                  className="h-14 bg-white/5 border-white/10 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] gap-2"
+                  className="h-10 bg-white/5 border-white/10 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] gap-2"
                 >
-                  <TableIcon size={16} /> Excel (CSV)
+                  <TableIcon size={14} /> Excel (CSV)
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-14 bg-white/5 border-white/10 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] gap-2"
+                  className="h-10 bg-white/5 border-white/10 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] gap-2"
                 >
-                  <Share2 size={16} /> Partager
+                  <Share2 size={14} /> Partager
                 </Button>
               </div>
 
-              <div className="pt-6 border-t border-white/10 mt-10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-6 leading-relaxed">
-                  Accédez au suivi d'exécution en temps réel des prestations facturées.
-                </p>
-                <button className="flex items-center gap-3 text-white font-black text-[10px] uppercase tracking-widest hover:gap-5 transition-all">
-                  Historique complet <ArrowRight size={14} />
+              <div className="pt-3 border-t border-white/10 mt-2">
+                <button className="flex items-center gap-2 text-white font-black text-[9px] uppercase tracking-widest hover:gap-4 transition-all opacity-40 hover:opacity-70">
+                  Historique complet <ArrowRight size={12} />
                 </button>
               </div>
             </div>
           </Card>
 
-          <Card className="p-8 bg-surface-container-low border-none flex flex-col items-center text-center gap-4">
-            <Clock className="text-primary/20" size={32} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40 leading-relaxed uppercase">
-              Ce document est certifié conforme aux normes de facturation en vigueur en France.
-            </p>
-          </Card>
+
         </div>
       </div>
     </div>
