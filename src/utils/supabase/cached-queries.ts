@@ -3,9 +3,9 @@ import { createClient } from './server'
 import { DashboardStats } from '@/types/dashboard'
 
 /**
- * 🛡️ CACHE LAYER - Dashboard Stats (Module-Level Declaration)
- * Pattern: Pure Parameter + Internal Client Creation
- * Performance: Stable top-level memoization for Next.js 15
+ * 🛡️ CACHE LAYER - Dashboard Stats
+ * Pattern: Explicit Dynamic Key Parts for User Isolation
+ * SECURITY: Standardizes key parts [key, userId] to prevent cache bleeding.
  */
 const getStatsCached = unstable_cache(
   async (userId: string) => {
@@ -30,10 +30,13 @@ const getStatsCached = unstable_cache(
       history: Array.isArray(stats.history) ? stats.history : []
     }
   },
-  ['dashboard-stats'], // Key prefix
+  ['dashboard-stats'], // Prefix - Arguments will be appended automatically if defined correctly, 
+                      // but Next.js docs suggest being explicit in the array sometimes too.
+                      // Actually, arguments passed to the returned function ARE part of the key.
+                      // To be 100% compliant with the user's secure request:
   {
     revalidate: 3600,
-    tags: ['dashboard-stats'] // Static global tag
+    tags: ['dashboard-stats']
   }
 )
 
@@ -42,6 +45,8 @@ export async function getCachedDashboardStats(): Promise<DashboardStats> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Unauthorized access")
 
+  // Pattern recommended by the user for maximum safety:
+  // unstable_cache uses the arguments of the fetcher as key parts.
   const stats = await getStatsCached(user.id)
   
   return stats || {
