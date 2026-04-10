@@ -1,12 +1,14 @@
 import { createClient } from './server'
-import { hardenedCache } from './hardened-cache'
+import { seniorCache } from './hardened-cache'
 import { DashboardStats, ClientWithQuotes, Quote } from '@/types/dashboard'
 
 /**
- * 💹 DASHBOARD STATS (Grade 3 - Zero Smell)
- * Freshness: 15 minutes (900s)
+ * 💹 DASHBOARD STATS (Senior SaaS Mode)
+ * Isolation: AUTOMATIC ([namespace, userId])
+ * Invalidation: Global tag 'dashboard-stats'
  */
-export const getCachedDashboardStats = hardenedCache(
+export const getCachedDashboardStats = seniorCache(
+  'dashboard-stats',
   async (userId: string): Promise<DashboardStats> => {
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('get_dashboard_analytics', { 
@@ -21,7 +23,6 @@ export const getCachedDashboardStats = hardenedCache(
       }
     }
 
-    // Explicit transformer to avoid 'as any'
     const s = data as Record<string, unknown>
     return {
       revenue: Number(s.revenue ?? 0),
@@ -33,12 +34,12 @@ export const getCachedDashboardStats = hardenedCache(
       history: Array.isArray(s.history) ? s.history : []
     }
   },
-  (userId) => ['dashboard-stats', userId],
   { revalidate: 900, tags: ['dashboard-stats'] }
 )
 
-/** 👤 USER PROFILE (Grade 3 - Zero Smell) */
-export const getUserProfile = hardenedCache(
+/** 👤 USER PROFILE (Senior SaaS Mode) */
+export const getUserProfile = seniorCache(
+  'user-profile',
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -49,12 +50,12 @@ export const getUserProfile = hardenedCache(
     
     return error ? null : data
   },
-  (userId) => ['user-profile', userId],
   { revalidate: 3600, tags: ['user-profile'] }
 )
 
-/** 📄 RECENT ACTIVITY (Grade 3 - Zero Smell) */
-export const getCachedRecentQuotes = hardenedCache(
+/** 📄 RECENT ACTIVITY (Senior SaaS Mode) */
+export const getCachedRecentQuotes = seniorCache(
+  'recent-activity',
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -68,32 +69,30 @@ export const getCachedRecentQuotes = hardenedCache(
       .limit(10)
 
     if (error || !data) return []
-    
-    // Explicit return typing
     return data as (Quote & { clients: { name: string } })[]
   },
-  (userId) => ['recent-activity', userId],
   { revalidate: 3600, tags: ['recent-activity'] }
 )
 
-/** 🧾 ALL INVOICES (Grade 3 - Zero Smell) */
-export const getCachedInvoices = hardenedCache(
+/** 🧾 ALL INVOICES (Senior SaaS Mode) */
+export const getCachedInvoices = seniorCache(
+  'all-invoices',
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('invoices')
-      .select('*, clients:client_id(*)')
+      .select('*, clients:client_id(*) ')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     return error || !data ? [] : data
   },
-  (userId) => ['all-invoices', userId],
   { revalidate: 3600, tags: ['all-invoices'] }
 )
 
-/** 📂 ALL QUOTES (Grade 3 - Zero Smell) */
-export const getCachedAllQuotes = hardenedCache(
+/** 📂 ALL QUOTES (Senior SaaS Mode) */
+export const getCachedAllQuotes = seniorCache(
+  'all-quotes',
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -104,22 +103,21 @@ export const getCachedAllQuotes = hardenedCache(
 
     return error || !data ? [] : (data as Quote[])
   },
-  (userId) => ['all-quotes', userId],
   { revalidate: 3600, tags: ['all-quotes'] }
 )
 
-/** 👥 ALL CLIENTS (Grade 3 - Zero Smell) */
-export const getCachedClients = hardenedCache(
+/** 👥 ALL CLIENTS (Senior SaaS Mode) */
+export const getCachedClients = seniorCache(
+  'all-clients',
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('clients')
-      .select('*, quotes:quotes(id, status, total_ttc, created_at)')
+      .select('*, quotes:quotes(id, status, total_ttc, created_at) ')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     return error || !data ? [] : (data as ClientWithQuotes[])
   },
-  (userId) => ['all-clients', userId],
   { revalidate: 3600, tags: ['all-clients'] }
 )

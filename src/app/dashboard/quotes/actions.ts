@@ -7,6 +7,7 @@ import { revalidateTag, revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
 import { createAdminClient } from '@/utils/supabase/admin'
+import { revalidateDashboardCache, revalidateDocumentCache } from '@/utils/supabase/revalidate'
 
 export async function createQuoteAction(rawData: unknown) {
   // 1. Validation Zod stricte : si ça échoue, ça lève une erreur qu'on attrape
@@ -65,10 +66,12 @@ export async function createQuoteAction(rawData: unknown) {
     }
     
     
-    // 🚀 Cache Invalidation (Tag + Path)
-    // 🚀 Cache Invalidation (Path-based for reliability)
+    // 🚀 Cache Invalidation (Targeted Scoped Tags - Ultimate SaaS)
+    await revalidateDashboardCache(user.id)
+    await revalidateDocumentCache(user.id)
+    
+    // Path-based for UI consistency
     revalidatePath('/dashboard', 'layout')
-    revalidatePath('/dashboard/quotes')
 
     return { success: true, quote }
   } catch (err: any) {
@@ -121,6 +124,7 @@ export async function acceptQuoteAction(rawData: unknown) {
 
     if (rpcError) throw rpcError;
 
+    await revalidateDocumentCache(user.id)
     revalidatePath(`/dashboard/quotes/${quoteId}`);
     return { success: true, signatureUrl: publicUrl };
   } catch (err: any) {
@@ -235,6 +239,7 @@ export async function generateQuoteTokenAction(quoteId: string) {
 
     if (error) throw error
 
+    await revalidateDocumentCache(user.id)
     revalidatePath(`/dashboard/quotes/${quoteId}`)
     return { success: true, token: newToken, expiresAt: expiresAt.toISOString() }
   } catch (err: any) {

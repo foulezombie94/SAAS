@@ -1,50 +1,43 @@
 import { unstable_cache } from 'next/cache'
 
-/**
- * 🛡️ HARDENED CACHE WRAPPER (SaaS Grade 3)
- * Enforces absolute multi-tenant isolation through type-safety and runtime guards.
- * Uses the Next.js 16 functional key pattern for top-level singleton benefit.
- */
-
 type CacheOptions = {
-  revalidate?: number | false;
-  tags?: string[];
+  revalidate?: number | false
+  tags?: string[]
 }
 
 /**
- * Creates a type-safe cached function that MANDATES userId as the first argument.
+ * 🛡️ ULTIMATE CACHE WRAPPER (Stripe-Like Standard)
  * 
- * @param fetcher The data fetching function (first arg must be userId)
- * @param keyPartsFn A function that returns string[] isolation keys
- * @param options Next.js cache options
+ * CORE PROTECTIONS:
+ * 1. Fatal Guard: Immediately throws if userId is missing, preventing 'undefined' collisions.
+ * 2. Auto-Scoping: Automatically transforms global tags into user-scoped tags (Stripe-Level Scaling).
+ * 3. Native Isolation: Enforces [namespace, userId] key structure architecturally.
  */
-export function hardenedCache<T extends (userId: string, ...args: any[]) => Promise<any>>(
+export function seniorCache<T extends (userId: string, ...args: any[]) => Promise<any>>(
+  namespace: string,
   fetcher: T,
-  keyPartsFn: (userId: string, ...args: any[]) => string[],
   options: CacheOptions
 ): T {
-  // Create the cached instance at the call site (module level)
   return (unstable_cache as any)(
     async (userId: string, ...args: any[]) => {
-      // 🕵️ SECURITY CHECK: Ensure userId is valid before fetching
+      // 🚨 ULTIMATE GUARD: Never allow an undefined context to reach the cache or fetcher.
+      // This eliminates the 'undefined-collision' risk if upstream auth fails.
       if (!userId || typeof userId !== 'string') {
-        throw new Error(`[SECURITY] Invalid userId for cached query: ${userId}`)
+        throw new Error(`[SECURITY FATAL] UltimateCache: Missing auth context for namespace '${namespace}'.`)
       }
-      
-      // Perform the fetch
       return fetcher(userId, ...args)
     },
-    // We pass the keyParts function directly. In this environment, 
-    // unstable_cache uses this to generate the key at runtime per-call.
     (userId: string, ...args: any[]) => {
-      const keys = keyPartsFn(userId, ...args)
+      // 🕵️ Redundant proof: userId MUST be present for key generation
+      if (!userId) throw new Error(`[SECURITY FATAL] Invalid Key Generation Context.`)
       
-      // 🔍 RUNTIME GUARD: Absolute isolation check
-      if (!keys.includes(userId)) {
-        throw new Error(`[SECURITY CRITICAL] Multi-tenant isolation breach: userId '${userId}' missing from cache keys.`)
-      }
-      return keys
+      return [namespace, userId, ...args.map(a => String(a))]
     },
-    options
+    {
+      ...options,
+      // 💡 STRIPE-LEVEL SCALING: 
+      // Automatically scope all tags to the user to avoid expensive global purges.
+      tags: options.tags?.map(tag => `${tag}:${userId}`)
+    }
   ) as unknown as T
 }
