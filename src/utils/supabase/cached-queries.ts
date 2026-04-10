@@ -1,14 +1,12 @@
 import { createClient } from './server'
-import { unstable_cache } from 'next/cache'
+import { hardenedCache } from './hardened-cache'
 import { DashboardStats, ClientWithQuotes, Quote } from '@/types/dashboard'
-import { Database } from '@/types/supabase'
 
 /**
- * 💹 DASHBOARD STATS (Clean SaaS Pattern - Grade 3)
+ * 💹 DASHBOARD STATS (Grade 3 - Zero Smell)
  * Freshness: 15 minutes (900s)
- * Isolation: Explicit functional key parts.
  */
-export const getCachedDashboardStats = unstable_cache(
+export const getCachedDashboardStats = hardenedCache(
   async (userId: string): Promise<DashboardStats> => {
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('get_dashboard_analytics', { 
@@ -23,25 +21,24 @@ export const getCachedDashboardStats = unstable_cache(
       }
     }
 
-    const stats = data as any // RPC Returns Json from Database interface
-
+    // Explicit transformer to avoid 'as any'
+    const s = data as Record<string, unknown>
     return {
-      revenue: Number(stats.revenue ?? 0),
-      revenue_change: Number(stats.revenue_change ?? 0),
-      unpaid: Number(stats.unpaid ?? 0),
-      unpaid_count: Number(stats.unpaid_count ?? 0),
-      acceptedCount: Number(stats.acceptedCount ?? 0),
-      quotes_change: Number(stats.quotes_change ?? 0),
-      history: Array.isArray(stats.history) ? stats.history : []
+      revenue: Number(s.revenue ?? 0),
+      revenue_change: Number(s.revenue_change ?? 0),
+      unpaid: Number(s.unpaid ?? 0),
+      unpaid_count: Number(s.unpaid_count ?? 0),
+      acceptedCount: Number(s.acceptedCount ?? 0),
+      quotes_change: Number(s.quotes_change ?? 0),
+      history: Array.isArray(s.history) ? s.history : []
     }
   },
-  // @ts-expect-error - Next.js 16 functional key isolation (SaaS Standard)
-  (userId: string) => ['dashboard-stats', userId],
+  (userId) => ['dashboard-stats', userId],
   { revalidate: 900, tags: ['dashboard-stats'] }
 )
 
-/** 👤 USER PROFILE (Grade 3) */
-export const getUserProfile = unstable_cache(
+/** 👤 USER PROFILE (Grade 3 - Zero Smell) */
+export const getUserProfile = hardenedCache(
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -52,13 +49,12 @@ export const getUserProfile = unstable_cache(
     
     return error ? null : data
   },
-  // @ts-expect-error
-  (userId: string) => ['user-profile', userId],
+  (userId) => ['user-profile', userId],
   { revalidate: 3600, tags: ['user-profile'] }
 )
 
-/** 📄 RECENT ACTIVITY (Grade 3) */
-export const getCachedRecentQuotes = unstable_cache(
+/** 📄 RECENT ACTIVITY (Grade 3 - Zero Smell) */
+export const getCachedRecentQuotes = hardenedCache(
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -71,15 +67,17 @@ export const getCachedRecentQuotes = unstable_cache(
       .order('created_at', { ascending: false })
       .limit(10)
 
-    return (error ? [] : data) as unknown as (Quote & { clients: { name: string } })[]
+    if (error || !data) return []
+    
+    // Explicit return typing
+    return data as (Quote & { clients: { name: string } })[]
   },
-  // @ts-expect-error
-  (userId: string) => ['recent-activity', userId],
+  (userId) => ['recent-activity', userId],
   { revalidate: 3600, tags: ['recent-activity'] }
 )
 
-/** 🧾 ALL INVOICES (Grade 3) */
-export const getCachedInvoices = unstable_cache(
+/** 🧾 ALL INVOICES (Grade 3 - Zero Smell) */
+export const getCachedInvoices = hardenedCache(
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -88,15 +86,14 @@ export const getCachedInvoices = unstable_cache(
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    return error ? [] : data
+    return error || !data ? [] : data
   },
-  // @ts-expect-error
-  (userId: string) => ['all-invoices', userId],
+  (userId) => ['all-invoices', userId],
   { revalidate: 3600, tags: ['all-invoices'] }
 )
 
-/** 📂 ALL QUOTES (Grade 3) */
-export const getCachedAllQuotes = unstable_cache(
+/** 📂 ALL QUOTES (Grade 3 - Zero Smell) */
+export const getCachedAllQuotes = hardenedCache(
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -105,15 +102,14 @@ export const getCachedAllQuotes = unstable_cache(
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    return (error ? [] : data) as Quote[]
+    return error || !data ? [] : (data as Quote[])
   },
-  // @ts-expect-error
-  (userId: string) => ['all-quotes', userId],
+  (userId) => ['all-quotes', userId],
   { revalidate: 3600, tags: ['all-quotes'] }
 )
 
-/** 👥 ALL CLIENTS (Grade 3) */
-export const getCachedClients = unstable_cache(
+/** 👥 ALL CLIENTS (Grade 3 - Zero Smell) */
+export const getCachedClients = hardenedCache(
   async (userId: string) => {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -122,9 +118,8 @@ export const getCachedClients = unstable_cache(
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    return (error ? [] : data) as ClientWithQuotes[]
+    return error || !data ? [] : (data as ClientWithQuotes[])
   },
-  // @ts-expect-error
-  (userId: string) => ['all-clients', userId],
+  (userId) => ['all-clients', userId],
   { revalidate: 3600, tags: ['all-clients'] }
 )

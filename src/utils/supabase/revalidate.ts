@@ -1,21 +1,35 @@
 import { revalidateTag } from 'next/cache'
 
 /**
- * 🔄 REVALIDATE CACHE (Clean SaaS Standard - Grade 3)
- * Signature Fix: In this Next.js 16 version, a 'profile' argument is mandatory.
- * We use the 'default' profile for seamless production invalidation.
+ * 🔄 GLOBAL CACHE REVALIDATION (Clean SaaS Standard)
+ * Tags are global invalidation keys. User isolation is handled by 'unstable_cache'.
  */
+const TAGS = {
+  dashboard: ['dashboard-stats', 'recent-activity'],
+  profile: ['user-profile'],
+  documents: ['all-invoices', 'all-quotes', 'all-clients'],
+} as const
+
+/**
+ * REVALIDATE CACHE GROUP
+ * Standard Next.js revalidateTag signature (1 argument).
+ */
+export function revalidate(group: keyof typeof TAGS) {
+  TAGS[group].forEach(tag => {
+    // @ts-expect-error - Standard signature is 1 argument (tag)
+    revalidateTag(tag)
+  })
+}
+
+// Legacy helpers for specific pages (using the group revalidator)
 export async function revalidateDashboardCache() {
-  revalidateTag('dashboard-stats', 'default')
-  revalidateTag('recent-activity', 'default')
+  revalidate('dashboard')
 }
 
 export async function revalidateProfileCache() {
-  revalidateTag('user-profile', 'default')
+  revalidate('profile')
 }
 
 export async function revalidateDocumentCache() {
-  revalidateTag('all-invoices', 'default')
-  revalidateTag('all-quotes', 'default')
-  revalidateTag('all-clients', 'default')
+  revalidate('documents')
 }
