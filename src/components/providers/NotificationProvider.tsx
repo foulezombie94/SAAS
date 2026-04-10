@@ -58,15 +58,20 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   }, [lastSeen])
 
   // 🚀 Refetch unreadCount (Grade 10 Reliability)
-  const refetchUnreadCount = useCallback(async () => {
+  const refetchUnreadCount = useCallback(async (overrideLastSeen?: string) => {
     if (!userId || !supabase) return
+
+    const effectiveLastSeen = overrideLastSeen || lastSeenRef.current || '1970-01-01'
+
+    // 🚀 IMPROVED: Count both status transitions AND views (if pref enabled)
+    // Filter: (Status in [paid, accepted, expired] AND updated_at > lastSeen) OR (last_viewed_at > lastSeen)
+    const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${effectiveLastSeen}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${effectiveLastSeen})`
 
     const { count, error } = await supabase
       .from('quotes')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .in('status', ['paid', 'accepted', 'expired'] as any[])
-      .gt('updated_at', lastSeenRef.current || '1970-01-01')
+      .or(filter)
     
     if (error) {
       console.warn('[NOTIFICATIONS] Unread count refetch failed:', error.message)
@@ -123,20 +128,16 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
 
       // 2. Fetch Initial Notifications (only unread — after lastSeen)
-      let quotesQuery = supabase
+      // 🚀 CONSOLIDATED: Use exact same logic as count for consistency
+      const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${lastSeenVal || '1970-01-01'}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${lastSeenVal || '1970-01-01'})`
+      
+      const { data: quotes, error: quotesErr } = await supabase
         .from('quotes')
         .select('*, clients(name)')
         .eq('user_id', userId)
-        .in('status', ['paid', 'accepted', 'expired'] as any[])
-      
-      // 🚀 FIX: Only fetch notifications newer than lastSeen to prevent re-appearing on reload
-      if (lastSeenVal) {
-        quotesQuery = quotesQuery.gt('updated_at', lastSeenVal)
-      }
-
-      const { data: quotes, error: quotesErr } = await quotesQuery
+        .or(filter)
         .order('updated_at', { ascending: false })
-        .limit(8)
+        .limit(10)
       
       if (quotesErr) {
         console.warn('[NOTIFICATIONS] Initial quotes fetch failed:', quotesErr.message)
@@ -150,7 +151,8 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
 
       // 3. Initial count sync
-      await refetchUnreadCount()
+      // 🚀 FIX: Pass lastSeenVal directly to bypass stale Ref in this execution cycle
+      await refetchUnreadCount(lastSeenVal || undefined)
     }
 
     fetchInitialData()
@@ -317,7 +319,8 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     }
 
     // Refresh unread count immediately to sync UI
-    await refetchUnreadCount()
+    // 🚀 FIX: Pass direct value to bypass Ref delay
+    await refetchUnreadCount(nowWithBuffer)
   }
 
   const clearAllNotifications = () => {
