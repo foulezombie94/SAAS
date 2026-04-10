@@ -95,13 +95,13 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
               "relative p-2.5 rounded-2xl transition-all duration-300",
               isDropdownOpen 
                 ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" 
-                : unreadCount > 0
+                : unreadCount > 0 && notifications.length > 0
                   ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
                   : "bg-slate-50 text-slate-400 hover:bg-slate-100"
             )}
           >
-            <Bell size={20} className={cn(unreadCount > 0 && "animate-pulse")} />
-            {unreadCount > 0 && (
+            <Bell size={20} className={cn(unreadCount > 0 && notifications.length > 0 && "animate-pulse")} />
+            {unreadCount > 0 && notifications.length > 0 && (
               <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-secondary ring-2 ring-white shadow-sm" />
             )}
           </button>
