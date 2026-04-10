@@ -1,12 +1,11 @@
 import { revalidateTag } from 'next/cache'
 
 /**
- * 🔄 GLOBAL CACHE REVALIDATION (SaaS High-Scale)
+ * 🔄 GLOBAL CACHE REVALIDATION (Production Standard)
  * 
  * CORE RULES:
  * 1. Tags are global per namespace (e.g., 'all-invoices').
- * 2. Isolation is managed via deterministic keys (namespace + userId).
- * 3. Invalidation is simple and scalable: one tag per functional group.
+ * 2. Invalidation is simple and scalable: one tag per functional group.
  */
 const TAGS = {
   dashboard: ['dashboard-stats', 'recent-activity'],
@@ -22,15 +21,16 @@ const TAGS = {
 export function revalidate(group: keyof typeof TAGS) {
   TAGS[group].forEach(tag => {
     /**
-     * 🚀 ENVIRONMENT TRUTH:
-     * Although standard Next.js uses 1 argument, this specific project environment's 
-     * Type Definitions and Build Worker strictly require a 'profile' as the 2nd argument.
+     * 🚀 ENVIRONMENT SPECIFIC REVALUATION:
+     * In this project's dependency tree, revalidateTag is typed to REQUIRE 
+     * a second 'profile' argument. While this is non-standard in vanilla Next.js 
+     * documentation, it is a hard requirement for the current build worker.
      */
     revalidateTag(tag, 'default')
   })
 }
 
-/** 🚀 GLOBAL REVALIDATION HELPERS */
+/** 🚀 REVALIDATION HELPERS */
 
 export async function revalidateDashboardCache() {
   revalidate('dashboard')
