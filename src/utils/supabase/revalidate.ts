@@ -1,11 +1,12 @@
 import { revalidateTag } from 'next/cache'
 
 /**
- * 🔄 USER-SCOPED CACHE REVALIDATION (Ultimate SaaS Model)
+ * 🔄 GLOBAL CACHE REVALIDATION (SaaS High-Scale)
  * 
- * Our seniorCache wrapper automatically scopes tags as `${tag}:${userId}`.
- * This function targets those specific scoped tags to ensure that purges
- * are strictly limited to the relevant user (Stripe-Level Scaling).
+ * CORE RULES:
+ * 1. Tags are global per namespace (e.g., 'all-invoices').
+ * 2. Isolation is managed via deterministic keys (namespace + userId).
+ * 3. Invalidation is simple and scalable: one tag per functional group.
  */
 const TAGS = {
   dashboard: ['dashboard-stats', 'recent-activity'],
@@ -14,36 +15,31 @@ const TAGS = {
 } as const
 
 /**
- * REVALIDATE CACHE GROUP (User Scoped)
+ * REVALIDATE CACHE GROUP
  * 
- * @param group The tag group to invalidate
- * @param userId The unique ID of the user whose cache should be purged
+ * Purges all cached entries associated with the functional tags.
  */
-export function revalidate(group: keyof typeof TAGS, userId: string) {
-  if (!userId) {
-    console.error(`[REVALIDATE FATAL] Missing userId for group '${group}'. Invalidation aborted to prevent global inconsistency.`)
-    return
-  }
-
+export function revalidate(group: keyof typeof TAGS) {
   TAGS[group].forEach(tag => {
-    // Target the automated scoped tags created by seniorCache
-    const scopedTag = `${tag}:${userId}`
-    
-    // Note: Project-specific signature requires 2 arguments ('tag', 'profile')
-    revalidateTag(scopedTag, 'default')
+    /**
+     * 🚀 ENVIRONMENT TRUTH:
+     * Although standard Next.js uses 1 argument, this specific project environment's 
+     * Type Definitions and Build Worker strictly require a 'profile' as the 2nd argument.
+     */
+    revalidateTag(tag, 'default')
   })
 }
 
-/** 🚀 SCOPED HELPERS */
+/** 🚀 GLOBAL REVALIDATION HELPERS */
 
-export async function revalidateDashboardCache(userId: string) {
-  revalidate('dashboard', userId)
+export async function revalidateDashboardCache() {
+  revalidate('dashboard')
 }
 
-export async function revalidateProfileCache(userId: string) {
-  revalidate('profile', userId)
+export async function revalidateProfileCache() {
+  revalidate('profile')
 }
 
-export async function revalidateDocumentCache(userId: string) {
-  revalidate('documents', userId)
+export async function revalidateDocumentCache() {
+  revalidate('documents')
 }

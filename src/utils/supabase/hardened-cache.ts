@@ -6,12 +6,12 @@ type CacheOptions = {
 }
 
 /**
- * 🛡️ ULTIMATE CACHE WRAPPER (Stripe-Like Standard)
+ * 🛡️ SENIOR CACHE WRAPPER (SaaS High-Scale)
  * 
- * CORE PROTECTIONS:
- * 1. Fatal Guard: Immediately throws if userId is missing, preventing 'undefined' collisions.
- * 2. Auto-Scoping: Automatically transforms global tags into user-scoped tags (Stripe-Level Scaling).
- * 3. Native Isolation: Enforces [namespace, userId] key structure architecturally.
+ * CORE RULES:
+ * 1. Isolation = Enforced at the key level: [namespace, userId, ...args].
+ * 2. Invalidation = Managed via global tags for high-scale simplicity.
+ * 3. Security = Authenticated context (userId) is mandatory.
  */
 export function seniorCache<T extends (userId: string, ...args: any[]) => Promise<any>>(
   namespace: string,
@@ -20,24 +20,18 @@ export function seniorCache<T extends (userId: string, ...args: any[]) => Promis
 ): T {
   return (unstable_cache as any)(
     async (userId: string, ...args: any[]) => {
-      // 🚨 ULTIMATE GUARD: Never allow an undefined context to reach the cache or fetcher.
-      // This eliminates the 'undefined-collision' risk if upstream auth fails.
+      // 🕵️ Logical Guard: Ensure userId is provided for multi-tenant isolation
       if (!userId || typeof userId !== 'string') {
-        throw new Error(`[SECURITY FATAL] UltimateCache: Missing auth context for namespace '${namespace}'.`)
+        throw new Error(`[SECURITY] SeniorCache: Missing userId context for namespace '${namespace}'.`)
       }
       return fetcher(userId, ...args)
     },
-    (userId: string, ...args: any[]) => {
-      // 🕵️ Redundant proof: userId MUST be present for key generation
-      if (!userId) throw new Error(`[SECURITY FATAL] Invalid Key Generation Context.`)
-      
-      return [namespace, userId, ...args.map(a => String(a))]
-    },
-    {
-      ...options,
-      // 💡 STRIPE-LEVEL SCALING: 
-      // Automatically scope all tags to the user to avoid expensive global purges.
-      tags: options.tags?.map(tag => `${tag}:${userId}`)
-    }
+    // 🔑 Deterministic Key generation: the only real line of defense for data isolation.
+    (userId: string, ...args: any[]) => [
+      namespace,
+      userId,
+      ...args.map(String)
+    ],
+    options
   ) as unknown as T
 }
