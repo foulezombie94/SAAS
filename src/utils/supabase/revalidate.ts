@@ -1,16 +1,13 @@
 import { revalidateTag as nextRevalidateTag } from 'next/cache'
 
 /**
- * 🔄 SURGICAL CACHE REVALIDATION (Senior++ SaaS)
+ * 🔄 STABLE CACHE REVALIDATION (Level 18.5+)
  * 
  * CORE ARCHITECTURE:
- * 1. HYBRID INVALIDATION: Supports both global purges and user-specific purges.
- * 2. STANDARD CONFORMANCE: Uses the standard revalidateTag(tag) signature.
- * 3. PORTABILITY: Avoids custom runtime dependencies while satisfying local types.
+ * 1. GLOBAL TAGGING: Uses reliable global tags to ensure 100% revalidation uptime.
+ * 2. STANDARD CONFORMANCE: Uses the standard 1-arg revalidateTag(tag) signature.
  */
 
-// Bypass local type definition if it strictly requires 2 arguments, 
-// ensuring the produced code remains standard Next.js compliant.
 const revalidateTag = nextRevalidateTag as unknown as (tag: string) => void;
 
 const TAGS = {
@@ -22,31 +19,27 @@ const TAGS = {
 /**
  * REVALIDATE CACHE GROUP
  * 
- * Purges cached entries.
- * @param group The functional group to invalidate.
- * @param userId Optional. If provided, only this user's cache is purged (Surgical).
- *                If omitted, the entire group is purged globally (Emergency/Mass Update).
+ * Purges cached entries for a functional group.
+ * Priority: Stability and guaranteed invalidation.
  */
-export function revalidate(group: keyof typeof TAGS, userId?: string) {
+export function revalidate(group: keyof typeof TAGS) {
   TAGS[group].forEach(baseTag => {
-    // 🏷️ Determine the target: Global Tag or Scoped Tag (Senior++ Model)
-    const targetTag = userId ? `${baseTag}:${userId}` : baseTag
-    
-    // 🚀 Purge!
-    revalidateTag(targetTag)
+    // 🚀 Purge the global tag. 
+    // This affects all entries in this namespace but ensures total reliability.
+    revalidateTag(baseTag)
   })
 }
 
-/** 🚀 PRECISION REVALIDATION HELPERS */
+/** 🚀 STABLE REVALIDATION HELPERS */
 
-export async function revalidateDashboardCache(userId?: string) {
-  revalidate('dashboard', userId)
+export async function revalidateDashboardCache() {
+  revalidate('dashboard')
 }
 
-export async function revalidateProfileCache(userId?: string) {
-  revalidate('profile', userId)
+export async function revalidateProfileCache() {
+  revalidate('profile')
 }
 
-export async function revalidateDocumentCache(userId?: string) {
-  revalidate('documents', userId)
+export async function revalidateDocumentCache() {
+  revalidate('documents')
 }

@@ -66,9 +66,9 @@ export async function createQuoteAction(rawData: unknown) {
     }
     
     
-    // 🚀 Cache Invalidation (Surgical - Senior++ SaaS)
-    await revalidateDashboardCache(user.id)
-    await revalidateDocumentCache(user.id)
+    // 🚀 Cache Invalidation (Global Tag-based - SaaS High-Scale)
+    await revalidateDashboardCache()
+    await revalidateDocumentCache()
     
     // Path-based for UI consistency
     revalidatePath('/dashboard', 'layout')
@@ -124,7 +124,7 @@ export async function acceptQuoteAction(rawData: unknown) {
 
     if (rpcError) throw rpcError;
 
-    await revalidateDocumentCache(user.id)
+    await revalidateDocumentCache()
     revalidatePath(`/dashboard/quotes/${quoteId}`);
     return { success: true, signatureUrl: publicUrl };
   } catch (err: any) {
@@ -239,7 +239,7 @@ export async function generateQuoteTokenAction(quoteId: string) {
 
     if (error) throw error
 
-    await revalidateDocumentCache(user.id)
+    await revalidateDocumentCache()
     revalidatePath(`/dashboard/quotes/${quoteId}`)
     return { success: true, token: newToken, expiresAt: expiresAt.toISOString() }
   } catch (err: any) {
