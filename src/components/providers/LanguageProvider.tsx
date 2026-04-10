@@ -20,7 +20,7 @@ import es from '@/locales/es.json'
 
 const translations: Record<Locale, any> = { fr, en, es }
 
-export function LanguageProvider({ children, initialLanguage }: { children: ReactNode, initialLanguage?: string }) {
+export function LanguageProvider({ children, initialLanguage }: { children: ReactNode, initialLanguage?: string | null }) {
   const [language, setLanguage] = useState<Locale>((initialLanguage as Locale) || 'fr')
 
   // Sync state if initialLanguage changes from server props
