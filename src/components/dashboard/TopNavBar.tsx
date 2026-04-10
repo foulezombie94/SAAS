@@ -100,9 +100,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
           >
             <Bell size={20} className={cn(unreadCount > 0 && "animate-pulse")} />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[10px] font-black text-white ring-4 ring-white shadow-sm">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
+              <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-secondary ring-2 ring-white shadow-sm" />
             )}
           </button>
 
