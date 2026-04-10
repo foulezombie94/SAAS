@@ -15,6 +15,8 @@ import {
   HelpCircle,
   ExternalLink
 } from 'lucide-react'
+import { ActivityChart } from '@/components/dashboard/ActivityChart'
+import { getDashboardActivity } from './actions'
 
 export default async function DashboardPage({
   searchParams,
@@ -32,11 +34,12 @@ export default async function DashboardPage({
     getCachedRecentQuotes()
   ])
   
-  // Fetch only necessary recent activity
   const { data: invoices } = await supabase
     .from('invoices')
     .select('status, total_ttc')
     .eq('user_id', user.id)
+
+  const initialActivity = await getDashboardActivity(30)
 
   return (
     <div className="space-y-6">
@@ -129,38 +132,8 @@ export default async function DashboardPage({
 
       {/* Activity Chart & Quick Actions Row */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-surface-container-low/40 p-6 rounded-2xl border border-outline-variant/10">
-          <div className="flex justify-between items-center mb-6">
-            <h4 className="text-xl font-black text-primary tracking-tighter uppercase">Activité Mensuelle</h4>
-            <select className="bg-white border-none text-[10px] font-black uppercase tracking-widest rounded-full px-4 py-2 shadow-sm focus:ring-primary/20">
-              <option>30 derniers jours</option>
-              <option>90 derniers jours</option>
-            </select>
-          </div>
-          <div className="h-48 flex items-end justify-between gap-2 px-2">
-            {stats.history?.map((item: any, idx: number) => {
-              const maxRev = Math.max(...stats.history.map((h: any) => h.revenue), 1000);
-              const height = Math.max((item.revenue / maxRev) * 100, 5); // Min 5% height
-              return (
-                <div 
-                  key={idx}
-                  className={`w-full rounded-t-lg transition-all cursor-help relative group ${
-                    idx === (stats as any).history.length - 1 ? 'bg-primary shadow-lg' : 'bg-primary/20 hover:bg-primary/40'
-                  }`}
-                  style={{ height: `${height}%` }}
-                >
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-black py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 shadow-xl pointer-events-none">
-                    {item.revenue.toLocaleString('fr-FR')}€
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="flex justify-between mt-4 text-[0.625rem] font-black uppercase tracking-[0.2em] text-slate-400">
-            {stats.history?.map((item: any, idx: number) => (
-              <span key={idx}>{item.month}</span>
-            ))}
-          </div>
+        <div className="lg:col-span-2">
+          <ActivityChart initialData={initialActivity} />
         </div>
 
         {/* Quick Actions */}

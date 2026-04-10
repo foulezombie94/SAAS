@@ -58,5 +58,12 @@
     "desc_viewed": "El cliente está viendo el presupuesto",
     "desc_expired": "Este documento ya no es accesible",
     "desc_default": "Nueva actividad registrada"
+  },
+  "dashboard": {
+    "activity_title": "Activité Mensuelle",
+    "range_30": "Últimos 30 días",
+    "range_90": "Últimos 90 días",
+    "revenue": "Ingresos",
+    "no_data": "Sin datos"
   }
 }

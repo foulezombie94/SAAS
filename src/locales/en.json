@@ -58,5 +58,12 @@
     "desc_viewed": "The client is currently viewing the quote",
     "desc_expired": "This document is no longer accessible",
     "desc_default": "New activity recorded"
+  },
+  "dashboard": {
+    "activity_title": "Monthly Activity",
+    "range_30": "Last 30 days",
+    "range_90": "Last 90 days",
+    "revenue": "Revenue",
+    "no_data": "No data"
   }
 }

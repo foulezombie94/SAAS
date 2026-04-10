@@ -58,5 +58,12 @@
     "desc_viewed": "Le client parcourt actuellement le devis",
     "desc_expired": "Ce document n'est plus accessible",
     "desc_default": "Nouvelle activité enregistrée"
+  },
+  "dashboard": {
+    "activity_title": "Activité Mensuelle",
+    "range_30": "30 derniers jours",
+    "range_90": "90 derniers jours",
+    "revenue": "Revenu",
+    "no_data": "Aucune donnée"
   }
 }

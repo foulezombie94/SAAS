@@ -1,5 +1,6 @@
 'use server'
 
+import { createClient } from '@/utils/supabase/server'
 import { checkLimits } from '@/lib/limits'
 
 export async function getUsageLimits(table: 'clients' | 'quotes' | 'invoices') {
@@ -9,4 +10,22 @@ export async function getUsageLimits(table: 'clients' | 'quotes' | 'invoices') {
     console.error('Error fetching usage limits:', error)
     return { allowed: false, count: 0, isPro: false }
   }
+}
+
+export async function getDashboardActivity(days: number = 30) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const { data, error } = await supabase.rpc('get_dashboard_activity', {
+    p_user_id: user.id,
+    p_days: days
+  })
+
+  if (error) {
+    console.error('Error fetching dashboard activity:', error)
+    return []
+  }
+
+  return data as { label: string; revenue: number; full_date: string }[]
 }
