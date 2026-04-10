@@ -1,24 +1,21 @@
 import { revalidateTag } from 'next/cache'
 
 /**
- * 🔄 REVALIDATE CACHE (Clean SaaS Standard)
- * Uses the stable Next.js revalidateTag API.
+ * 🔄 REVALIDATE CACHE (Clean SaaS Standard - Grade 3)
+ * Signature Fix: In this Next.js 16 version, a 'profile' argument is mandatory.
+ * We use the 'default' profile for seamless production invalidation.
  */
 export async function revalidateDashboardCache() {
-  // @ts-expect-error - Next.js 16 specific API signature
-  revalidateTag('dashboard-stats')
-  // @ts-expect-error
-  revalidateTag('recent-activity')
+  revalidateTag('dashboard-stats', 'default')
+  revalidateTag('recent-activity', 'default')
 }
 
 export async function revalidateProfileCache() {
-  // @ts-expect-error
-  revalidateTag('user-profile')
+  revalidateTag('user-profile', 'default')
 }
 
 export async function revalidateDocumentCache() {
-  // @ts-expect-error
-  revalidateTag('all-invoices')
-  // @ts-expect-error
-  revalidateTag('all-quotes')
+  revalidateTag('all-invoices', 'default')
+  revalidateTag('all-quotes', 'default')
+  revalidateTag('all-clients', 'default')
 }
