@@ -10,6 +10,8 @@ export default async function InvoiceDetailPage({
 }) {
   const { id } = await params
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return notFound()
   
   const { data: invoice } = await supabase
     .from('invoices')
@@ -26,7 +28,7 @@ export default async function InvoiceDetailPage({
   }
 
   // 2. Fetch the Artisan's Profile to check for Pro status (via Cache)
-  const profile = await getUserProfile()
+  const profile = await getUserProfile(user.id)
 
   const invoiceWithProfile = {
     ...invoice,

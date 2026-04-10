@@ -7,6 +7,8 @@ import { Quote } from '@/types/dashboard'
 export default async function QuoteViewPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
   const { id } = await params
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return notFound()
 
   // 1. Fetch Quote and Profile in parallel for maximum speed ⚡
   const [quoteRes, profile] = await Promise.all([
@@ -19,7 +21,7 @@ export default async function QuoteViewPage({ params }: { params: Promise<{ id: 
       `)
       .eq('id', id)
       .single(),
-    getUserProfile()
+    getUserProfile(user.id)
   ])
 
   const { data: quote, error } = quoteRes

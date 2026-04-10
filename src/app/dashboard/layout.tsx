@@ -10,6 +10,8 @@ import { NotificationProvider } from '@/components/providers/NotificationProvide
 import { LanguageProvider } from '@/components/providers/LanguageProvider'
 import { NavLabel } from '@/components/dashboard/NavLabel'
 
+import { Suspense } from 'react'
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -22,7 +24,7 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  const profile = await getUserProfile()
+  const profile = await getUserProfile(user.id)
   const isPro = profile?.is_pro ?? false
 
   return (
@@ -40,9 +42,15 @@ export default async function DashboardLayout({
 
           {/* Content Canvas */}
           <main className="flex-1 p-6 md:p-10 overflow-y-auto bg-white pb-24 md:pb-2">
-            <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              {children}
-            </div>
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            }>
+              <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                {children}
+              </div>
+            </Suspense>
           </main>
 
           {/* BottomNavBar (Mobile Only) */}

@@ -6,8 +6,6 @@ import { LinkExpired } from '@/components/share/LinkExpired'
 
 import { ViewTracker } from './ViewTracker'
 
-export const dynamic = 'force-dynamic'
-
 export default async function PublicQuotePage({ 
   params, 
   searchParams 

@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { QuotesClient } from './QuotesClient'
 import { Quote } from '@/types/dashboard'
 import { redirect } from 'next/navigation'
+import { getCachedAllQuotes } from '@/utils/supabase/cached-queries'
 
 export const metadata = {
   title: "Devis | ArtisanFlow",
@@ -14,11 +15,7 @@ export default async function QuotesPage() {
   
   if (!user) redirect('/login')
 
-  const { data: quotes } = await supabase
-    .from('quotes')
-    .select('*, clients(name)')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  const quotes = await getCachedAllQuotes(user.id)
 
   return (
     <QuotesClient 

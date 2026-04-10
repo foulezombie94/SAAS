@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { ClientsClient } from './ClientsClient'
 import { ClientWithQuotes } from '@/types/dashboard'
 import { redirect } from 'next/navigation'
+import { getCachedClients } from '@/utils/supabase/cached-queries'
 
 export const metadata = {
   title: "Clients | ArtisanFlow",
@@ -14,11 +15,7 @@ export default async function ClientsPage() {
   
   if (!user) redirect('/login')
   
-  const { data: clients } = await supabase
-    .from('clients')
-    .select('*, quotes(id, status, total_ttc, created_at)')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  const clients = await getCachedClients(user.id)
 
   return (
     <ClientsClient 

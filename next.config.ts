@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
   // Configured for Next.js 16 (Stability & Standard)
   reactStrictMode: true,
   poweredByHeader: false, // Security: Remove X-Powered-By header
+  experimental: {
+    // cacheComponents: true, // ⚠️ Disabled to avoid 'Blocking Route' build errors in multi-tenant environments
+  },
   async headers() {
     return [
       {

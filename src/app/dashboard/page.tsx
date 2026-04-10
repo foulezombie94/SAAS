@@ -1,5 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
-import { getCachedDashboardStats, getCachedRecentQuotes } from '@/utils/supabase/cached-queries'
+import { 
+  getCachedDashboardStats, 
+  getCachedRecentQuotes, 
+  getCachedInvoices 
+} from '@/utils/supabase/cached-queries'
 import { Quote, DashboardStats } from '@/types/dashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -29,16 +33,12 @@ export default async function DashboardPage({
   if (!user) return null
 
   // 🚀 Fetch stats & activity with Intelligent Cache + Session Security (Grade 3)
-  const [stats, quotes] = await Promise.all([
-    getCachedDashboardStats() as Promise<DashboardStats>,
-    getCachedRecentQuotes()
+  const [stats, quotes, invoices] = await Promise.all([
+    getCachedDashboardStats(user.id) as Promise<DashboardStats>,
+    getCachedRecentQuotes(user.id),
+    getCachedInvoices(user.id)
   ])
   
-  const { data: invoices } = await supabase
-    .from('invoices')
-    .select('status, total_ttc')
-    .eq('user_id', user.id)
-
   const initialActivity = await getDashboardActivity(30)
 
   return (
