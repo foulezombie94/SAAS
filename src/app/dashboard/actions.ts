@@ -17,7 +17,7 @@ export async function getDashboardActivity(days: number = 30) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const { data, error } = await supabase.rpc('get_dashboard_activity', {
+  const { data, error } = await (supabase as any).rpc('get_dashboard_activity', {
     p_user_id: user.id,
     p_days: days
   })
