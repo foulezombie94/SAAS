@@ -314,43 +314,60 @@ export default function SettingsPage() {
         {/* Subscription & Integrations Section */}
         <div className="md:col-span-4 flex flex-col gap-8">
           {/* Subscription Card */}
-          <div className="bg-[#1e3a8a] bg-gradient-to-br from-[#1e3a8a] to-[#00236f] text-white rounded-xl p-8 flex flex-col justify-between flex-1">
-            <div className="space-y-6">
+          <div className="bg-[#1e3a8a] bg-gradient-to-br from-[#1e3a8a] to-[#011a5e] text-white rounded-xl p-10 flex flex-col justify-between flex-1 shadow-2xl shadow-blue-900/20 border border-white/5 relative overflow-hidden">
+            {/* Background Decorative Accent */}
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="space-y-12 relative z-10">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-blue-200">Niveau Actuel</p>
-                  <h4 className="text-2xl font-black tracking-tight">{profile.is_pro ? 'Plan Pro' : 'Plan Gratuit'}</h4>
+                  <p className="text-[0.75rem] font-black uppercase tracking-[0.15em] text-blue-300 mb-2">Niveau Actuel</p>
+                  <h4 className="text-4xl font-black tracking-tighter leading-none">{profile.is_pro ? 'Plan Pro' : 'Plan Gratuit'}</h4>
                 </div>
-                <Award className="text-4xl opacity-30 text-amber-300" size={48} />
+                <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10">
+                  <Award className="text-amber-400" size={32} />
+                </div>
               </div>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="text-emerald-400" size={16} />
-                  {profile.is_pro ? 'Devis & Factures Illimités' : 'Limite de 3 Devis / Factures'}
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="text-emerald-400" size={16} />
-                  Paiement en ligne (Stripe)
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="text-emerald-400" size={16} />
-                  {profile.is_pro ? 'Signatures électroniques illimitées' : 'Support Standard'}
-                </li>
-              </ul>
+
+              <div className="space-y-6">
+                <p className="text-xs font-bold text-blue-200 uppercase tracking-widest">{profile.is_pro ? 'Avantages Inclus' : 'Fonctionnalités'}</p>
+                <ul className="space-y-5">
+                  <li className="flex items-center gap-4 text-base font-medium">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="text-emerald-400" size={14} />
+                    </div>
+                    {profile.is_pro ? 'Devis & Factures Illimités' : 'Limite de 3 Devis / Factures'}
+                  </li>
+                  <li className="flex items-center gap-4 text-base font-medium">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="text-emerald-400" size={14} />
+                    </div>
+                    Paiement en ligne (Stripe)
+                  </li>
+                  <li className="flex items-center gap-4 text-base font-medium">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="text-emerald-400" size={14} />
+                    </div>
+                    {profile.is_pro ? 'Signatures électroniques illimitées' : 'Support Standard'}
+                  </li>
+                </ul>
+              </div>
             </div>
-            <div className="mt-8 space-y-3">
+
+            <div className="mt-12 space-y-4">
               {profile.is_pro ? (
-                <button className="w-full h-12 bg-white text-[#00236f] font-bold rounded-lg hover:scale-[0.98] transition-transform">
+                <button className="w-full h-14 bg-white text-[#00236f] font-black uppercase tracking-widest text-xs rounded-xl hover:scale-[0.98] transition-transform shadow-xl shadow-black/10">
                   Gérer la Facturation
                 </button>
               ) : (
                 <Link href="/onboarding/plans" className="block">
-                  <button className="w-full h-12 bg-amber-400 text-blue-900 font-bold rounded-lg hover:bg-amber-300 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-400/20 active:scale-95">
-                    <Rocket className="w-4 h-4" />
+                  <button className="w-full h-14 bg-amber-400 text-blue-900 font-black uppercase tracking-widest text-xs rounded-xl hover:bg-amber-300 transition-all flex items-center justify-center gap-3 shadow-xl shadow-amber-400/20 active:scale-95">
+                    <Rocket className="w-5 h-5" />
                     PASSER AU PLAN PRO
                   </button>
                 </Link>
               )}
+              <p className="text-[10px] text-center text-blue-300/50 font-medium">Propulsé par Stripe Billing</p>
             </div>
           </div>
           
