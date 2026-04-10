@@ -1,0 +1,62 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "quotes": "Quotes",
+    "agenda": "Calendar",
+    "invoices": "Invoices",
+    "settings": "Settings",
+    "emails": "Emails",
+    "create_quote": "Create Quote",
+    "pro_plan": "Pro Plan Active",
+    "free_plan": "Free Subscription"
+  },
+  "settings": {
+    "title": "Business Controls",
+    "subtitle": "Configure your corporate identity, legal standards, and payment processing.",
+    "config_title": "Workspace Configuration",
+    "company_profile": "Company Profile",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "company_name": "Company Name",
+    "siret": "SIRET / VAT ID",
+    "address": "Business Address",
+    "description": "Business Description",
+    "phone": "Phone Number",
+    "email": "Contact Email",
+    "num_contacts": "Number of contacts",
+    "annual_revenue": "Estimated Revenue",
+    "preferred_language": "Preferred Language",
+    "notifications": "Notification Preferences",
+    "save_changes": "Save changes"
+  },
+  "navbar": {
+    "search_placeholder": "Search for quote, client...",
+    "notifications_recent": "Recent Notifications",
+    "mark_all_read": "Mark all as read",
+    "no_notifications": "Nothing to report at the moment",
+    "connected_as": "Connected as",
+    "logout": "Exit"
+  },
+  "notif": {
+    "viewed": "Quote Viewed",
+    "paid": "Payment Received",
+    "accepted": "Signature Received",
+    "sent": "Link Sent",
+    "expired": "Link Expired",
+    "invoiced": "Auto Invoicing",
+    "info": "Quote Info",
+    "desc_paid": "Payment successfully validated",
+    "desc_accepted": "Document electronically signed",
+    "desc_viewed": "The client is currently viewing the quote",
+    "desc_expired": "This document is no longer accessible",
+    "desc_default": "New activity recorded"
+  }
+}

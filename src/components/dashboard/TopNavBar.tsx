@@ -9,6 +9,7 @@ import { useNotifications } from '@/components/providers/NotificationProvider'
 import { signOut } from '@/app/login/actions'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { useI18n } from '@/components/providers/LanguageProvider'
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -22,6 +23,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
   const { unreadCount, notifications, markAllAsRead, clearAllNotifications } = useNotifications()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useI18n()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -61,7 +63,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
           <input 
             className="w-full bg-slate-50 border border-slate-100 rounded-full pl-12 pr-6 py-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 placeholder:font-medium font-bold" 
-            placeholder="Rechercher un devis, client..." 
+            placeholder={t('navbar.search_placeholder')} 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -78,7 +80,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
         <div className="hidden lg:flex items-center gap-3 pr-6 border-r border-slate-200/20 h-10">
           <Link href="/dashboard/quotes/new">
             <Button size="sm" className="px-6 font-bold tracking-tight bg-[#00236f] hover:bg-[#001b54] text-white rounded-xl">
-              Créer un Devis
+              {t('sidebar.create_quote')}
             </Button>
           </Link>
         </div>
@@ -108,7 +110,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
           {isDropdownOpen && (
             <div className="absolute top-full right-0 mt-4 w-[400px] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest italic">Notifications récentes</h3>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest italic">{t('navbar.notifications_recent')}</h3>
                 {notifications.length > 0 && (
                   <button 
                     onClick={(e) => {
@@ -118,7 +120,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                     className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors group"
                   >
                     <Check size={12} className="group-hover:scale-110 transition-transform" />
-                    Tout marquer comme lu
+                    {t('navbar.mark_all_read')}
                   </button>
                 )}
               </div>
@@ -127,7 +129,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                 {notifications.length === 0 ? (
                   <div className="p-16 text-center">
                     <Bell size={40} className="mx-auto text-slate-100 mb-4" />
-                    <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest text-center">Rien à signaler pour le moment</p>
+                    <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest text-center">{t('navbar.no_notifications')}</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-50">
@@ -156,24 +158,24 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                             notif.status === 'expired' ? "text-amber-600" : "text-primary"
                           )}>
                              {(() => {
-                               // 🚀 Prioritize 'Viewed' if it was triggered recently, or if status is still 'sent' but viewed
-                               if (notif.last_viewed_at && notif.status === 'sent') return 'Devis Consulté'
+                              // 🚀 Prioritize 'Viewed' if it was triggered recently, or if status is still 'sent' but viewed
+                               if (notif.last_viewed_at && notif.status === 'sent') return t('notif.viewed')
                                
                                switch(notif.status) {
-                                 case 'paid': return 'Paiement Encaissé'
-                                 case 'accepted': return 'Signature Reçue'
-                                 case 'sent': return 'Lien Envoyé'
-                                 case 'expired': return 'Lien Expiré'
-                                 case 'invoiced': return 'Facturation Auto'
-                                 default: return 'Information Devis'
+                                 case 'paid': return t('notif.paid')
+                                 case 'accepted': return t('notif.accepted')
+                                 case 'sent': return t('notif.sent')
+                                 case 'expired': return t('notif.expired')
+                                 case 'invoiced': return t('notif.invoiced')
+                                 default: return t('notif.info')
                                }
                              })()}
                           </p>
                           <p className="text-[11px] font-bold text-slate-600 mb-1.5 leading-tight">
-                             {notif.status === 'paid' ? 'Règlement validé avec succès' : 
-                              notif.status === 'accepted' ? 'Document signé électroniquement' : 
-                              (notif.last_viewed_at && notif.status === 'sent') ? 'Le client parcourt actuellement le devis' :
-                              notif.status === 'expired' ? 'Ce document n\'est plus accessible' : 'Nouvelle activité enregistrée'} pour{' '}
+                             {notif.status === 'paid' ? t('notif.desc_paid') : 
+                              notif.status === 'accepted' ? t('notif.desc_accepted') : 
+                              (notif.last_viewed_at && notif.status === 'sent') ? t('notif.desc_viewed') :
+                              notif.status === 'expired' ? t('notif.desc_expired') : t('notif.desc_default')} pour{' '}
                              <span className={cn("text-secondary font-black", notif.status === 'expired' && "text-amber-500")}>
                                {notif.number}
                              </span>
@@ -201,7 +203,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
         </div>
         <div className="flex items-center gap-4 pl-4 border-l border-slate-200/20 ml-2">
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-black text-primary uppercase tracking-tighter opacity-40 mb-0.5">Connecté en tant que</p>
+            <p className="text-[10px] font-black text-primary uppercase tracking-tighter opacity-40 mb-0.5">{t('navbar.connected_as')}</p>
             <p className="text-[11px] font-bold text-slate-600 truncate max-w-[150px]">{userEmail}</p>
           </div>
           
@@ -217,7 +219,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
             <div className="bg-white p-1 rounded-full shadow-sm border border-slate-50 group-hover:border-red-100 group-hover:bg-red-50 transition-all">
               <LogOut size={10} className="text-slate-400 group-hover:text-red-500 transition-colors" />
             </div>
-            <span className="text-[9px] font-black text-slate-500 group-hover:text-red-600 uppercase tracking-widest leading-none pr-1">Quitter</span>
+            <span className="text-[9px] font-black text-slate-500 group-hover:text-red-600 uppercase tracking-widest leading-none pr-1">{t('navbar.logout')}</span>
           </button>
         </div>
       </div>

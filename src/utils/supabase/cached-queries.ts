@@ -64,7 +64,7 @@ export async function getUserProfile() {
     async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, company_name, email, is_pro') // 🛡️ NO SMTP/IBAN
+        .select('id, first_name, last_name, company_name, email, is_pro, preferred_language') // 🛡️ NO SMTP/IBAN
         .eq('id', user.id)
         .single()
       return data

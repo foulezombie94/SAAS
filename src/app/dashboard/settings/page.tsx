@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { RefreshCw, Mail, Verified, Building2, Award, CheckCircle2, Rocket, ShieldCheck, Wallet, Clock, Link2, Unlink, Save, ExternalLink, Bell, Eye, AlertCircle } from 'lucide-react'
+import { useI18n } from '@/components/providers/LanguageProvider'
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Partial<Profile>>({
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   const [stripeStatus, setStripeStatus] = useState<{ isReady: boolean; exists: boolean; detailsSubmitted?: boolean; chargesEnabled?: boolean }>({ isReady: false, exists: false })
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { t } = useI18n()
 
   useEffect(() => {
     loadProfile()
@@ -159,7 +161,7 @@ export default function SettingsPage() {
     return (
       <div className="flex justify-center flex-col items-center min-h-[500px]">
         <RefreshCw className="animate-spin text-blue-900 mb-4" size={32} />
-        <p className="text-sm font-medium text-slate-500">Chargement des paramètres...</p>
+        <p className="text-sm font-medium text-slate-500">{t('common.loading')}</p>
       </div>
     )
   }
@@ -169,9 +171,9 @@ export default function SettingsPage() {
       {/* Header Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-slate-600 mb-2">Workspace Configuration</p>
-          <h3 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-4">Contrôles d'Entreprise</h3>
-          <p className="text-slate-500 max-w-xl">Configurez votre identité d'entreprise, vos normes légales et le traitement des paiements. Ces paramètres ont un impact direct sur vos documents générés et la facturation client.</p>
+          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-slate-600 mb-2">{t('settings.config_title')}</p>
+          <h3 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-4">{t('settings.title')}</h3>
+          <p className="text-slate-500 max-w-xl">{t('settings.subtitle')}</p>
         </div>
         <div className="flex items-end justify-start lg:justify-end">
           <div className="h-12 flex items-center px-6 bg-amber-100 text-amber-900 rounded-lg">
@@ -187,13 +189,13 @@ export default function SettingsPage() {
         {/* Company Profile Card */}
         <div className="md:col-span-8 bg-white rounded-xl p-8 shadow-[0px_24px_48px_rgba(0,35,111,0.06)] flex flex-col gap-8">
           <div className="flex items-center justify-between">
-            <h4 className="text-lg font-bold tracking-tight">Profil de l'Entreprise</h4>
+            <h4 className="text-lg font-bold tracking-tight">{t('settings.company_profile')}</h4>
             <Building2 className="text-slate-400" size={20} />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Prénom</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.first_name')}</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
                 type="text" 
@@ -202,7 +204,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nom</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.last_name')}</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
                 type="text" 
@@ -211,7 +213,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nom de l'Entreprise</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.company_name')}</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
                 type="text" 
@@ -220,7 +222,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">SIRET / TVA</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.siret')}</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
                 placeholder="123 456 789 00012" 
@@ -230,7 +232,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Adresse de l'Entreprise</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.address')}</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
                 type="text" 
@@ -239,17 +241,17 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Description des Services</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.description')}</label>
               <textarea 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm resize-none" 
-                placeholder="Décrivez vos services et produits..." 
+                placeholder="..." 
                 rows={3}
                 value={profile.business_description || ''}
                 onChange={(e) => setProfile({...profile, business_description: e.target.value})}
               ></textarea>
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Numéro de Téléphone</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.phone')}</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
                 type="tel" 
@@ -258,7 +260,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Email de Contact</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.email')}</label>
               <input 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm opacity-70 cursor-not-allowed" 
                 type="email" 
@@ -267,42 +269,42 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Nombre de contacts</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.num_contacts')}</label>
               <select 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
                 value={profile.num_contacts || ''}
                 onChange={(e) => setProfile({...profile, num_contacts: e.target.value})}
               >
-                <option value="">Sélectionnez...</option>
-                <option value="range_0_50">0 à 50</option>
-                <option value="range_51_200">51 à 200</option>
-                <option value="range_201_500">201 à 500</option>
-                <option value="range_501_plus">Plus de 500</option>
+                <option value="">...</option>
+                <option value="range_0_50">0 - 50</option>
+                <option value="range_51_200">51 - 200</option>
+                <option value="range_201_500">201 - 500</option>
+                <option value="range_501_plus">500+</option>
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">CA Annuel estimé</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.annual_revenue')}</label>
               <select 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
                 value={profile.annual_revenue || ''}
                 onChange={(e) => setProfile({...profile, annual_revenue: e.target.value})}
               >
-                <option value="">Sélectionnez...</option>
-                <option value="range_under_50k">&lt; 50 000 €</option>
-                <option value="range_50k_100k">50k - 100 000 €</option>
-                <option value="range_100k_250k">100k - 250 000 €</option>
-                <option value="range_250k_plus">Plus de 250 000 €</option>
+                <option value="">...</option>
+                <option value="range_under_50k">&lt; 50k €</option>
+                <option value="range_50k_100k">50k - 100k €</option>
+                <option value="range_100k_250k">100k - 250k €</option>
+                <option value="range_250k_plus">250k+ €</option>
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Langue préférée</label>
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">{t('settings.preferred_language')}</label>
               <select 
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
                 value={profile.preferred_language || 'fr'}
                 onChange={(e) => setProfile({...profile, preferred_language: (e.target.value as 'fr' | 'en' | 'es')})}
               >
-                <option value="fr">Français (France)</option>
-                <option value="en">English (US)</option>
+                <option value="fr">Français</option>
+                <option value="en">English</option>
                 <option value="es">Español</option>
               </select>
             </div>
@@ -374,7 +376,7 @@ export default function SettingsPage() {
         {/* Notification Preferences Card */}
         <div className="md:col-span-12 bg-white rounded-xl p-8 shadow-[0px_24px_48px_rgba(0,35,111,0.06)] flex flex-col gap-6">
           <div className="flex items-center justify-between">
-            <h4 className="text-lg font-bold tracking-tight">Préférences de Notifications</h4>
+            <h4 className="text-lg font-bold tracking-tight">{t('settings.notifications')}</h4>
             <Bell className="text-slate-400" size={20} />
           </div>
           
@@ -556,7 +558,7 @@ export default function SettingsPage() {
             disabled={isSaving}
             className="px-8 py-4 text-slate-600 font-bold hover:bg-slate-100 transition-colors rounded-lg disabled:opacity-50"
           >
-            Annuler
+            {t('common.cancel')}
           </button>
           <button 
             onClick={handleSave}
@@ -564,7 +566,7 @@ export default function SettingsPage() {
             className="px-10 py-4 bg-[#00236f] text-white font-bold rounded-lg hover:scale-[0.98] transition-transform shadow-xl shadow-blue-900/20 flex items-center gap-3 disabled:opacity-50"
           >
             {isSaving ? <RefreshCw className="animate-spin" size={20} /> : <Save className="w-5 h-5" />}
-            Enregistrer les modifications
+            {t('settings.save_changes')}
           </button>
         </div>
       </div>

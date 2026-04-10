@@ -1,0 +1,62 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "success": "Éxito",
+    "error": "Error"
+  },
+  "sidebar": {
+    "dashboard": "Panel",
+    "clients": "Clientes",
+    "quotes": "Presupuestos",
+    "agenda": "Agenda",
+    "invoices": "Facturas",
+    "settings": "Configuración",
+    "emails": "Correos",
+    "create_quote": "Crear Presupuesto",
+    "pro_plan": "Plan Pro Activo",
+    "free_plan": "Suscripción Gratuita"
+  },
+  "settings": {
+    "title": "Controles de Empresa",
+    "subtitle": "Configure su identidad corporativa, estándares legales y procesamiento de pagos.",
+    "config_title": "Configuración del Espacio de Trabajo",
+    "company_profile": "Perfil de la Empresa",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "company_name": "Nombre de la Empresa",
+    "siret": "CIF / NIF / IVA",
+    "address": "Dirección de la Empresa",
+    "description": "Descripción del Negocio",
+    "phone": "Número de Teléfono",
+    "email": "Correo de Contacto",
+    "num_contacts": "Número de contactos",
+    "annual_revenue": "Ingresos anuales estimados",
+    "preferred_language": "Idioma preferido",
+    "notifications": "Preferencias de Notificaciones",
+    "save_changes": "Guardar cambios"
+  },
+  "navbar": {
+    "search_placeholder": "Buscar presupuesto, cliente...",
+    "notifications_recent": "Notificaciones Recientes",
+    "mark_all_read": "Marcar todo como leído",
+    "no_notifications": "Nada que informar por el momento",
+    "connected_as": "Conectado como",
+    "logout": "Salir"
+  },
+  "notif": {
+    "viewed": "Presupuesto Consultado",
+    "paid": "Pago Recibido",
+    "accepted": "Firma Recibida",
+    "sent": "Enlace Enviado",
+    "expired": "Enlace Expirado",
+    "invoiced": "Facturación Auto",
+    "info": "Info del Presupuesto",
+    "desc_paid": "Pago validado con éxito",
+    "desc_accepted": "Documento firmado electrónicamente",
+    "desc_viewed": "El cliente está viendo el presupuesto",
+    "desc_expired": "Este documento ya no es accesible",
+    "desc_default": "Nueva actividad registrada"
+  }
+}

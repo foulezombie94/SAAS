@@ -1,0 +1,62 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement...",
+    "success": "Succès",
+    "error": "Erreur"
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "clients": "Clients",
+    "quotes": "Devis",
+    "agenda": "Agenda",
+    "invoices": "Factures",
+    "settings": "Paramètres",
+    "emails": "E-mails",
+    "create_quote": "Créer un Devis",
+    "pro_plan": "Plan Pro Actif",
+    "free_plan": "Abonnement Gratuit"
+  },
+  "settings": {
+    "title": "Contrôles d'Entreprise",
+    "subtitle": "Configurez votre identité d'entreprise, vos normes légales et le traitement des paiements.",
+    "config_title": "Configuration de l'Espace de Travail",
+    "company_profile": "Profil de l'Entreprise",
+    "first_name": "Prénom",
+    "last_name": "Nom",
+    "company_name": "Nom de l'Entreprise",
+    "siret": "SIRET / TVA",
+    "address": "Adresse de l'Entreprise",
+    "description": "Description des Services",
+    "phone": "Numéro de Téléphone",
+    "email": "Email de Contact",
+    "num_contacts": "Nombre de contacts",
+    "annual_revenue": "CA Annuel estimé",
+    "preferred_language": "Langue préférée",
+    "notifications": "Préférences de Notifications",
+    "save_changes": "Enregistrer les modifications"
+  },
+  "navbar": {
+    "search_placeholder": "Rechercher un devis, client...",
+    "notifications_recent": "Notifications récentes",
+    "mark_all_read": "Tout marquer comme lu",
+    "no_notifications": "Rien à signaler pour le moment",
+    "connected_as": "Connecté en tant que",
+    "logout": "Quitter"
+  },
+  "notif": {
+    "viewed": "Devis Consulté",
+    "paid": "Paiement Encaissé",
+    "accepted": "Signature Reçue",
+    "sent": "Lien Envoyé",
+    "expired": "Lien Expiré",
+    "invoiced": "Facturation Auto",
+    "info": "Information Devis",
+    "desc_paid": "Règlement validé avec succès",
+    "desc_accepted": "Document signé électroniquement",
+    "desc_viewed": "Le client parcourt actuellement le devis",
+    "desc_expired": "Ce document n'est plus accessible",
+    "desc_default": "Nouvelle activité enregistrée"
+  }
+}

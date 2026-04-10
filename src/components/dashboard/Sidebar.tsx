@@ -18,25 +18,27 @@ import {
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { Button } from '@/components/ui/Button'
+import { useI18n } from '@/components/providers/LanguageProvider'
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 interface NavItem {
-  name: string
+  id: string
+  name: string // Default for fallback
   href: string
   icon: LucideIcon
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Clients', href: '/dashboard/clients', icon: Users },
-  { name: 'Devis', href: '/dashboard/quotes', icon: FileText },
-  { name: 'Agenda', href: '/dashboard/calendar', icon: Calendar },
-  { name: 'Factures', href: '/dashboard/invoices', icon: Receipt },
-  { name: 'Paramètres', href: '/dashboard/settings', icon: Settings },
-  { name: 'E-mails', href: '/dashboard/settings/email', icon: Mail },
+  { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { id: 'clients', name: 'Clients', href: '/dashboard/clients', icon: Users },
+  { id: 'quotes', name: 'Devis', href: '/dashboard/quotes', icon: FileText },
+  { id: 'agenda', name: 'Agenda', href: '/dashboard/calendar', icon: Calendar },
+  { id: 'invoices', name: 'Factures', href: '/dashboard/invoices', icon: Receipt },
+  { id: 'settings', name: 'Paramètres', href: '/dashboard/settings', icon: Settings },
+  { id: 'emails', name: 'E-mails', href: '/dashboard/settings/email', icon: Mail },
 ]
 
 interface SidebarProps {
@@ -45,6 +47,7 @@ interface SidebarProps {
 
 export function Sidebar({ isPro }: SidebarProps) {
   const pathname = usePathname()
+  const { t } = useI18n()
 
   return (
     <aside className="h-full w-60 hidden md:flex flex-col fixed left-0 top-0 bg-white p-4 gap-2 border-r border-slate-100 z-50">
@@ -56,7 +59,7 @@ export function Sidebar({ isPro }: SidebarProps) {
       <nav className="flex-1 space-y-1">
         {navigation.map((item) => {
           // Hide Pro features for non-pro users
-          if ((item.name === 'E-mails' || item.name === 'Agenda') && !isPro) return null
+          if ((item.id === 'emails' || item.id === 'agenda') && !isPro) return null
 
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
@@ -71,7 +74,7 @@ export function Sidebar({ isPro }: SidebarProps) {
               )}
             >
               <item.icon size={20} />
-              {item.name}
+              {t(`sidebar.${item.id}`)}
             </Link>
           )
         })}
@@ -81,14 +84,14 @@ export function Sidebar({ isPro }: SidebarProps) {
         <Link href="/dashboard/quotes/new">
           <Button className="w-full justify-start gap-3 h-12 mb-4 bg-[#00236f] hover:bg-[#001b54] text-white rounded-xl shadow-lg shadow-blue-900/10 active:scale-95 transition-all">
             <PlusCircle size={18} />
-            <span className="font-black uppercase tracking-widest text-[9px]">Créer un Devis</span>
+            <span className="font-black uppercase tracking-widest text-[9px]">{t('sidebar.create_quote')}</span>
           </Button>
         </Link>
         
         {isPro ? (
           <div className="flex items-center gap-3 p-3 text-[#00236f] font-black text-[10px] uppercase tracking-widest bg-blue-50/50 rounded-xl border border-blue-100/50">
             <ShieldCheck size={16} className="text-primary" />
-            Plan Pro Actif
+            {t('sidebar.pro_plan')}
           </div>
         ) : (
           <Link href="/onboarding/plans">
@@ -96,7 +99,7 @@ export function Sidebar({ isPro }: SidebarProps) {
               <div className="w-4 h-4 rounded-full border-2 border-slate-200 group-hover:border-primary flex items-center justify-center">
                 <div className="w-1.5 h-1.5 bg-slate-200 group-hover:bg-primary rounded-full" />
               </div>
-              Abonnement Gratuit
+              {t('sidebar.free_plan')}
             </div>
           </Link>
         )}
