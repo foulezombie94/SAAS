@@ -1,3 +1,4 @@
+import "server-only"
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
@@ -7,6 +8,9 @@ import { Database } from '@/types/supabase'
  * 
  * Used in Server Components, Route Handlers, and Server Actions.
  * Handles automatic session refreshing via cookies.
+ * 
+ * NOTE: In Next.js 15+, cookies() is asynchronous. 
+ * createClient must be awaited to resolve the Promise.
  */
 export async function createClient() {
   const cookieStore = await cookies()
