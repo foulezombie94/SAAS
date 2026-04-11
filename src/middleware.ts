@@ -2,8 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // 1. Generate a cryptographically secure nonce for CSP (Edge-compatible)
-  const nonce = btoa(crypto.randomUUID())
+  // 1. Generate a cryptographically secure nonce for CSP (Direct UUID is safest for Edge)
+  const nonce = crypto.randomUUID()
 
   // 2. Initialize request headers and inject the nonce
   // This allows the root layout to retrieve the nonce via headers().get('x-nonce')
@@ -40,7 +40,7 @@ function applySecurityHeaders(response: NextResponse, nonce: string) {
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""} https://js.stripe.com;
-    style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com https://lh3.googleusercontent.com;
     font-src 'self' data: https://fonts.gstatic.com;
     media-src 'self' https://assets.mixkit.co;
@@ -78,13 +78,6 @@ function applySecurityHeaders(response: NextResponse, nonce: string) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
