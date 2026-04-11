@@ -24,7 +24,7 @@ export const clientBaseSchema = z.object({
   postal_code: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
-  created_at: z.string().datetime().nullable().optional(),
+  created_at: z.string().nullable().optional(),
 });
 
 export const quoteBaseSchema = z.object({
@@ -76,7 +76,13 @@ export const quoteWithClientSchema = quoteBaseSchema.extend({
 });
 
 export const invoiceWithClientSchema = invoiceBaseSchema.extend({
-  clients: clientBaseSchema.nullable().optional(),
+  clients: z.union([
+    clientBaseSchema,
+    z.array(clientBaseSchema)
+  ]).nullable().optional().transform(val => {
+    if (Array.isArray(val)) return val[0] || null;
+    return val || null;
+  }),
 });
 
 export const clientWithQuotesSchema = clientBaseSchema.extend({

@@ -50,22 +50,26 @@ export async function getInvoicesServer(): Promise<Invoice[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non authentifié')
 
+  // 🛰️ Alignement avec DataService (Utilise l'alias pour la cohérence)
   const { data, error } = await supabase
     .from('invoices')
-    .select('*, clients(*)')
+    .select('*, clients:client_id(*)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    console.error('[DATABASE ERROR] getInvoicesServer:', error)
+    throw error
+  }
   if (!data) return []
 
-  // ✅ Validation Permissive
+  // ✅ Validation Permissive & Résiliente
   return data.reduce<Invoice[]>((acc, item) => {
     const result = invoiceWithClientSchema.safeParse(item)
     if (result.success) {
       acc.push(result.data as any as Invoice)
     } else {
-      console.error('[RUNTIME VALIDATION ERROR] Invoice ID:', item.id, result.error.format())
+      console.warn('[VALIDATION WARNING] Invoice skipped:', item.id, result.error.format())
     }
     return acc
   }, [])
@@ -78,11 +82,14 @@ export async function getClientsServer() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('*, quotes(*)')
+    .select('*, quotes:quotes(id, status, total_ttc, created_at)')
     .eq('user_id', user.id)
     .order('name', { ascending: true })
 
-  if (error) throw error
+  if (error) {
+    console.error('[DATABASE ERROR] getClientsServer:', error)
+    throw error
+  }
   if (!data) return []
 
   // ✅ Validation Permissive
@@ -91,7 +98,7 @@ export async function getClientsServer() {
     if (result.success) {
       acc.push(result.data)
     } else {
-      console.error('[RUNTIME VALIDATION ERROR] Client ID:', item.id, result.error.format())
+      console.warn('[VALIDATION WARNING] Client skipped:', item.id, result.error.format())
     }
     return acc
   }, [])
