@@ -123,7 +123,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         
         setLastSeen(lastSeenVal)
         if (profile.notification_preferences) {
-          setPreferences((prev: any) => ({ ...prev, ...profile.notification_preferences }))
+          setPreferences((prev: any) => ({ ...prev, ...(profile.notification_preferences as object) }))
         }
       }
 
