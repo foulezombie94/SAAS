@@ -8,9 +8,12 @@ import { Database } from '@/types/supabase'
  * 
  * Used in Server Components, Route Handlers, and Server Actions.
  * Handles automatic session refreshing via cookies.
+ * 
+ * IMPORTANT: In Next.js 15+, cookies() is ASYNCHRONOUS.
+ * We must await it to avoid type errors during build.
  */
-export function createClient() {
-  const cookieStore = cookies()
+export async function createClient() {
+  const cookieStore = await cookies()
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
