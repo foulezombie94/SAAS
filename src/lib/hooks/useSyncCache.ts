@@ -103,16 +103,19 @@ export function useSyncCache<T>(
       if (currentRequestId !== requestIdRef.current) return
 
       const receivedEmpty = Array.isArray(freshData) && freshData.length === 0
+      const hasCachedData = Array.isArray(state) ? state.length > 0 : !!state
 
-      // 🔥 PROTECTION RLS / SESSION : if first sync + empty + we have initial/cached data -> ignore
-      if (isFirstSync.current) {
+      // 🔥 PROTECTION RLS / SESSION "MAX"
+      // Si c'est le premier sync ET que le serveur renvoie du vide ALORS qu'on a déjà des données 
+      // (provenant du cache LocalStorage), on ignore cette mise à jour. 
+      // Cela évite de wiper l'UI avec des "0" le temps que la session Supabase se stabilise.
+      if (isFirstSync.current && receivedEmpty && hasCachedData) {
         isFirstSync.current = false
-        // Si le serveur renvoie du vide alors qu'on s'attend à de la data (initialData présent)
-        // on ignore ce premier sync silencieusement (attente RLS/Session)
-        if (receivedEmpty && initialData && (Array.isArray(initialData) ? initialData.length > 0 : true)) {
-           return
-        }
+        console.log(`[SyncCache] Guard triggered for "${key}": keeping cached data during session boot.`)
+        return
       }
+      
+      isFirstSync.current = false
 
       const envelope: CacheEnvelope<T> = {
         data: freshData,

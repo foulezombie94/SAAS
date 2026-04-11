@@ -139,13 +139,14 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         .order('updated_at', { ascending: false })
         .limit(10)
       
-      if (quotes) {
+      if (quotes && (quotes.length > 0)) {
         const normalized = quotes.map(q => ({
           ...q,
           clients: Array.isArray(q.clients) ? q.clients[0] : q.clients
         })) as unknown as QuoteNotification[]
         setNotifications(normalized)
       }
+      // Si quotes est [], on ne fait rien lors de l'initial fetch pour éviter le flickering "Zéro"
 
       // 3. Sync Initial Count
       await refetchUnreadCount(lastSeenVal || undefined)
