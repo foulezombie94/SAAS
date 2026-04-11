@@ -22,24 +22,28 @@ export function seniorCache<T extends (userId: string, supabase?: any, ...args: 
   fetcher: T,
   options: CacheOptions
 ): T {
+  // 🏭 STATIC INSTANTIATION (Defined once per namespace at module load)
+  // This ensures Next.js internal registry is stable and optimized.
+  // Multi-tenant isolation is guaranteed by argument hashing (uid).
+  const cachedFn = unstable_cache(
+    async (uid: string, ...flowArgs: any[]) => {
+      // 📡 OBSERVABILITY: Cache MISS
+      console.log(`\x1b[33m[CACHE-MISS]\x1b[0m ${namespace}:${uid}`);
+      
+      const adminClient = createAdminClient();
+      return fetcher(uid, adminClient, ...flowArgs);
+    },
+    [namespace], // Static namespace key
+    options
+  );
+
   return (async (userId: string, ...args: any[]) => {
     // 🕵️ Structural Guard
     if (typeof userId !== 'string' || !userId) {
       throw new Error(`[SECURITY] SeniorCache: Missing userId context for namespace '${namespace}'.`)
     }
 
-    // 🏭 Define and execute the cache in one go
-    // This allows including the userId in the keyParts for isolation
-    return unstable_cache(
-      async (uid: string, ...flowArgs: any[]) => {
-        // 📡 OBSERVABILITY: Cache MISS
-        console.log(`\x1b[33m[CACHE-MISS]\x1b[0m ${namespace}:${uid}`);
-        
-        const adminClient = createAdminClient();
-        return fetcher(uid, adminClient, ...flowArgs);
-      },
-      [namespace, userId], // ✅ Successfully isolated by user
-      options
-    )(userId, ...args);
+    // 🚀 Execute the stable cached function
+    return cachedFn(userId, ...args);
   }) as unknown as T;
 }
