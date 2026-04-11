@@ -46,6 +46,14 @@ export const quoteBaseSchema = z.object({
   last_viewed_at: z.string().nullable().optional(),
 });
 
+/** 🛰️ NESTED QUOTES (FOR OVERVIEWS) */
+export const quoteNestedSchema = z.object({
+  id: z.string().uuid(),
+  status: quoteStatusSchema,
+  total_ttc: z.coerce.number(),
+  created_at: z.string().nullable().optional(),
+});
+
 export const invoiceBaseSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
@@ -87,8 +95,8 @@ export const invoiceWithClientSchema = invoiceBaseSchema.extend({
 
 export const clientWithQuotesSchema = clientBaseSchema.extend({
   quotes: z.union([
-    z.array(quoteBaseSchema),
-    quoteBaseSchema.transform(val => [val])
+    z.array(quoteNestedSchema),
+    quoteNestedSchema.transform(val => [val])
   ]).nullable().optional().default([]),
 });
 
