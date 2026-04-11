@@ -105,24 +105,30 @@ export function useSyncCache<T>(
       if (currentRequestId !== requestIdRef.current) return
 
       const receivedEmpty = Array.isArray(freshData) && freshData.length === 0
-      const hasCachedData = Array.isArray(stateRef.current) 
+      const hasPreviousData = Array.isArray(stateRef.current) 
         ? (stateRef.current as any).length > 0 
         : !!stateRef.current
 
-      // 🔥 PROTECTION RLS / SESSION + AUTO-RETRY
-      if (isFirstSync.current && receivedEmpty && hasCachedData) {
-        console.warn(`[SyncCache] Suspected session race for "${key}". Retrying in 1s...`)
-        
-        // On planifie un retry automatique unique car on suspecte que la DB n'était pas prête
-        if (!retryTimeoutRef.current) {
-          retryTimeoutRef.current = setTimeout(() => {
-            retryTimeoutRef.current = null
-            revalidate(true) 
-          }, 1000)
+      // 🛡️ PROTECTION "ZERO-DATA" (Grade 10 Resilience)
+      // Si on reçoit du vide alors qu'on avait des données, on suspecte une régression (RLS/Session)
+      if (receivedEmpty && hasPreviousData) {
+        if (isFirstSync.current) {
+          console.warn(`[SyncCache] Suspected session race for "${key}". Retrying in 2s...`)
+          if (!retryTimeoutRef.current) {
+            retryTimeoutRef.current = setTimeout(() => {
+              retryTimeoutRef.current = null
+              revalidate(true) 
+            }, 2000) // Delay augmenté pour laisser Supabase se stabiliser
+          }
+          isFirstSync.current = false 
+          return
+        } else if (!isManual) {
+          // En arrière-plan (polling/realtime), si on reçoit du vide après le premier sync 
+          // alors qu'on avait des données, on IGNORE la mise à jour pour éviter le flash blanc.
+          console.error(`[SyncCache Critical] Received empty data for "${key}" while state was non-empty. Ignoring update to prevent data loss.`)
+          setIsSyncing(false)
+          return
         }
-        
-        isFirstSync.current = false // On marque comme "tenté"
-        return
       }
       
       isFirstSync.current = false

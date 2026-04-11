@@ -37,13 +37,13 @@ export const quoteBaseSchema = z.object({
   tax_rate: z.coerce.number(),
   total_ttc: z.coerce.number(),
   public_token: z.string().nullable().optional(),
-  public_token_expires_at: z.string().datetime().nullable().optional(),
-  valid_until: z.string().datetime().nullable().optional(),
+  public_token_expires_at: z.string().nullable().optional(),
+  valid_until: z.string().nullable().optional(),
   signature_url: z.string().nullable().optional(),
-  paid_at: z.string().datetime().nullable().optional(),
-  updated_at: z.string().datetime().nullable().optional(),
-  created_at: z.string().datetime().nullable().optional(),
-  last_viewed_at: z.string().datetime().nullable().optional(),
+  paid_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
+  created_at: z.string().nullable().optional(),
+  last_viewed_at: z.string().nullable().optional(),
 });
 
 export const invoiceBaseSchema = z.object({
@@ -56,9 +56,9 @@ export const invoiceBaseSchema = z.object({
   total_ht: z.coerce.number(),
   tax_rate: z.coerce.number(),
   total_ttc: z.coerce.number(),
-  due_date: z.string().datetime().nullable().optional(),
+  due_date: z.string().nullable().optional(),
   stripe_session_id: z.string().nullable().optional(),
-  created_at: z.string().datetime().nullable().optional(),
+  created_at: z.string().nullable().optional(),
 });
 
 // -------------------------------------------------------------------------
@@ -66,9 +66,13 @@ export const invoiceBaseSchema = z.object({
 // -------------------------------------------------------------------------
 
 export const quoteWithClientSchema = quoteBaseSchema.extend({
-  clients: z.object({
-    name: z.string(),
-  }).nullable().optional(),
+  clients: z.union([
+    z.object({ name: z.string() }),
+    z.array(z.object({ name: z.string() }))
+  ]).nullable().optional().transform(val => {
+    if (Array.isArray(val)) return val[0] || null;
+    return val || null;
+  }),
 });
 
 export const invoiceWithClientSchema = invoiceBaseSchema.extend({

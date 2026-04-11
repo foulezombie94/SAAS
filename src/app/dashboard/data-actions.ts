@@ -19,23 +19,27 @@ export async function getQuotesServer(): Promise<Quote[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non authentifié')
 
-  // On sélectionne l'objet client complet pour correspondre au type attendu par l'UI
+  // 🛰️ Alignement avec DataService (Utilise l'alias pour la cohérence)
   const { data, error } = await supabase
     .from('quotes')
-    .select('*, clients(*)') 
+    .select('*, clients:client_id(name)') 
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    console.error('[DATABASE ERROR] getQuotesServer:', error)
+    throw error
+  }
   if (!data) return []
 
-  // ✅ Validation Permissive : On filtre ce qui est corrompu et on log
+  // ✅ Validation Permissive & Résiliente
   return data.reduce<Quote[]>((acc, item) => {
     const result = quoteWithClientSchema.safeParse(item)
     if (result.success) {
       acc.push(result.data as any as Quote)
     } else {
-      console.error('[RUNTIME VALIDATION ERROR] Quote ID:', item.id, result.error.format())
+      // Log détaillé pour identifier les records corrompus sans bloquer l'UI
+      console.warn('[VALIDATION WARNING] Quote skipped:', item.id, result.error.format())
     }
     return acc
   }, [])
