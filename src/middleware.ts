@@ -2,8 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // 1. Generate a cryptographically secure nonce for CSP
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  // 1. Generate a cryptographically secure nonce for CSP (Edge-compatible)
+  const nonce = btoa(crypto.randomUUID())
 
   // 2. Initialize request headers and inject the nonce
   // This allows the root layout to retrieve the nonce via headers().get('x-nonce')
@@ -40,7 +40,7 @@ function applySecurityHeaders(response: NextResponse, nonce: string) {
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""} https://js.stripe.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com https://lh3.googleusercontent.com;
     font-src 'self' data: https://fonts.gstatic.com;
     media-src 'self' https://assets.mixkit.co;
@@ -55,6 +55,17 @@ function applySecurityHeaders(response: NextResponse, nonce: string) {
   `.replace(/\s{2,}/g, ' ').trim()
 
   response.headers.set('Content-Security-Policy', cspHeader)
+  
+  // 🛰️ Modern Reporting API (Required by report-to)
+  response.headers.set(
+    'Report-To',
+    JSON.stringify({
+      group: 'csp-endpoint',
+      max_age: 10886400,
+      endpoints: [{ url: '/api/csp-report' }],
+    })
+  )
+
   response.headers.set('x-nonce', nonce)
   
   // Re-confirm secondary security headers (Defense in Depth)
