@@ -41,7 +41,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     payments_received: true
   })
   
-  co  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const preferencesRef = useRef(preferences)
   const processedRef = useRef<string[]>([]) 
   const lastPlayedRef = useRef(0)
