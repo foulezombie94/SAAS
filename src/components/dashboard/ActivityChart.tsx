@@ -43,8 +43,9 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
         </div>
 
         {(data || []).map((item, idx) => {
-          const height = (item.revenue / maxRevenue) * 100
-          const isSignificant = item.revenue > 0
+          const revenue = Number(item.revenue) || 0
+          const height = (revenue / maxRevenue) * 100
+          const isSignificant = revenue > 0
 
           return (
             <div
@@ -65,7 +66,7 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
                 className={cn(
                   "w-full rounded-t-xl transition-all duration-500 relative overflow-hidden",
                   isSignificant 
-                    ? "bg-gradient-to-t from-primary to-primary/80 shadow-[0_-4px_12px_rgba(var(--primary-rgb),0.1)]" 
+                    ? "bg-gradient-to-t from-primary to-primary/80 shadow-lg shadow-primary/10" 
                     : "bg-slate-100",
                   hoveredIndex === idx && "filter brightness-110 scale-x-[1.05] z-10 shadow-xl"
                 )}

@@ -27,5 +27,9 @@ export async function getDashboardActivity(days: number = 30) {
     return []
   }
 
-  return data as { label: string; revenue: number; full_date: string }[]
+  return (data || []).map((item: any) => ({
+    label: item.label,
+    revenue: Number(item.revenue) || 0,
+    full_date: item.full_date
+  }))
 }
