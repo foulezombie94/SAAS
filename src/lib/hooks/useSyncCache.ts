@@ -77,53 +77,52 @@ export function useSyncCache<T>(
 
     // 🏆 ID monotonic pour éviter les Race Conditions
     const currentRequestId = ++requestIdRef.current
-
-    // 🛡️ DÉDUPLICATION : Si une requête pour cette clé est déjà en cours, on s'y attache
-    if (pendingRequests.has(key)) {
-      try {
-        const data = await pendingRequests.get(key)
-        if (currentRequestId === requestIdRef.current) {
-          setState(data)
-        }
-        return
-      } catch (e) { /* On laisse la suite gérer si échec */ }
-    }
     
     setIsSyncing(true)
-    lastFetchTimestamps.set(key, now)
 
-    // 🛡️ GESTION DU FETCH AVEC DÉLÉGATION DE NETTOYAGE
     try {
-      const p = fetcher()
-      pendingRequests.set(key, p)
+      let freshData: T
+
+      // 🛡️ DÉDUPLICATION INTELLIGENTE : Si une requête pour cette clé est déjà en cours, on l'attend
+      if (pendingRequests.has(key)) {
+        console.log(`[SyncCache] Joining existing request for "${key}"`)
+        freshData = await pendingRequests.get(key)
+      } else {
+        // Initialsation du fetch
+        lastFetchTimestamps.set(key, now)
+        const p = fetcher()
+        pendingRequests.set(key, p)
+        try {
+          freshData = await p
+        } finally {
+          pendingRequests.delete(key)
+        }
+      }
       
-      const freshData = await p
-      
-      // Si une requête plus récente a déjà abouti, on ignore celle-ci
+      // 🛡️ ANTI-RACE : Si une requête plus récente a déjà abouti, on ignore celle-ci
       if (currentRequestId !== requestIdRef.current) return
 
       const receivedEmpty = Array.isArray(freshData) && freshData.length === 0
       const hasCachedData = Array.isArray(state) ? state.length > 0 : !!state
 
-      // 🔥 PROTECTION RLS / SESSION "MAX"
-      // Si c'est le premier sync ET que le serveur renvoie du vide ALORS qu'on a déjà des données 
-      // (provenant du cache LocalStorage), on ignore cette mise à jour. 
-      // Cela évite de wiper l'UI avec des "0" le temps que la session Supabase se stabilise.
+      // 🔥 PROTECTION RLS / SESSION UNIFIÉE
+      // S'applique même aux requêtes partagées. On n'écrase jamais du cache avec du vide 
+      // lors de la première tentative de synchro.
       if (isFirstSync.current && receivedEmpty && hasCachedData) {
         isFirstSync.current = false
-        console.log(`[SyncCache] Guard triggered for "${key}": keeping cached data during session boot.`)
+        console.log(`[SyncCache] Guard triggered for "${key}" (Dedupped): keeping cached data.`)
         return
       }
       
       isFirstSync.current = false
 
+      // 🟠 OPTIMISATION LOCALSTORAGE : Éviter les écritures CPU/IO inutiles
       const envelope: CacheEnvelope<T> = {
         data: freshData,
         timestamp: Date.now(),
         version: CACHE_VERSION
       }
 
-      // 🟠 OPTIMISATION LOCALSTORAGE : Éviter les écritures inutiles
       if (typeof window !== 'undefined') {
         const envelopeStr = JSON.stringify(envelope)
         const previous = window.localStorage.getItem(key)
@@ -137,8 +136,6 @@ export function useSyncCache<T>(
     } catch (error) {
       console.error(`[SyncCache Error] "${key}":`, error)
     } finally {
-      // Nettoyage systématique même en cas de throw
-      pendingRequests.delete(key)
       if (currentRequestId === requestIdRef.current) {
         setIsSyncing(false)
       }
