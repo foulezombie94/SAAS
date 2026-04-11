@@ -6,13 +6,14 @@ import { DashboardStats, ClientWithQuotes, Quote } from '@/types/dashboard'
  * 
  * Responsibility: Pure database communication with strict type safety.
  * Constraint: NO caching logic here. NO lazy casting.
+ * Flexibility: Allows client injection for background/cached operations.
  */
 
 export const DataService = {
   /** 📊 DASHBOARD ANALYTICS */
-  async fetchDashboardStats(userId: string): Promise<DashboardStats> {
-    const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_dashboard_analytics', { 
+  async fetchDashboardStats(userId: string, supabase?: any): Promise<DashboardStats> {
+    const client = supabase || await createClient()
+    const { data, error } = await client.rpc('get_dashboard_analytics', { 
       p_user_id: userId 
     })
 
@@ -24,8 +25,7 @@ export const DataService = {
       }
     }
 
-    // Strict mapping to avoid 'Record' or 'any'
-    const payload = data as any // Necessary for RPC mapping but cleaned immediately
+    const payload = data as any
     return {
       revenue: Number(payload.revenue ?? 0),
       revenue_change: Number(payload.revenue_change ?? 0),
@@ -38,9 +38,9 @@ export const DataService = {
   },
 
   /** 👤 USER PROFILE */
-  async fetchUserProfile(userId: string) {
-    const supabase = await createClient()
-    const { data, error } = await supabase
+  async fetchUserProfile(userId: string, supabase?: any) {
+    const client = supabase || await createClient()
+    const { data, error } = await client
       .from('profiles')
       .select('id, first_name, last_name, company_name, email, is_pro, preferred_language')
       .eq('id', userId)
@@ -54,9 +54,9 @@ export const DataService = {
   },
 
   /** 📄 RECENT QUOTES (WITH CLIENTS) */
-  async fetchRecentQuotes(userId: string) {
-    const supabase = await createClient()
-    const { data, error } = await supabase
+  async fetchRecentQuotes(userId: string, supabase?: any) {
+    const client = supabase || await createClient()
+    const { data, error } = await client
       .from('quotes')
       .select('id, number, status, total_ttc, created_at, clients:client_id(name)')
       .eq('user_id', userId)
@@ -64,17 +64,16 @@ export const DataService = {
       .limit(10)
 
     if (error || !data) return []
-    // Precision mapping instead of generic cast
-    return data.map(q => ({
+    return data.map((q: any) => ({
       ...q,
       clients: Array.isArray(q.clients) ? q.clients[0] : q.clients
     })) as (Quote & { clients: { name: string } })[]
   },
 
   /** 🧾 ALL INVOICES */
-  async fetchInvoices(userId: string) {
-    const supabase = await createClient()
-    const { data, error } = await supabase
+  async fetchInvoices(userId: string, supabase?: any) {
+    const client = supabase || await createClient()
+    const { data, error } = await client
       .from('invoices')
       .select('*, clients:client_id(*)')
       .eq('user_id', userId)
@@ -85,9 +84,9 @@ export const DataService = {
   },
 
   /** 📂 ALL QUOTES */
-  async fetchAllQuotes(userId: string): Promise<Quote[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
+  async fetchAllQuotes(userId: string, supabase?: any): Promise<Quote[]> {
+    const client = supabase || await createClient()
+    const { data, error } = await client
       .from('quotes')
       .select('*, clients:client_id(name)')
       .eq('user_id', userId)
@@ -98,9 +97,9 @@ export const DataService = {
   },
 
   /** 👥 ALL CLIENTS */
-  async fetchClients(userId: string): Promise<ClientWithQuotes[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
+  async fetchClients(userId: string, supabase?: any): Promise<ClientWithQuotes[]> {
+    const client = supabase || await createClient()
+    const { data, error } = await client
       .from('clients')
       .select('*, quotes:quotes(id, status, total_ttc, created_at)')
       .eq('user_id', userId)
