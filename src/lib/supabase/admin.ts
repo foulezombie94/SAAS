@@ -10,6 +10,11 @@ import { Database } from '@/types/supabase'
  * NEVER expose to the client bundle.
  */
 export function createAdminClient() {
+  // 🛡️ TIER 1 SECURITY: Environment Check
+  if (typeof window !== "undefined") {
+    throw new Error("[SECURITY FATAL] createAdminClient called on client side.");
+  }
+
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!serviceRoleKey) {
