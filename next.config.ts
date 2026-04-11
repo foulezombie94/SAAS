@@ -4,7 +4,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self'${isDev ? " 'unsafe-eval' 'unsafe-inline'" : ""} https://js.stripe.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com https://lh3.googleusercontent.com;
     font-src 'self' data: https://fonts.gstatic.com;
@@ -15,9 +15,8 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    ${isDev ? "" : "upgrade-insecure-requests;"}
+    upgrade-insecure-requests;
     report-uri /api/csp-report;
-    report-to csp-endpoint;
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig: NextConfig = {
@@ -35,10 +34,6 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: cspHeader,
-          },
-          {
-            key: "Report-To",
-            value: '{"group":"csp-endpoint","max_age":10886400,"endpoints":[{"url":"/api/csp-report"}]}',
           },
           {
             key: "Strict-Transport-Security",
