@@ -23,8 +23,12 @@ export function createClient() {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options)
             })
-          } catch {
-            // Handled by middleware session refresh
+          } catch (error) {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored since the middleware is handling session refresh.
+            if (process.env.NODE_ENV === "development") {
+              console.warn("Supabase cookie set failed (expected in Server Components):", error)
+            }
           }
         },
       },
