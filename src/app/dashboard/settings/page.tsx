@@ -38,7 +38,12 @@ export default function SettingsPage() {
   const router = useRouter()
   const { t } = useI18n()
 
+  const initialized = useRef(false)
+
   useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+    
     loadProfile()
     
     // 🛡️ Gestion des retours Stripe (Succès / Refresh)

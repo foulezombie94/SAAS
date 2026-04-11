@@ -10,11 +10,16 @@ interface CacheEnvelope<T> {
   version: string
 }
 
+// 🏎️ DÉDUPLICATION GLOBALE (Niveau Module)
+// Empêche plusieurs instances du hook de lancer la même requête simultanément.
+const pendingRequests = new Map<string, Promise<any>>();
+const lastFetchTimestamps = new Map<string, number>();
+
 /**
  * Hook de Synchronisation "God Tier" (SWR-style)
  * 🏎️ Affiche instantanément le cache local (Stale)
  * 🔄 Rafraîchit en arrière-plan depuis le serveur (Revalidate)
- * 🛡️ Résilience contre les sessions vides
+ * 🛡️ Résilience contre les sessions vides & Double Fetch (Strict Mode)
  */
 export function useSyncCache<T>(
   key: string, 
@@ -37,7 +42,7 @@ export function useSyncCache<T>(
     enabled = true 
   } = options
 
-  // 1. Initial State: Synch-Only (No Flash)
+  // 1. Initial State
   const [state, setState] = useState<T>(() => {
     if (typeof window === 'undefined') return initialData
     
@@ -49,12 +54,7 @@ export function useSyncCache<T>(
       const isExpired = Date.now() - envelope.timestamp > ttl
       const versionMatch = envelope.version === CACHE_VERSION
       
-      // Si on a des données valides, on les prend
-      if (versionMatch && !isExpired) {
-        return envelope.data
-      }
-      
-      return initialData
+      return (versionMatch && !isExpired) ? envelope.data : initialData
     } catch (e) {
       return initialData
     }
@@ -64,24 +64,54 @@ export function useSyncCache<T>(
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const isFirstMount = useRef(true)
   const isFirstSync = useRef(true)
-  const supabase = createClient()
-
-  // 2. Revalidation (Background)
+  const requestIdRef = useRef(0)
+  
+  // 🚀 REVALIDATE OPTIMISÉ (DEDUP + THROTTLE + ANTI-RACE)
   const revalidate = useCallback(async (isManual = false) => {
-    if (!enabled && !isManual) return // Ne pas forcer si désactivé
+    if (!enabled && !isManual) return
+
+    // 🛡️ THROTTLE : Empêche deux auto-revalidations sur la même clé en moins de 1s
+    const now = Date.now()
+    const lastFetch = lastFetchTimestamps.get(key) || 0
+    if (!isManual && (now - lastFetch < 1000)) return
+
+    // 🏆 ID monotonic pour éviter les Race Conditions
+    const currentRequestId = ++requestIdRef.current
+
+    // 🛡️ DÉDUPLICATION : Si une requête pour cette clé est déjà en cours, on s'y attache
+    if (pendingRequests.has(key)) {
+      try {
+        const data = await pendingRequests.get(key)
+        if (currentRequestId === requestIdRef.current) {
+          setState(data)
+        }
+        return
+      } catch (e) { /* On laisse la suite gérer si échec */ }
+    }
     
     setIsSyncing(true)
+    lastFetchTimestamps.set(key, now)
+
+    // 🛡️ GESTION DU FETCH AVEC DÉLÉGATION DE NETTOYAGE
     try {
-      const freshData = await fetcher()
-      const hasActualData = state && Array.isArray(state) && state.length > 0
+      const p = fetcher()
+      pendingRequests.set(key, p)
+      
+      const freshData = await p
+      
+      // Si une requête plus récente a déjà abouti, on ignore celle-ci
+      if (currentRequestId !== requestIdRef.current) return
+
       const receivedEmpty = Array.isArray(freshData) && freshData.length === 0
 
-      // 🔥 Protection Critique : Ne pas écraser les données par du vide lors du premier sync
-      // si le navigateur n'a pas encore fini d'initialiser la session (ce qui renverrait [] via RLS)
-      if (isFirstSync.current && hasActualData && receivedEmpty) {
-        console.log(`[SyncTracker] Protection activée pour "${key}": Données serveur préservées.`)
+      // 🔥 PROTECTION RLS / SESSION : if first sync + empty + we have initial/cached data -> ignore
+      if (isFirstSync.current) {
         isFirstSync.current = false
-        return
+        // Si le serveur renvoie du vide alors qu'on s'attend à de la data (initialData présent)
+        // on ignore ce premier sync silencieusement (attente RLS/Session)
+        if (receivedEmpty && initialData && (Array.isArray(initialData) ? initialData.length > 0 : true)) {
+           return
+        }
       }
 
       const envelope: CacheEnvelope<T> = {
@@ -90,18 +120,29 @@ export function useSyncCache<T>(
         version: CACHE_VERSION
       }
 
-      window.localStorage.setItem(key, JSON.stringify(envelope))
+      // 🟠 OPTIMISATION LOCALSTORAGE : Éviter les écritures inutiles
+      if (typeof window !== 'undefined') {
+        const envelopeStr = JSON.stringify(envelope)
+        const previous = window.localStorage.getItem(key)
+        if (previous !== envelopeStr) {
+           window.localStorage.setItem(key, envelopeStr)
+        }
+      }
+      
       setState(freshData)
       setLastUpdated(envelope.timestamp)
-      isFirstSync.current = false
     } catch (error) {
       console.error(`[SyncCache Error] "${key}":`, error)
     } finally {
-      setIsSyncing(false)
+      // Nettoyage systématique même en cas de throw
+      pendingRequests.delete(key)
+      if (currentRequestId === requestIdRef.current) {
+        setIsSyncing(false)
+      }
     }
-  }, [key, fetcher, state])
+  }, [key, fetcher, enabled, initialData]) // ✅ state retiré des deps pour casser la boucle
 
-  // 3. Mount + Polling Cycle
+  // 3. Cycle de vie (Mount + Polling)
   useEffect(() => {
     if (!enabled) return
 
@@ -112,11 +153,13 @@ export function useSyncCache<T>(
 
     if (refreshInterval > 0) {
       const interval = setInterval(() => {
-        if (!isSyncing) revalidate()
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+           revalidate()
+        }
       }, refreshInterval)
       return () => clearInterval(interval)
     }
-  }, [revalidate, refreshInterval, isSyncing, enabled])
+  }, [revalidate, refreshInterval, enabled])
 
   return { data: state, isSyncing, lastUpdated, revalidate }
 }

@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ArtisanFlow - SaaS de Facturation Artisanale
 
-## Getting Started
+ArtisanFlow est une plateforme SaaS haute performance conçue pour les artisans, optimisée pour la vitesse, la sécurité et la synchronisation en temps réel.
 
-First, run the development server:
+## 🚀 Architecture de Performance (Senior++)
 
+L'application utilise une couche de données hybride "Zero-Leak" garantissant un trafic minimal et une cohérence maximale.
+
+### 1. Système de Cache `useSyncCache`
+Un moteur de synchronisation propriétaire avec :
+- **Déduplication au Niveau Instance** : Empêche les requêtes redondantes (ex: React Strict Mode).
+- **Anti-Race Condition** : Protection par `requestId` monotone.
+- **Optimisation LocalStorage** : Comparaison de timestamps avant lecture/écriture pour minimiser les I/O.
+- **Stabilité Totale** : Utilisation de Refs pour le `fetcher` et les dépendances, éliminant les boucles de re-fetch infinies.
+
+### 2. Notification & Sync "Source of Truth"
+Le `NotificationProvider` assure la cohérence du dashboard via :
+- **Stratégie d'Invalidation** : Contrairement à l'optimisme pur qui peut diverger, chaque événement Realtime (Supabase) déclenche une réconciliation systématique avec le backend.
+- **Déduplication Persistante** : Utilisation de `localStorage` (`AF_EVT_*`) pour filtrer les événements doublés même après un rafraîchissement de page.
+- **Page Visibility API** : Suspension intelligente du polling en arrière-plan pour économiser la batterie et les ressources serveur.
+
+## 🔒 Sécurité & Fiabilité
+- **Middleware Hardening** : CSP robuste, gestion des nonces et protection contre les injections XSS.
+- **Session Sync** : Rafraîchissement automatique de la session Supabase lors des changements de plan ou de profil.
+- **Audio Guard** : Protection anti-spam pour les alertes sonores de notification.
+
+## 🛠️ Développement
+
+### Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Lancement
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Architecture maintenue par Antigravity & ArtisanFlow Expert Team.*

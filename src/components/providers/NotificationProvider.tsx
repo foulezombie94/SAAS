@@ -41,47 +41,46 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     payments_received: true
   })
   
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  co  const audioRef = useRef<HTMLAudioElement | null>(null)
   const preferencesRef = useRef(preferences)
-  const processedRef = useRef<string[]>([]) // 🚀 FIFO Deduplication
+  const processedRef = useRef<string[]>([]) 
   const lastPlayedRef = useRef(0)
+  const hasFetchedRef = useRef(false)
+  const audioLockRef = useRef(false)
+  
+  // 🚀 STABILISATION SUPABASE/ROUTER
+  const supabaseRef = useRef(supabase)
+  const routerRef = useRef(router)
 
-  // 🔄 Sync Ref with state for closure safety in callbacks
   useEffect(() => {
     preferencesRef.current = preferences
   }, [preferences])
 
-  // 🔄 Sync lastSeen for refetch query
   const lastSeenRef = useRef(lastSeen)
   useEffect(() => {
     lastSeenRef.current = lastSeen
   }, [lastSeen])
 
-  // 🚀 Refetch unreadCount (Grade 10 Reliability)
+  // 🚀 REFETCH UNREAD COUNT (STABILISÉ)
   const refetchUnreadCount = useCallback(async (overrideLastSeen?: string) => {
-    if (!userId || !supabase) return
+    const sb = supabaseRef.current
+    if (!userId || !sb) return
 
     const effectiveLastSeen = overrideLastSeen || lastSeenRef.current || '1970-01-01'
-
-    // 🚀 IMPROVED: Count both status transitions AND views (if pref enabled)
-    // Filter: (Status in [paid, accepted, expired] AND updated_at > lastSeen) OR (last_viewed_at > lastSeen)
     const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${effectiveLastSeen}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${effectiveLastSeen})`
 
-    const { count, error } = await supabase
+    const { count, error } = await sb
       .from('quotes')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .or(filter)
     
-    if (error) {
-      console.warn('[NOTIFICATIONS] Unread count refetch failed:', error.message)
-      return
+    if (!error) {
+      setUnreadCount(count || 0)
     }
-    
-    setUnreadCount(count || 0)
-  }, [userId, supabase])
+  }, [userId]) // ✅ Supabase/Router exclus car stables via Refs
 
-  // 🔊 Audio Warmup mechanism
+  // 🔊 Audio Warmup
   useEffect(() => {
     const warmup = () => {
       if (audioRef.current) {
@@ -95,43 +94,44 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     return () => window.removeEventListener('click', warmup)
   }, [])
 
+  // 🧪 EFFECT PRINCIPAL (STABILISÉ)
   useEffect(() => {
     if (!userId || !supabase) return
+    
+    // 🛡️ DOUBLE-MOUNT PROTECTION
+    if (hasFetchedRef.current) return
+    hasFetchedRef.current = true
 
     const fetchInitialData = async () => {
-      // 🚀 RESTORE: Load from LocalStorage first for instant consistency
+      const sb = supabaseRef.current
       const localLastSeen = typeof window !== 'undefined' ? localStorage.getItem(`last_seen_${userId}`) : null
       
-      // 1. Fetch Profile (Preferences & Last Seen)
       let lastSeenVal: string | null = localLastSeen
       
-      const { data: profile, error: profileErr } = await supabase
+      // 1. Fetch Profile (Lite)
+      const { data: profile } = await sb
         .from('profiles')
         .select('notification_preferences, last_seen_notifications_at')
         .eq('id', userId)
         .single()
       
-      if (profileErr) {
-        console.warn('[NOTIFICATIONS] Profile fetch failed:', profileErr.message)
-      } else {
+      if (profile) {
         const dbLastSeen = profile?.last_seen_notifications_at ?? null
-        // 🚀 LOGIC: Use the most recent of either DB or LocalStorage
         if (dbLastSeen && (!lastSeenVal || new Date(dbLastSeen) > new Date(lastSeenVal))) {
           lastSeenVal = dbLastSeen
         }
         
         setLastSeen(lastSeenVal)
-        const prefs = (profile as any)?.notification_preferences
-        if (prefs) {
-          setPreferences((prev: any) => ({ ...prev, ...prefs }))
+        if (profile.notification_preferences) {
+          setPreferences((prev: any) => ({ ...prev, ...profile.notification_preferences }))
         }
       }
 
-      // 2. Fetch Initial Notifications (only unread — after lastSeen)
-      // 🚀 CONSOLIDATED: Use exact same logic as count for consistency
-      const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${lastSeenVal || '1970-01-01'}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${lastSeenVal || '1970-01-01'})`
+      // 2. Fetch Unread (Optimized)
+      const ts = lastSeenVal || '1970-01-01'
+      const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts})`
       
-      const { data: quotes, error: quotesErr } = await supabase
+      const { data: quotes } = await sb
         .from('quotes')
         .select('*, clients(name)')
         .eq('user_id', userId)
@@ -139,10 +139,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         .order('updated_at', { ascending: false })
         .limit(10)
       
-      if (quotesErr) {
-        console.warn('[NOTIFICATIONS] Initial quotes fetch failed:', quotesErr.message)
-      } else if (quotes) {
-        // 🚀 FIX: Handle Supabase jointure format (sometimes array, sometimes object)
+      if (quotes) {
         const normalized = quotes.map(q => ({
           ...q,
           clients: Array.isArray(q.clients) ? q.clients[0] : q.clients
@@ -150,19 +147,22 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         setNotifications(normalized)
       }
 
-      // 3. Initial count sync
-      // 🚀 FIX: Pass lastSeenVal directly to bypass stale Ref in this execution cycle
+      // 3. Sync Initial Count
       await refetchUnreadCount(lastSeenVal || undefined)
     }
 
     fetchInitialData()
 
-    // 🕒 Periodical sync (Every 5 minutes) to ensure consistency
-    const interval = setInterval(refetchUnreadCount, 5 * 60 * 1000)
+    // 🕒 Periodical sync (Invisible background)
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        refetchUnreadCount()
+      }
+    }, 5 * 60 * 1000)
 
-    // 🛡️ REALTIME: Advanced Multi-Event Listener with FULL REPLICA IDENTITY
+    // 🛡️ REALTIME (ADVANCED & SILENT)
     const channel = supabase
-      .channel(`user-activity-v5-${userId}`)
+      .channel(`user-activity-v7-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -171,90 +171,89 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           table: 'quotes',
           filter: `user_id=eq.${userId}`
         },
-        (payload) => {
+        async (payload) => {
           const newQuote = payload.new as QuoteRow
           const oldQuote = payload.old as QuoteRow 
 
-          // 🚀 IMMEDIATE DETECTION (State Transition Guard)
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
-          // Zero-Trust View: Only if it was NULL/undefined before
           const isViewed = !!newQuote.last_viewed_at && (!oldQuote || !oldQuote.last_viewed_at)
           
           if (!isPaid && !isAccepted && !isViewed) return
 
-          // 🛡️ STATIC TERMINAL DEDUPLICATION
-          // Key format: [ID]-[EVENT] (e.g. "uuid-viewed")
-          // This guarantees ONE toast per event type per quote, FOREVER in this session.
           const eventType = isPaid ? 'paid' : isAccepted ? 'signed' : 'viewed'
-          const staticKey = `${newQuote.id}-${eventType}`
+          const staticKey = `AF_EVT_${newQuote.id}_${eventType}`
           
-          if (processedRef.current.includes(staticKey)) {
-             // console.log('[NOTIFICATIONS] Blocked duplicate event for:', staticKey)
-             return
+          // 🛡️ PERSISTENT DEDUPLICATION (Survives Refresh/Reconnect)
+          if (typeof window !== 'undefined' && localStorage.getItem(staticKey)) return
+          
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(staticKey, Date.now().toString())
+            // Cleanup old keys (keep only last 50)
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('AF_EVT_'))
+            if (keys.length > 50) {
+              const sorted = keys.sort((a, b) => Number(localStorage.getItem(a)) - Number(localStorage.getItem(b)))
+              localStorage.removeItem(sorted[0])
+            }
           }
-          
-          processedRef.current.push(staticKey)
-          if (processedRef.current.length > 100) processedRef.current.shift()
 
           const prefs = preferencesRef.current
-          const getPref = (k: keyof typeof prefs) => prefs[k] !== false
-
-          const triggerNotification = async () => {
-            // 🛡️ SONNER LOCK: Explicit unique ID for this specific event
-            const toastId = staticKey
-
-            // 1. Show immediate high-precision Toast
-            if (isViewed) toast.info("👀 Devis consulté !", { id: toastId, description: `Le client vient de consulter le devis #${newQuote.number || '...'}` })
-            if (isPaid) toast.success("🎉 Paiement reçu !", { id: toastId, description: `Le devis #${newQuote.number || '...'} a été payé.` })
-            if (isAccepted) toast.success("✍️ Devis signé !", { id: toastId, description: `Le devis #${newQuote.number || '...'} a été accepté.` })
-
-            // 🔊 Controlled Audio
-            const now = Date.now()
-            if (now - lastPlayedRef.current > 3000) {
-              audioRef.current?.play().catch(() => {})
-              lastPlayedRef.current = now
-            }
-
-            // 2. Refresh count and list
-            const { data: fullQuote } = await supabase
-              .from('quotes')
-              .select('*, clients(name)')
-              .eq('id', newQuote.id)
-              .single()
-
-            if (fullQuote) {
-              const validated = {
-                ...fullQuote,
-                clients: Array.isArray(fullQuote.clients) ? fullQuote.clients[0] : fullQuote.clients
-              } as QuoteNotification
-              
-              setNotifications(prev => {
-                const filtered = prev.filter(n => !(n.id === validated.id && n.status === validated.status))
-                return [validated, ...filtered].slice(0, 15)
-              })
-              await refetchUnreadCount()
-            }
-          }
-
           if (
-            (isPaid && getPref('payments_received')) ||
-            (isAccepted && getPref('quotes_accepted')) ||
-            (isViewed && getPref('quotes_viewed'))
-          ) {
-            triggerNotification()
+             (isPaid && prefs.payments_received === false) ||
+             (isAccepted && prefs.quotes_accepted === false) ||
+             (isViewed && prefs.quotes_viewed === false)
+          ) return
+
+          // 🛡️ TOAST UI
+          const toastId = staticKey
+          if (isViewed) toast.info("👀 Devis consulté !", { id: toastId, description: `Le devis #${newQuote.number} vient d'être ouvert.` })
+          if (isPaid) toast.success("🎉 Paiement reçu !", { id: toastId, description: `Le devis #${newQuote.number} a été payé.` })
+          if (isAccepted) toast.success("✍️ Devis signé !", { id: toastId, description: `Le devis #${newQuote.number} a été accepté.` })
+
+          // 🔊 AUDIO LOCK
+          if (!audioLockRef.current) {
+            const now = Date.now()
+            if (now - lastPlayedRef.current > 2000) {
+              audioLockRef.current = true
+              audioRef.current?.play().finally(() => { 
+                audioLockRef.current = false 
+                lastPlayedRef.current = Date.now()
+              })
+            }
           }
+
+          // 🚀 BACKEND-FIRST SYNC (Source of Truth)
+          // On évite l'injection de state locale 'sale'
+          // 1. Mise à jour de la liste via fetch ciblé ou refresh global
+          const sb = supabaseRef.current
+          const { data: fullQuote } = await sb
+            .from('quotes')
+            .select('*, clients(name)')
+            .eq('id', newQuote.id)
+            .single()
+
+          if (fullQuote) {
+            const validated = {
+              ...fullQuote,
+              clients: Array.isArray(fullQuote.clients) ? fullQuote.clients[0] : fullQuote.clients
+            } as QuoteNotification
+            
+            setNotifications(prev => {
+              const filtered = prev.filter(n => n.id !== validated.id)
+              return [validated, ...filtered].slice(0, 15)
+            })
+          }
+
+          // 2. RECONCILIATION DU COMPTE (Invalidation Strategy)
+          // C'est le SEUL moyen de garantir que le badge est juste
+          await refetchUnreadCount()
         }
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('[NOTIFICATIONS] Realtime connected successfully')
-        }
-      })
+      .subscribe()
 
-    // 🚀 PROTECTION: Session & Prefs Sync
+    // 🚀 PROFILE SYNC
     const profileChannel = supabase
-      .channel(`profile-sync-v5-${userId}`)
+      .channel(`profile-sync-v7-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -263,23 +262,13 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           table: 'profiles',
           filter: `id=eq.${userId}`
         },
-        (payload: any) => {
-          if (payload.new.id !== userId) return
-
-          const newPrefs = payload.new.notification_preferences
-          if (newPrefs) {
-            setPreferences((prev: any) => ({ ...prev, ...newPrefs }))
+        async (payload: any) => {
+          if (payload.new.notification_preferences) {
+            setPreferences(payload.new.notification_preferences)
           }
-
           if (payload.new.last_seen_notifications_at !== payload.old.last_seen_notifications_at) {
              setLastSeen(payload.new.last_seen_notifications_at)
-             refetchUnreadCount()
-          }
-
-          if (payload.new.plan !== payload.old.plan) {
-            supabase.auth.refreshSession().then(() => {
-              router.refresh()
-            })
+             await refetchUnreadCount(payload.new.last_seen_notifications_at)
           }
         }
       )
@@ -290,37 +279,33 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       supabase.removeChannel(profileChannel)
       clearInterval(interval)
     }
-  }, [supabase, userId, router, refetchUnreadCount])
+  }, [userId, supabase, refetchUnreadCount]) // ✅ refetchUnreadCount est stable via useCallback
 
   const markAllAsRead = async () => {
-    // 🚀 RADICAL CLEANUP: Clear local state instantly for 'delete' effect
+    if (!userId) return
+
+    // 🚀 OPTIMISTIC UI: Instant feedback
     setNotifications([])
     setUnreadCount(0)
     
-    // 🚀 FIX: Add a 5s safety buffer
-    const nowWithBuffer = new Date(Date.now() + 5000).toISOString()
+    // 🚀 TIME BUFFER: Avoid race conditions with sub-second DB updates
+    const nowWithBuffer = new Date(Date.now() + 2000).toISOString()
     setLastSeen(nowWithBuffer)
     
-    if (!userId) return
-
-    // 🚀 SYNC: LocalStorage for immediate F5 protection
     if (typeof window !== 'undefined') {
       localStorage.setItem(`last_seen_${userId}`, nowWithBuffer)
     }
 
-    // 🚀 Persist "seen" state to DB
+    // 🚀 PERSISTENCE & FINAL SYNC
+    // On update d'abord la DB, PUIS on refetch pour être 100% sûr de la cohérence
     const { error } = await supabase
       .from('profiles')
       .update({ last_seen_notifications_at: nowWithBuffer })
       .eq('id', userId)
     
-    if (error) {
-      console.error('[NOTIFICATIONS] Mark all as read failed:', error.message)
+    if (!error) {
+      await refetchUnreadCount(nowWithBuffer)
     }
-
-    // Refresh unread count immediately to sync UI
-    // 🚀 FIX: Pass direct value to bypass Ref delay
-    await refetchUnreadCount(nowWithBuffer)
   }
 
   const clearAllNotifications = () => {

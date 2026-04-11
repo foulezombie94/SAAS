@@ -65,7 +65,12 @@ export default function NewQuotePage() {
   const [totalHt, setTotalHt] = useState(0)
   const [totalTtc, setTotalTtc] = useState(0)
 
+  const initialized = useRef(false)
+
   useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+
     async function init() {
        try {
          // Check limits via Server Action (qui est déjà sécurisée)
