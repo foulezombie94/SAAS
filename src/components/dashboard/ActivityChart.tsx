@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { TrendingUp, Calendar, ChevronDown, Loader2 } from 'lucide-react'
-import { getDashboardActivity } from '@/app/dashboard/actions'
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { TrendingUp, Loader2 } from 'lucide-react'
 import { useI18n } from '@/components/providers/LanguageProvider'
 import { cn } from '@/lib/utils'
 
@@ -15,28 +14,8 @@ interface ActivityData {
 
 export function ActivityChart({ initialData }: { initialData: ActivityData[] }) {
   const { t } = useI18n()
-  const [range, setRange] = useState<30 | 90>(30)
   const [data, setData] = useState<ActivityData[]>(initialData || [])
-  const [isLoading, setIsLoading] = useState(false)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true)
-      try {
-        const newData = await getDashboardActivity(range)
-        setData(newData)
-      } catch (error) {
-        console.error('Failed to fetch activity data:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (range !== 30 || data.length === 0) {
-      fetchData()
-    }
-  }, [range])
 
   const maxRevenue = Math.max(...(data || []).map(d => d.revenue), 1000)
 
@@ -51,30 +30,7 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
              <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
              <h4 className="text-xl font-black text-primary tracking-tighter uppercase">{t('dashboard.activity_title')}</h4>
           </div>
-          <p className="text-xs font-bold text-slate-400 tracking-wide uppercase">{range} {t('dashboard.range_30').split(' ').slice(1).join(' ')}</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-            <button 
-              onClick={() => setRange(30)}
-              className={cn(
-                "px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                range === 30 ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
-              )}
-            >
-              30J
-            </button>
-            <button 
-              onClick={() => setRange(90)}
-              className={cn(
-                "px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                range === 90 ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
-              )}
-            >
-              90J
-            </button>
-          </div>
+          <p className="text-xs font-bold text-slate-400 tracking-wide uppercase">7 {t('dashboard.range_30').split(' ').slice(1).join(' ')}</p>
         </div>
       </div>
 
@@ -86,85 +42,61 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
           ))}
         </div>
 
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div 
-              key="loader"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-[2px] z-20"
+        {(data || []).map((item, idx) => {
+          const height = (item.revenue / maxRevenue) * 100
+          const isSignificant = item.revenue > 0
+
+          return (
+            <div
+              key={idx}
+              className="relative flex-1 group"
+              onMouseEnter={() => setHoveredIndex(idx)}
+              onMouseLeave={() => setHoveredIndex(null)}
             >
-              <Loader2 className="animate-spin text-primary" size={32} />
-            </motion.div>
-          ) : data.length === 0 ? (
-            <div key="no-data" className="absolute inset-0 flex items-center justify-center text-slate-300 font-bold uppercase tracking-widest text-xs">
-              {t('dashboard.no_data')}
-            </div>
-          ) : (
-            (data || []).map((item, idx) => {
-              const height = (item.revenue / maxRevenue) * 100
-              const isSignificant = item.revenue > 0
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: `${Math.max(height, 4)}%`, opacity: 1 }}
+                transition={{ 
+                  type: 'spring', 
+                  damping: 20, 
+                  stiffness: 100, 
+                  delay: (idx * 0.02) % 0.5 
+                }}
+                className={cn(
+                  "w-full rounded-t-xl transition-all duration-500 relative overflow-hidden",
+                  isSignificant 
+                    ? "bg-gradient-to-t from-primary to-primary/80 shadow-[0_-4px_12px_rgba(var(--primary-rgb),0.1)]" 
+                    : "bg-slate-100",
+                  hoveredIndex === idx && "filter brightness-110 scale-x-[1.05] z-10 shadow-xl"
+                )}
+              >
+                {/* Glossy Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10" />
+              </motion.div>
 
-              return (
-                <div
-                  key={`${range}-${idx}`}
-                  className="relative flex-1 group"
-                  onMouseEnter={() => setHoveredIndex(idx)}
-                  onMouseLeave={() => setHoveredIndex(null)}
+              {/* Tooltip */}
+              {hoveredIndex === idx && item.revenue > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  className="absolute -top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
                 >
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: `${Math.max(height, 4)}%`, opacity: 1 }}
-                    transition={{ 
-                      type: 'spring', 
-                      damping: 20, 
-                      stiffness: 100, 
-                      delay: (idx * 0.02) % 0.5 
-                    }}
-                    className={cn(
-                      "w-full rounded-t-xl transition-all duration-500 relative overflow-hidden",
-                      isSignificant 
-                        ? "bg-gradient-to-t from-primary to-primary/80 shadow-[0_-4px_12px_rgba(var(--primary-rgb),0.1)]" 
-                        : "bg-slate-100",
-                      hoveredIndex === idx && "filter brightness-110 scale-x-[1.05] z-10 shadow-xl"
-                    )}
-                  >
-                    {/* Glossy Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10" />
-                  </motion.div>
-
-                  {/* Tooltip */}
-                  <AnimatePresence>
-                    {hoveredIndex === idx && item.revenue > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 5, scale: 0.9 }}
-                        className="absolute -top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
-                      >
-                        <div className="bg-primary text-white p-3 rounded-2xl shadow-2xl shadow-primary/40 border border-white/10 whitespace-nowrap min-w-[100px]">
-                           <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-0.5">{item.label}</p>
-                           <p className="text-base font-black tracking-tighter">{item.revenue.toLocaleString('fr-FR')}€</p>
-                           <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45" />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )
-            })
-          )}
-        </AnimatePresence>
+                  <div className="bg-primary text-white p-3 rounded-2xl shadow-2xl shadow-primary/40 border border-white/10 whitespace-nowrap min-w-[100px]">
+                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-0.5">{item.label}</p>
+                     <p className="text-base font-black tracking-tighter">{item.revenue.toLocaleString('fr-FR')}€</p>
+                     <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45" />
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* X-Axis Labels */}
-      {!isLoading && data.length > 0 && (
+      {data.length > 0 && (
         <div className="flex justify-between mt-6 px-1">
-          {data.filter((_, i) => {
-            if (range === 30) return i % 5 === 0 || i === data.length - 1
-            return true // Show all weekly labels
-          }).map((item, idx) => (
+          {data.map((item, idx) => (
             <span key={idx} className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300">
               {item.label}
             </span>

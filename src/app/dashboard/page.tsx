@@ -39,7 +39,7 @@ export default async function DashboardPage({
     getCachedInvoices(user.id)
   ])
   
-  const initialActivity = await getDashboardActivity(30)
+  const initialActivity = await getDashboardActivity(7)
 
   return (
     <div className="space-y-6">
