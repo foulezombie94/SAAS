@@ -20,15 +20,11 @@ export const metadata: Metadata = {
   description: "La solution la plus simple pour les artisans. Créez des devis, facturez et recevez vos paiements en un clin d'œil.",
 };
 
-import { headers } from 'next/headers';
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const nonce = (await headers()).get('x-nonce') ?? '';
-
   return (
     <html lang="fr" className={`${inter.variable}`}>
       <body className="antialiased">
