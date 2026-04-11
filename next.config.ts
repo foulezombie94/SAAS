@@ -17,6 +17,7 @@ const cspHeader = `
     frame-ancestors 'none';
     ${isDev ? "" : "upgrade-insecure-requests;"}
     report-uri /api/csp-report;
+    report-to csp-endpoint;
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig: NextConfig = {
@@ -34,6 +35,10 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: cspHeader,
+          },
+          {
+            key: "Report-To",
+            value: '{"group":"csp-endpoint","max_age":10886400,"endpoints":[{"url":"/api/csp-report"}]}',
           },
           {
             key: "Strict-Transport-Security",
