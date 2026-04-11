@@ -102,13 +102,12 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     if (hasFetchedRef.current) return
     hasFetchedRef.current = true
 
-    const fetchInitialData = async () => {
+    const fetchInitialData = async (retryCount = 0) => {
       const sb = supabaseRef.current
       const localLastSeen = typeof window !== 'undefined' ? localStorage.getItem(`last_seen_${userId}`) : null
       
       let lastSeenVal: string | null = localLastSeen
       
-      // 1. Fetch Profile (Lite)
       const { data: profile } = await sb
         .from('profiles')
         .select('notification_preferences, last_seen_notifications_at')
@@ -120,14 +119,12 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         if (dbLastSeen && (!lastSeenVal || new Date(dbLastSeen) > new Date(lastSeenVal))) {
           lastSeenVal = dbLastSeen
         }
-        
         setLastSeen(lastSeenVal)
         if (profile.notification_preferences) {
           setPreferences((prev: any) => ({ ...prev, ...(profile.notification_preferences as object) }))
         }
       }
 
-      // 2. Fetch Unread (Optimized)
       const ts = lastSeenVal || '1970-01-01'
       const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts})`
       
@@ -139,16 +136,18 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         .order('updated_at', { ascending: false })
         .limit(10)
       
-      if (quotes && (quotes.length > 0)) {
+      if (quotes && quotes.length > 0) {
         const normalized = quotes.map(q => ({
           ...q,
           clients: Array.isArray(q.clients) ? q.clients[0] : q.clients
         })) as unknown as QuoteNotification[]
         setNotifications(normalized)
+      } else if (retryCount < 1) {
+        // Retry once after 1.5s if empty (session sync)
+        console.warn("[Notifications] Empty initial result, retrying...")
+        setTimeout(() => fetchInitialData(retryCount + 1), 1500)
       }
-      // Si quotes est [], on ne fait rien lors de l'initial fetch pour éviter le flickering "Zéro"
 
-      // 3. Sync Initial Count
       await refetchUnreadCount(lastSeenVal || undefined)
     }
 

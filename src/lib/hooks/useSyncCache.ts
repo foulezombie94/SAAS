@@ -62,33 +62,36 @@ export function useSyncCache<T>(
 
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
+  
+  // 🛡️ REFS DE STABILITÉ
   const isFirstMount = useRef(true)
   const isFirstSync = useRef(true)
   const requestIdRef = useRef(0)
-  
-  // 🚀 REVALIDATE OPTIMISÉ (DEDUP + THROTTLE + ANTI-RACE)
+  const stateRef = useRef(state)
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Sync stateRef
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
+
+  // 🚀 REVALIDATE IRONCLAD (DEDUP + RETRY + GAURD)
   const revalidate = useCallback(async (isManual = false) => {
     if (!enabled && !isManual) return
 
-    // 🛡️ THROTTLE : Empêche deux auto-revalidations sur la même clé en moins de 1s
     const now = Date.now()
     const lastFetch = lastFetchTimestamps.get(key) || 0
     if (!isManual && (now - lastFetch < 1000)) return
 
-    // 🏆 ID monotonic pour éviter les Race Conditions
     const currentRequestId = ++requestIdRef.current
-    
     setIsSyncing(true)
 
     try {
       let freshData: T
 
-      // 🛡️ DÉDUPLICATION INTELLIGENTE : Si une requête pour cette clé est déjà en cours, on l'attend
       if (pendingRequests.has(key)) {
-        console.log(`[SyncCache] Joining existing request for "${key}"`)
         freshData = await pendingRequests.get(key)
       } else {
-        // Initialsation du fetch
         lastFetchTimestamps.set(key, now)
         const p = fetcher()
         pendingRequests.set(key, p)
@@ -99,36 +102,42 @@ export function useSyncCache<T>(
         }
       }
       
-      // 🛡️ ANTI-RACE : Si une requête plus récente a déjà abouti, on ignore celle-ci
       if (currentRequestId !== requestIdRef.current) return
 
       const receivedEmpty = Array.isArray(freshData) && freshData.length === 0
-      const hasCachedData = Array.isArray(state) ? state.length > 0 : !!state
+      const hasCachedData = Array.isArray(stateRef.current) 
+        ? (stateRef.current as any).length > 0 
+        : !!stateRef.current
 
-      // 🔥 PROTECTION RLS / SESSION UNIFIÉE
-      // S'applique même aux requêtes partagées. On n'écrase jamais du cache avec du vide 
-      // lors de la première tentative de synchro.
+      // 🔥 PROTECTION RLS / SESSION + AUTO-RETRY
       if (isFirstSync.current && receivedEmpty && hasCachedData) {
-        isFirstSync.current = false
-        console.log(`[SyncCache] Guard triggered for "${key}" (Dedupped): keeping cached data.`)
+        console.warn(`[SyncCache] Suspected session race for "${key}". Retrying in 1s...`)
+        
+        // On planifie un retry automatique unique car on suspecte que la DB n'était pas prête
+        if (!retryTimeoutRef.current) {
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null
+            revalidate(true) 
+          }, 1000)
+        }
+        
+        isFirstSync.current = false // On marque comme "tenté"
         return
       }
       
       isFirstSync.current = false
 
-      // 🟠 OPTIMISATION LOCALSTORAGE : Éviter les écritures CPU/IO inutiles
       const envelope: CacheEnvelope<T> = {
         data: freshData,
         timestamp: Date.now(),
         version: CACHE_VERSION
       }
 
-      if (typeof window !== 'undefined') {
-        const envelopeStr = JSON.stringify(envelope)
-        const previous = window.localStorage.getItem(key)
-        if (previous !== envelopeStr) {
-           window.localStorage.setItem(key, envelopeStr)
-        }
+      const envelopeStr = JSON.stringify(envelope)
+      const previous = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null
+      
+      if (previous !== envelopeStr && typeof window !== 'undefined') {
+        window.localStorage.setItem(key, envelopeStr)
       }
       
       setState(freshData)
@@ -140,7 +149,7 @@ export function useSyncCache<T>(
         setIsSyncing(false)
       }
     }
-  }, [key, fetcher, enabled, initialData]) // ✅ state retiré des deps pour casser la boucle
+  }, [key, fetcher, enabled]) // ✅ Propre
 
   // 3. Cycle de vie (Mount + Polling)
   useEffect(() => {
