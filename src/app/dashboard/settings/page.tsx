@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { getProfile, updateProfile, createStripeOnboardingLink, disconnectStripe, getStripeAccountStatus, updateNotificationPreferences, createStripeDashboardLink } from './actions'
 import { Profile } from '@/types/dashboard'
 import { toast } from 'sonner'
