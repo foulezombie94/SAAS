@@ -34,7 +34,7 @@ export function seniorCache<T extends (userId: string, supabase?: any, ...args: 
       const adminClient = createAdminClient();
       return fetcher(userId, adminClient, ...args);
     },
-    [namespace], // Base key parts
+    [namespace, userId], // Base key parts isolated by user
     options
   );
 
