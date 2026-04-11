@@ -50,7 +50,7 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
           return (
             <div
               key={idx}
-              className="relative flex-1 group"
+              className="relative flex-1 h-full group"
               onMouseEnter={() => setHoveredIndex(idx)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
