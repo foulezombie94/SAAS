@@ -43,21 +43,26 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
   const [invoiceId, setInvoiceId] = useState<string | null>(null)
 
   const fetchLatestQuote = async () => {
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('quotes')
-      .select('*, clients(*), quote_items(*)')
-      .eq('id', quote.id)
-      .single()
-    
-    if (data && !error) {
-      setCurrentQuote(prev => ({ 
-        ...prev, 
-        ...(data as any as Quote),
-        // Preserve profiles as they are fetched from separate admin-only call usually
-        profiles: prev.profiles 
-      }))
-      return data
+    try {
+      const response = await fetch('/api/quotes/public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteId: quote.id, publicToken })
+      })
+      const data = await response.json()
+      
+      if (response.ok && data) {
+        setCurrentQuote(prev => ({ 
+          ...prev, 
+          ...data,
+          // Handle profile mapping if needed
+          profiles: data.profiles || data.artisan 
+        }))
+        if (data.invoice_id) setInvoiceId(data.invoice_id)
+        return data
+      }
+    } catch (err) {
+      console.error('[FetchLatest] Error:', err)
     }
   }
 
@@ -72,18 +77,9 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
       toast.error("Le paiement a été annulé.")
     }
 
-    // NEW: If quote is already accepted but not paid, find the invoice
-    if (quote.status === 'accepted' || quote.status === 'invoiced') {
-       const findInvoice = async () => {
-          const supabase = createClient()
-          const { data } = await supabase
-            .from('invoices')
-            .select('id')
-            .eq('quote_id', quote.id)
-            .single()
-          if (data) setInvoiceId(data.id)
-       }
-       findInvoice()
+    // NEW: Use the secure API to sync initial state and find invoice
+    if (quote.status === 'accepted' || quote.status === 'invoiced' || quote.status === 'paid') {
+       fetchLatestQuote()
     }
   }, [searchParams, quote.id, quote.status])
 
