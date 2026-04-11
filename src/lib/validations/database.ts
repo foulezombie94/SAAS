@@ -86,7 +86,10 @@ export const invoiceWithClientSchema = invoiceBaseSchema.extend({
 });
 
 export const clientWithQuotesSchema = clientBaseSchema.extend({
-  quotes: z.array(quoteBaseSchema).optional().default([]),
+  quotes: z.union([
+    z.array(quoteBaseSchema),
+    quoteBaseSchema.transform(val => [val])
+  ]).nullable().optional().default([]),
 });
 
 // -------------------------------------------------------------------------
