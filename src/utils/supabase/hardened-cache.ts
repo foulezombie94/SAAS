@@ -22,32 +22,24 @@ export function seniorCache<T extends (userId: string, supabase?: any, ...args: 
   fetcher: T,
   options: CacheOptions
 ): T {
-  // 🏭 Define the cache statically (once per module load)
-  const cachedFn = unstable_cache(
-    async (userId: string, ...args: any[]) => {
-      // 📡 OBSERVABILITY: Cache MISS
-      console.log(`\x1b[33m[CACHE-MISS]\x1b[0m ${namespace}:${userId}`);
-      
-      // 🛡️ SECURITY & STABILITY:
-      // Inside unstable_cache, we cannot access cookies().
-      // Use the static admin client instead.
-      const adminClient = createAdminClient();
-      return fetcher(userId, adminClient, ...args);
-    },
-    [namespace, userId], // Base key parts isolated by user
-    options
-  );
-
   return (async (userId: string, ...args: any[]) => {
     // 🕵️ Structural Guard
     if (typeof userId !== 'string' || !userId) {
       throw new Error(`[SECURITY] SeniorCache: Missing userId context for namespace '${namespace}'.`)
     }
 
-    // 📡 OBSERVABILITY: Cache ACCESS
-    console.log(`\x1b[34m[CACHE-ACCESS]\x1b[0m ${namespace}:${userId}`);
-
-    // Call the static cache
-    return cachedFn(userId, ...args);
+    // 🏭 Define and execute the cache in one go
+    // This allows including the userId in the keyParts for isolation
+    return unstable_cache(
+      async (uid: string, ...flowArgs: any[]) => {
+        // 📡 OBSERVABILITY: Cache MISS
+        console.log(`\x1b[33m[CACHE-MISS]\x1b[0m ${namespace}:${uid}`);
+        
+        const adminClient = createAdminClient();
+        return fetcher(uid, adminClient, ...flowArgs);
+      },
+      [namespace, userId], // ✅ Successfully isolated by user
+      options
+    )(userId, ...args);
   }) as unknown as T;
 }
