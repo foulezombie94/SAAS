@@ -10,17 +10,18 @@ import { Database } from '@/types/supabase'
  * NEVER expose to the client bundle.
  */
 export function createAdminClient() {
-  // 🛡️ TIER 1 SECURITY: Environment Check
-  if (typeof window !== "undefined") {
-    throw new Error("[SECURITY FATAL] createAdminClient called on client side.");
-  }
-
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!serviceRoleKey) {
+  // 🛡️ SECURITY GUARD: Service role key is MANDATORY in production
+  if (process.env.NODE_ENV === "production" && !serviceRoleKey) {
     throw new Error(
-      "[SECURITY CRITICAL] Missing SUPABASE_SERVICE_ROLE_KEY. Administrative operations aborted."
+      "[SECURITY CRITICAL] Supabase Service Role Key is missing in production environment."
     );
+  }
+
+  // Fallback for development if key is missing but logic is called
+  if (!serviceRoleKey) {
+    throw new Error("[SECURITY] Missing SUPABASE_SERVICE_ROLE_KEY.");
   }
 
   return createServerClient<Database>(
@@ -29,7 +30,9 @@ export function createAdminClient() {
     {
       cookies: {
         getAll: () => [],
-        setAll: () => {}, // Admin client is stateless regarding session cookies
+        setAll: () => {
+          // 🛡️ INTENTIONALLY DISABLED: Admin client is stateless and bypasses auth session.
+        },
       },
     }
   )
