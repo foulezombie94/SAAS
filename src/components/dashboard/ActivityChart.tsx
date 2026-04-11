@@ -16,7 +16,7 @@ interface ActivityData {
 export function ActivityChart({ initialData }: { initialData: ActivityData[] }) {
   const { t } = useI18n()
   const [range, setRange] = useState<30 | 90>(30)
-  const [data, setData] = useState<ActivityData[]>(initialData)
+  const [data, setData] = useState<ActivityData[]>(initialData || [])
   const [isLoading, setIsLoading] = useState(false)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
@@ -38,7 +38,7 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
     }
   }, [range])
 
-  const maxRevenue = Math.max(...data.map(d => d.revenue), 1000)
+  const maxRevenue = Math.max(...(data || []).map(d => d.revenue), 1000)
 
   return (
     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
@@ -102,7 +102,7 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
               {t('dashboard.no_data')}
             </div>
           ) : (
-            data.map((item, idx) => {
+            (data || []).map((item, idx) => {
               const height = (item.revenue / maxRevenue) * 100
               const isSignificant = item.revenue > 0
 
