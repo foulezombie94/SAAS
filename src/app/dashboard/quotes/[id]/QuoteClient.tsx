@@ -907,7 +907,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 </Button>
               )}
 
-              {currentQuote.profiles?.is_pro && (
+              {currentQuote.profiles?.is_pro && currentQuote.public_token && (
                 <Button
                   onClick={() => setIsEmailModalOpen(true)}
                   disabled={currentQuote.status === 'paid' || currentQuote.status === 'invoiced'}
