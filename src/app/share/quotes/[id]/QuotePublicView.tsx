@@ -285,10 +285,11 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
   }
 
   return (
-    <div className="flex flex-col gap-8 pb-32">
-      {/* 
-        SUCCESS OVERLAY (Congratulations)
-      */}
+    <div className={cn(
+      "flex flex-col gap-8 pb-32 transition-all duration-700",
+      isSigning && "blur-md grayscale-[0.4] opacity-40 scale-[0.98] pointer-events-none"
+    )}>
+      {/* ... Success Overlay exactly as before ... */}
       {showSuccess && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-500">
            <div className="bg-white rounded-[40px] p-12 max-w-lg w-full mx-4 shadow-2xl text-center border border-slate-100 animate-in zoom-in-95 duration-500">
@@ -316,12 +317,11 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
       {/* 
         Professional PDF Template - Shared Logic
       */}
-      {/* 
-        PREMIUM RESPONSIVE WEB VIEW 
-        This is what the client see on their screen (Desktop/Mobile).
-      */}
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className={`h-24 ${currentQuote.status === 'paid' ? 'bg-emerald-600' : signature ? 'bg-blue-600' : 'bg-[#002878]'} flex items-center justify-between px-8 text-white transition-colors duration-500`}>
+        <div className={cn(
+          "h-24 flex items-center justify-between px-8 text-white transition-all duration-700",
+          currentQuote.status === 'paid' ? 'bg-emerald-600' : signature ? 'bg-blue-600' : 'bg-[#002878]'
+        )}>
            <div className="flex items-center gap-3">
               <FileText className="opacity-50" size={24} />
               <span className="font-black uppercase tracking-widest text-[10px]">
@@ -330,8 +330,12 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
            </div>
            <div className="flex items-center gap-4">
               <div className={cn(
-                "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 transition-all duration-500",
-                currentQuote.status === 'paid' ? "bg-emerald-500 shadow-xl" : signature ? "bg-blue-500 shadow-lg" : "bg-white/10"
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all duration-500 shadow-sm",
+                currentQuote.status === 'paid' 
+                  ? "bg-emerald-500 border-emerald-400 text-white" 
+                  : signature 
+                    ? "bg-blue-500 border-blue-400 text-white" 
+                    : "bg-white/10 border-white/20 text-blue-100"
               )}>
                  {currentQuote.status === 'paid' ? '✓ RÉGLÉ' : signature ? '✓ SIGNÉ' : '⚠ EN ATTENTE'}
               </div>

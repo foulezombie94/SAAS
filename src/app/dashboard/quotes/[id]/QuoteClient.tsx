@@ -45,7 +45,10 @@ export function QuoteClient({ quote }: QuoteClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20">
+    <div className={cn(
+      "min-h-screen bg-slate-50/50 pb-20 transition-all duration-700",
+      modals.isSigPadOpen && "blur-sm grayscale-[0.2] opacity-50 scale-[0.98] pointer-events-none"
+    )}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* HEADER SECTION */}
