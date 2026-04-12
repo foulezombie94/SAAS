@@ -11,6 +11,7 @@ import { LanguageProvider } from '@/components/providers/LanguageProvider'
 import { NavLabel } from '@/components/dashboard/NavLabel'
 
 import { Suspense } from 'react'
+import { revalidateProfileCache } from '@/utils/supabase/revalidate'
 
 export default async function DashboardLayout({
   children,
@@ -23,6 +24,9 @@ export default async function DashboardLayout({
   if (!user) {
     redirect('/login')
   }
+
+  // 🚨 EMERGENCY CACHE PURGE (Will be removed after one refresh)
+  await revalidateProfileCache()
 
   const profile = await getUserProfile(user.id)
   const isPro = profile?.is_pro ?? false
