@@ -41,14 +41,26 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
     try {
       setIsGeneratingPdf(true)
       
+      // 🛡️ AGGRESSIVE CLEANUP: Temporarily sanitize ALL real document styles 
+      // (Bypasses html2canvas parser crashing on modern CSS colors)
+      const allStyles = Array.from(document.querySelectorAll('style'));
+      const originalContents = allStyles.map(s => s.innerHTML);
+      allStyles.forEach(s => {
+        if (s.innerHTML.includes('lab(') || s.innerHTML.includes('oklch(')) {
+          s.innerHTML = s.innerHTML.replace(/lab\([^)]*\)/g, '#000').replace(/oklch\([^)]*\)/g, '#000');
+        }
+      });
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
-          // 🛡️ SECURITY & STABILITY: Remove modern CSS color functions (lab, oklch) 
-          // that cause html2canvas to crash.
+          // Remove external stylesheets to prevent fetch parsing failures
+          const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
+          links.forEach(l => l.remove());
+
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const style = styleTags[i];
@@ -60,19 +72,19 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
             }
           }
 
-          // Also clean inline styles on all elements
+          // Force clean all inline styles
           const allElements = clonedDoc.getElementsByTagName('*');
           for (let i = 0; i < allElements.length; i++) {
             const el = allElements[i] as HTMLElement;
             if (el.style) {
               if (el.style.color?.includes('lab') || el.style.color?.includes('oklch')) {
-                el.style.color = '#1e293b'; // Default text color
+                el.style.color = '#1e293b';
               }
               if (el.style.backgroundColor?.includes('lab') || el.style.backgroundColor?.includes('oklch')) {
-                el.style.backgroundColor = '#ffffff'; // Default bg
+                el.style.backgroundColor = '#ffffff';
               }
               if (el.style.borderColor?.includes('lab') || el.style.borderColor?.includes('oklch')) {
-                el.style.borderColor = '#e2e8f0'; // Default border
+                el.style.borderColor = '#e2e8f0';
               }
             }
           }
@@ -83,6 +95,9 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
           }
         }
       })
+      
+      // 🔄 RESTORE original styles in the real DOM immediately
+      allStyles.forEach((s, i) => { s.innerHTML = originalContents[i]; });
       
       const imgData = canvas.toDataURL('image/png')
       const pdf = new jsPDF({

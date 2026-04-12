@@ -44,11 +44,25 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
       const { jsPDF } = await import('jspdf')
       const html2canvas = (await import('html2canvas')).default
 
+      // 🛡️ AGGRESSIVE CLEANUP: Temporarily sanitize ALL real document styles 
+      // (Bypasses html2canvas parser crashing on modern CSS colors)
+      const allStyles = Array.from(document.querySelectorAll('style'));
+      const originalContents = allStyles.map(s => s.innerHTML);
+      allStyles.forEach(s => {
+        if (s.innerHTML.includes('lab(') || s.innerHTML.includes('oklch(')) {
+          s.innerHTML = s.innerHTML.replace(/lab\([^)]*\)/g, '#000').replace(/oklch\([^)]*\)/g, '#000');
+        }
+      });
+
       const canvas = await html2canvas(printElement, {
         scale: 4,
         useCORS: true,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
+          // Remove external stylesheets to prevent fetch parsing failures
+          const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
+          links.forEach(l => l.remove());
+
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const style = styleTags[i];
@@ -76,6 +90,9 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
           }
         }
       })
+      
+      // 🔄 RESTORE original styles in the real DOM immediately
+      allStyles.forEach((s, i) => { s.innerHTML = originalContents[i]; });
 
       const imgData = canvas.toDataURL('image/png', 1.0)
       const pdf = new jsPDF({
