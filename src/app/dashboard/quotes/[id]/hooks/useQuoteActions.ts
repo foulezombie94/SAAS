@@ -5,7 +5,11 @@ import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import ExcelJS from 'exceljs'
 import { Quote } from '@/types/dashboard'
-import { acceptQuoteAction, createInvoiceAction } from '../actions'
+import { 
+  acceptQuoteAction, 
+  createInvoiceFromQuoteAction,
+  generateQuoteTokenAction 
+} from '@/app/dashboard/quotes/actions'
 
 interface UseQuoteActionsProps {
   quote: Quote
@@ -116,18 +120,24 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
       let token = quote.public_token
       
       if (!token) {
-        // Logique de génération si absent (peut être déplacée en server action si besoin)
-        const response = await fetch(`/api/quotes/${quote.id}/token`, { method: 'POST' })
-        const data = await response.json()
-        token = data.token
-        setCurrentQuote(prev => ({ ...prev, public_token: token }))
+        const result = await generateQuoteTokenAction(quote.id)
+        if (result.success && result.token) {
+          token = result.token
+          setCurrentQuote(prev => ({ 
+            ...prev, 
+            public_token: result.token ?? null,
+            public_token_expires_at: result.expiresAt ?? null
+          }))
+        } else {
+          throw new Error(result.error)
+        }
       }
 
       const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${token}`
       await navigator.clipboard.writeText(shareUrl)
       toast.success("Lien de partage copié !")
-    } catch (error) {
-      toast.error("Erreur lors de la copie du lien")
+    } catch (error: any) {
+      toast.error("Erreur lors de la copie du lien : " + error.message)
     } finally {
       setIsGeneratingLink(false)
     }
@@ -143,11 +153,13 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
     try {
       setIsSigning(true)
       // On utilise l'action côté client pour la signature artisan
-      const result = await acceptQuoteAction(quote.id, signatureData, quote.public_token || '')
+      const result = await acceptQuoteAction({
+        quoteId: quote.id,
+        signatureDataUrl: signatureData
+      })
 
       if (!result.success) throw new Error(result.error)
 
-      // 🛡️ FIX TS ERROR: Use || null to match Quote type (string | null)
       const newSignature = result.signatureUrl || null
       setSignature(newSignature)
       setCurrentQuote(prev => ({ 
@@ -163,7 +175,7 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
       toast.error("Échec de la signature : " + e.message)
       setIsSigning(false)
     }
-  }, [quote.id, quote.public_token, router, setCurrentQuote, setSignature])
+  }, [quote.id, router, setCurrentQuote, setSignature])
 
   // 💰 CREATE PAYMENT (STRIPE)
   const handleCreatePayment = useCallback(async () => {
@@ -178,8 +190,9 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
           cancelUrl: `${window.location.origin}/dashboard/quotes/${quote.id}?canceled=true`
         })
       })
-      const { url } = await response.json()
-      if (url) window.location.href = url
+      const data = await response.json()
+      if (data.url) window.location.href = data.url
+      else throw new Error(data.error || 'Erreur Stripe')
     } catch (error) {
       toast.error("Erreur lors de l'initialisation du paiement")
     } finally {
@@ -191,7 +204,7 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
   const handleCreateInvoice = useCallback(async () => {
     try {
       setIsGeneratingInvoice(true)
-      const result = await createInvoiceAction(quote.id)
+      const result = await createInvoiceFromQuoteAction(quote.id)
       if (result.success) {
         toast.success("Facture générée avec succès !")
         router.push(`/dashboard/invoices/${result.invoiceId}`)

@@ -23,7 +23,7 @@ interface QuoteClientProps {
  * 🎨 QuoteClient - Orchestrator Component
  * Refactored to follow SOLID principles: Split logic, UI, and Realtime.
  */
-export default function QuoteClient({ quote }: QuoteClientProps) {
+export function QuoteClient({ quote }: QuoteClientProps) {
   
   // 1. Manage State & Realtime
   const { currentQuote, setCurrentQuote, signature, setSignature } = useQuoteRealtime(quote)

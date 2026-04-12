@@ -1,6 +1,6 @@
-import React from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import React, { useState } from 'react'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { SignaturePad } from '@/components/SignaturePad'
 import { 
   CreditCard, 
@@ -11,7 +11,8 @@ import {
   Clock, 
   FileText,
   Zap,
-  Loader2
+  Loader2,
+  PenTool
 } from 'lucide-react'
 import { Quote } from '@/types/dashboard'
 import { cn } from '@/lib/utils'
@@ -39,29 +40,52 @@ export function QuoteActionsPanel({
   onCreateInvoice,
   onOpenEmailModal
 }: QuoteActionsPanelProps) {
+  const [isSigPadOpen, setIsSigPadOpen] = useState(false)
   
   const isPaid = quote.status === 'paid'
   const isAccepted = ['accepted', 'paid', 'invoiced'].includes(quote.status)
+
+  const handleSaveSignature = (data: string) => {
+    onSaveSignature(data)
+    setIsSigPadOpen(false)
+  }
 
   return (
     <div className="space-y-6 sticky top-8">
       {/* CARD: COMMAND CENTER */}
       <Card className="border-slate-200/60 shadow-lg shadow-slate-200/20 overflow-hidden ring-1 ring-slate-200/50">
-        <CardHeader className="bg-slate-900 border-b border-slate-800 py-5">
-          <CardTitle className="text-white text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+        <div className="bg-slate-900 border-b border-slate-800 py-5 px-6">
+          <div className="text-white text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
             <Settings2 className="w-4 h-4 text-indigo-400" />
             Command Center
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
+          </div>
+        </div>
+        <div className="p-6 space-y-6">
           {/* Espace Signature */}
           {!signature && quote.status !== 'paid' && (
             <div className="space-y-3 pb-2 border-b border-slate-100 mb-6">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-3 font-bold">
                 <Zap className="w-3.5 h-3.5 text-amber-500" />
                 Validation Interne
               </label>
-              <SignaturePad onSave={onSaveSignature} isLoading={isSigning} />
+              
+              <Button 
+                onClick={() => setIsSigPadOpen(true)}
+                className="w-full h-11 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 font-black uppercase tracking-tighter"
+                variant="outline"
+              >
+                <PenTool className="w-4 h-4 mr-2" />
+                Signer le devis
+              </Button>
+
+              {isSigPadOpen && (
+                <SignaturePad 
+                  onSave={handleSaveSignature} 
+                  onCancel={() => setIsSigPadOpen(false)} 
+                  isLoading={isSigning} 
+                />
+              )}
+
               <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
                 Utilisez cette zone pour signer vous-même le devis <br/>si le client l'a déjà validé oralement.
               </p>
@@ -121,34 +145,32 @@ export function QuoteActionsPanel({
               <CheckCircle2 className={cn("w-4 h-4 transition-colors", isAccepted ? "text-emerald-500" : "text-slate-200")} />
             </Button>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       {/* CARD: STATUT DÉTAILLÉ */}
-      <Card className="border-slate-200/60 shadow-md bg-white">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Suivi Logiciel</span>
+      <Card className="border-slate-200/60 shadow-md bg-white p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+          <span className="text-xs font-black uppercase tracking-widest text-slate-400">Suivi Logiciel</span>
+        </div>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-slate-500 font-medium italic">Consulté le :</span>
+            <span className="font-bold text-slate-900">
+              {quote.last_viewed_at ? new Date(quote.last_viewed_at).toLocaleDateString('fr-FR') : 'Jamais'}
+            </span>
           </div>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-500 font-medium italic">Consulté le :</span>
-              <span className="font-bold text-slate-900">
-                {quote.last_viewed_at ? new Date(quote.last_viewed_at).toLocaleDateString('fr-FR') : 'Jamais'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-500 font-medium italic">Signé par :</span>
-              <span className="font-bold text-slate-900">{signature ? 'Client / Artisan' : 'En attente'}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <p className="text-[10px] leading-relaxed text-slate-400 font-medium uppercase tracking-tight">
-                Chaque action est enregistrée avec horodatage pour votre protection juridique.
-              </p>
-            </div>
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-slate-500 font-medium italic">Signé par :</span>
+            <span className="font-bold text-slate-900">{signature ? 'Client / Artisan' : 'En attente'}</span>
           </div>
-        </CardContent>
+          <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+            <p className="text-[10px] leading-relaxed text-slate-400 font-bold uppercase tracking-tight">
+              Chaque action est enregistrée avec horodatage pour votre protection juridique.
+            </p>
+          </div>
+        </div>
       </Card>
       
       {/* ACTION: CALENDRIER */}

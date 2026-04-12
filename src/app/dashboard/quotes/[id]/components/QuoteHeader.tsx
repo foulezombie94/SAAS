@@ -1,6 +1,5 @@
 import React from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { Quote } from '@/types/dashboard'
 import { 
   FileText, 
@@ -44,7 +43,7 @@ export function QuoteHeader({
       case 'sent': return { label: 'Envoyé', class: 'bg-blue-100 text-blue-700 border-blue-200' }
       case 'accepted': return { label: 'Validé', class: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
       case 'rejected': return { label: 'Refusé', class: 'bg-rose-100 text-rose-700 border-rose-200' }
-      case 'paid': return { label: 'Payé', class: 'bg-cyan-100 text-cyan-700 border-cyan-200 text-cyan-700' }
+      case 'paid': return { label: 'Payé', class: 'bg-cyan-100 text-cyan-700 border-cyan-200' }
       case 'expired': return { label: 'Expiré', class: 'bg-amber-100 text-amber-700 border-amber-200' }
       default: return { label: status, class: 'bg-slate-100 text-slate-700' }
     }
@@ -71,13 +70,14 @@ export function QuoteHeader({
               Devis {quote.number}
             </h1>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className={cn("px-2.5 py-0.5 font-semibold capitalize border shadow-sm", statusConfig.class)}>
+              {/* Fallback for missing Badge component */}
+              <div className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm", statusConfig.class)}>
                 {statusConfig.label}
-              </Badge>
+              </div>
               {isTokenExpired && (
-                <Badge variant="destructive" className="px-2.5 py-0.5 shadow-sm">
+                <div className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-rose-500 text-white shadow-sm">
                   Lien public expiré
-                </Badge>
+                </div>
               )}
             </div>
           </div>
