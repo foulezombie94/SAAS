@@ -232,22 +232,29 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     // Realtime Subscriptions with FILTERS
     console.log("🔌 [Realtime] Tentative de connexion aux canaux pour l'utilisateur...", userId)
     
+    // 🔧 DEBUG MODE: Shotgun (No server-side filter) to verify delivery
+    console.log("🔌 [Realtime] MODE DEBUG: Connexion Shotgun (sans filtre serveur)...")
+    
     const quoteChannel = supabase
-      .channel(`quotes-sync-${userId}`)
+      .channel(`quotes-debug-${userId}`)
       .on('postgres_changes', { 
          event: '*', 
          schema: 'public', 
-         table: 'quotes', 
-         filter: `user_id=eq.${userId}` 
+         table: 'quotes' 
       }, (payload) => {
-         console.log("⚡ [Realtime] Message reçu (Quotes) !", payload)
-         handleQuoteChange(payload)
+         console.log("⚡ [Realtime] BRUT reçu (Shotgun) !", payload)
+         const newQuote = payload.new as QuoteRow
+         
+         // FILTRE JS (Sécurité)
+         if (newQuote && newQuote.user_id === userId) {
+            console.log("✅ [Realtime] Match utilisateur ! Traitement...")
+            handleQuoteChange(payload)
+         } else {
+            console.log("ℹ️ [Realtime] Event ignoré (User ID mismatch)", { eventId: newQuote?.user_id, myId: userId })
+         }
       })
       .subscribe((status) => {
-         console.log(`📡 [Realtime] Statut du canal Quotes : ${status}`)
-         if (status === 'CHANNEL_ERROR') {
-            console.error("❌ [Realtime] Erreur critique sur le canal Quotes. Vérifiez les permissions RLS et la publication.")
-         }
+         console.log(`📡 [Realtime] Statut du canal DEBUG : ${status}`)
       })
 
     const profileChannel = supabase
