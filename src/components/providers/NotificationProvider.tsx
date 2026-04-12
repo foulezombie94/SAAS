@@ -230,15 +230,36 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     fetchInitialData()
 
     // Realtime Subscriptions with FILTERS
+    console.log("🔌 [Realtime] Tentative de connexion aux canaux pour l'utilisateur...", userId)
+    
     const quoteChannel = supabase
       .channel(`quotes-sync-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'quotes', filter: `user_id=eq.${userId}` }, handleQuoteChange)
-      .subscribe()
+      .on('postgres_changes', { 
+         event: '*', 
+         schema: 'public', 
+         table: 'quotes', 
+         filter: `user_id=eq.${userId}` 
+      }, (payload) => {
+         console.log("⚡ [Realtime] Message reçu (Quotes) !", payload)
+         handleQuoteChange(payload)
+      })
+      .subscribe((status) => {
+         console.log(`📡 [Realtime] Statut du canal Quotes : ${status}`)
+         if (status === 'CHANNEL_ERROR') {
+            console.error("❌ [Realtime] Erreur critique sur le canal Quotes. Vérifiez les permissions RLS et la publication.")
+         }
+      })
 
     const profileChannel = supabase
       .channel(`profile-sync-${userId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, 
+      .on('postgres_changes', { 
+         event: 'UPDATE', 
+         schema: 'public', 
+         table: 'profiles', 
+         filter: `id=eq.${userId}` 
+      }, 
         (p: any) => {
+          console.log("⚡ [Realtime] Message reçu (Profile) !", p)
           if (p.new.notification_preferences) setPreferences(p.new.notification_preferences)
           if (p.new.last_seen_notifications_at !== p.old.last_seen_notifications_at) {
              setLastSeen(p.new.last_seen_notifications_at)
@@ -246,14 +267,26 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+         console.log(`📡 [Realtime] Statut du canal Profile : ${status}`)
+      })
 
     const invoiceChannel = supabase
       .channel(`invoices-sync-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices', filter: `user_id=eq.${userId}` }, 
-        () => router.refresh()
+      .on('postgres_changes', { 
+         event: '*', 
+         schema: 'public', 
+         table: 'invoices', 
+         filter: `user_id=eq.${userId}` 
+      }, 
+        (payload: any) => {
+          console.log("⚡ [Realtime] Message reçu (Invoices) !", payload)
+          router.refresh()
+        }
       )
-      .subscribe()
+      .subscribe((status) => {
+         console.log(`📡 [Realtime] Statut du canal Invoices : ${status}`)
+      })
 
     return () => {
       supabase.removeChannel(quoteChannel)
