@@ -14,9 +14,9 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
   const client = quote.clients
 
   return (
-    <div id="pdf-template" className="bg-white p-20 text-[#0f172a]" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
+    <div id="pdf-template" className="bg-white p-8 text-[#0f172a]" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
       {/* HEADER */}
-      <div className="flex justify-between items-start mb-20">
+      <div className="flex justify-between items-start mb-8">
         <div className="space-y-8">
           <div className="bg-[#0f172a] text-white px-8 py-4 rounded-2xl inline-block font-black text-3xl uppercase tracking-tighter shadow-xl">
              {profile?.company_name?.split(' ')[0] || 'AF'}.FLOW
@@ -31,9 +31,9 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
           </div>
         </div>
         <div className="text-right">
-          <h2 className="text-6xl font-black mb-4 uppercase text-[#0f172a] tracking-tighter opacity-10">DOCUMENT</h2>
-          <h2 className="text-5xl font-black mb-2 uppercase text-[#0f172a] tracking-tight">Devis</h2>
-          <p className="text-3xl font-black text-[#4f46e5] bg-[#eef2ff] px-4 py-1 rounded-xl inline-block mt-2">#{quote.number}</p>
+          <h2 className="text-4xl font-black mb-2 uppercase text-[#0f172a] tracking-tighter opacity-10">DOCUMENT</h2>
+          <h2 className="text-4xl font-black mb-1 uppercase text-[#0f172a] tracking-tight">Devis</h2>
+          <p className="text-2xl font-black text-[#4f46e5] bg-[#eef2ff] px-3 py-1 rounded-xl inline-block mt-1">#{quote.number}</p>
           <div className="mt-8 text-xs space-y-2 font-bold uppercase tracking-widest text-[#94a3b8]">
             <p>Date d'émission : {new Date(quote.created_at).toLocaleDateString('fr-FR')}</p>
             {quote.valid_until && (
@@ -43,27 +43,27 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
         </div>
       </div>
 
-      <div className="h-1 bg-[#f1f5f9] w-full mb-16 rounded-full" />
+      <div className="h-1 bg-[#f1f5f9] w-full mb-10 rounded-full" />
 
       {/* CLIENT & OBJECT INFO */}
-      <div className="grid grid-cols-2 gap-16 mb-20">
-        <div className="bg-[#f8fafc] p-10 rounded-[2.5rem] border-2 border-[#f1f5f9]">
-          <p className="text-[#94a3b8] text-xs font-black uppercase tracking-[0.2em] mb-6">Destinataire</p>
-          <div className="space-y-2">
-            <p className="font-black text-2xl text-[#0f172a]">{client?.name}</p>
-            <p className="text-[#64748b] text-lg font-medium whitespace-pre-line leading-relaxed">{client?.address}</p>
-            <p className="text-[#64748b] text-lg font-medium">{client?.city} {client?.postal_code}</p>
+      <div className="grid grid-cols-2 gap-8 mb-8">
+        <div className="bg-[#f8fafc] p-5 rounded-[1rem] border-2 border-[#f1f5f9]">
+          <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.2em] mb-4">Destinataire</p>
+          <div className="space-y-1">
+            <p className="font-black text-xl text-[#0f172a]">{client?.name}</p>
+            <p className="text-[#64748b] text-md font-medium leading-tight">{client?.address}</p>
+            <p className="text-[#64748b] text-md font-medium">{client?.city} {client?.postal_code}</p>
           </div>
         </div>
-        <div className="flex flex-col justify-center border-l-[6px] border-[#4f46e5] pl-10">
-           <p className="text-[#94a3b8] text-xs font-black uppercase tracking-[0.2em] mb-4">Désignation du projet</p>
-           <p className="text-2xl font-black text-[#0f172a] leading-tight mb-2">Prestation de Services & Installation Professionnelle</p>
-           <p className="text-lg text-[#4f46e5] font-black italic">Référence Dossier : #{quote.number}</p>
+        <div className="flex flex-col justify-center border-l-[4px] border-[#4f46e5] pl-6">
+           <p className="text-[#94a3b8] text-[9px] font-black uppercase tracking-[0.2em] mb-1">Désignation du projet</p>
+           <p className="text-lg font-black text-[#0f172a] leading-tight mb-1">Installation & Services Professionnels</p>
+           <p className="text-md text-[#4f46e5] font-black italic">Réf : #{quote.number}</p>
         </div>
       </div>
 
       {/* ITEMS TABLE */}
-      <div className="rounded-[2.5rem] border-2 border-[#f1f5f9] overflow-hidden mb-16">
+      <div className="rounded-[1.5rem] border-2 border-[#f1f5f9] overflow-hidden mb-8">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-[#0f172a]">
@@ -76,12 +76,12 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
           <tbody className="divide-y-2 divide-[#f1f5f9]">
             {quote.quote_items?.map((item) => (
               <tr key={item.id} className="bg-white">
-                <td className="py-8 px-10">
-                  <p className="font-black text-[#0f172a] text-lg mb-1">{item.description}</p>
+                <td className="py-4 px-8">
+                  <p className="font-black text-[#0f172a] text-md mb-0.5">{item.description}</p>
                 </td>
-                <td className="py-8 px-6 text-center font-black text-[#475569] text-lg">{item.quantity}</td>
-                <td className="py-8 px-6 text-right font-black text-[#475569] text-lg">{item.unit_price.toLocaleString('fr-FR')} €</td>
-                <td className="py-8 px-10 text-right font-black text-[#0f172a] text-xl">{(item.total_ht ?? (item.quantity * item.unit_price)).toLocaleString('fr-FR')} €</td>
+                <td className="py-4 px-6 text-center font-black text-[#475569] text-md">{item.quantity}</td>
+                <td className="py-4 px-6 text-right font-black text-[#475569] text-md">{item.unit_price.toLocaleString('fr-FR')} €</td>
+                <td className="py-4 px-8 text-right font-black text-[#0f172a] text-lg">{(item.total_ht ?? (item.quantity * item.unit_price)).toLocaleString('fr-FR')} €</td>
               </tr>
             ))}
           </tbody>
@@ -89,7 +89,7 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
       </div>
 
       {/* TOTALS SECTION */}
-      <div className="flex justify-end mb-24 pr-10">
+      <div className="flex justify-end mb-12 pr-8">
         <div className="w-96 space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-[#94a3b8] uppercase text-xs font-black tracking-widest">Total Hors Taxes</span>
@@ -109,11 +109,11 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
       </div>
 
       {/* SIGNATURES - MAXIMUM VISIBILITY */}
-      <div className="grid grid-cols-2 gap-20 pt-20 border-t-4 border-dashed border-[#f1f5f9]">
-        <div className="space-y-8">
-          <p className="text-[#94a3b8] uppercase text-[10px] font-black tracking-[0.3em] text-center mb-4">Cachet & Signature Artisan</p>
-          <div className="h-64 bg-[#f8fafc] rounded-[2.5rem] border-4 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative shadow-inner group">
-            <div className="absolute top-4 left-6 bg-[#4f46e5]/10 text-[#4f46e5] text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Validation Professionnelle</div>
+      <div className="grid grid-cols-2 gap-8 pt-6 border-t-2 border-dashed border-[#f1f5f9]">
+        <div className="space-y-3">
+          <p className="text-[#94a3b8] uppercase text-[8px] font-black tracking-[0.2em] text-center mb-1">Signature Artisan</p>
+          <div className="h-32 bg-[#f8fafc] rounded-[1rem] border-2 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative">
+            <div className="absolute top-2 left-4 bg-[#4f46e5]/10 text-[#4f46e5] text-[7px] font-black px-2 py-0.5 rounded-full uppercase">Certifié</div>
             {quote.artisan_signature_url ? (
                <img 
                  src={quote.artisan_signature_url} 
@@ -122,17 +122,17 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
                  className="max-h-[85%] max-w-[85%] object-contain" 
                />
             ) : (
-               <div className="flex flex-col items-center gap-3 opacity-20">
-                 <div className="w-16 h-16 border-4 border-dashed border-[#cbd5e1] rounded-full" />
-                 <span className="italic text-[#cbd5e1] font-bold text-xs uppercase tracking-widest text-center">EN ATTENTE ARTISAN</span>
+               <div className="flex flex-col items-center gap-1 opacity-20">
+                 <div className="w-8 h-8 border-2 border-dashed border-[#cbd5e1] rounded-full" />
+                 <span className="text-[#cbd5e1] font-bold text-[8px]">ATTENTE</span>
                </div>
             )}
           </div>
         </div>
-        <div className="space-y-8">
-          <p className="text-[#94a3b8] uppercase text-[10px] font-black tracking-[0.3em] text-center mb-4">Acceptation Client ("Bon pour accord")</p>
-          <div className="h-64 bg-[#f8fafc] rounded-[2.5rem] border-4 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative shadow-inner">
-            <div className="absolute top-4 right-6 bg-emerald-100 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Accord Numérique Certifié</div>
+        <div className="space-y-3">
+          <p className="text-[#94a3b8] uppercase text-[8px] font-black tracking-[0.2em] text-center mb-1">Signature Client</p>
+          <div className="h-32 bg-[#f8fafc] rounded-[1rem] border-2 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative">
+            <div className="absolute top-2 right-4 bg-emerald-100 text-emerald-600 text-[7px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Accord</div>
             {quote.client_signature_url ? (
                <img 
                  src={quote.client_signature_url} 
@@ -141,12 +141,11 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
                  className="max-h-[85%] max-w-[85%] object-contain" 
                />
             ) : (
-               <div className="flex flex-col items-center gap-3 opacity-20">
-                 <div className="w-16 h-16 border-4 border-dashed border-[#cbd5e1] rounded-full" />
-                 <span className="italic text-[#cbd5e1] font-bold text-xs uppercase tracking-widest text-center">EN ATTENTE CLIENT</span>
+               <div className="flex flex-col items-center gap-1 opacity-20">
+                 <div className="w-8 h-8 border-2 border-dashed border-[#cbd5e1] rounded-full" />
+                 <span className="text-[#cbd5e1] font-bold text-[8px]">ATTENTE</span>
                </div>
             )}
-            <div className="absolute bottom-4 right-8 text-[7px] text-[#cbd5e1] font-black uppercase tracking-[0.2em]">AF-HASH: {quote.id.split('-')[0].toUpperCase()}</div>
           </div>
         </div>
       </div>

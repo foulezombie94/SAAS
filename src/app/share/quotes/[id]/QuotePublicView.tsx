@@ -540,12 +540,12 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
         left: '-9999px',
         top: 0,
         width: '1000px', 
-        padding: '80px',
+        padding: '50px',
         backgroundColor: '#ffffff',
         fontFamily: 'Helvetica, Arial, sans-serif',
         color: '#1e293b'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '80px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
            <div>
               <h2 style={{ fontSize: '14px', fontWeight: '900', color: '#002878', letterSpacing: '0.2em', textTransform: 'uppercase', margin: '0 0 4px 0' }}>{currentQuote.profiles?.company_name || 'Artisan Professionnel'}</h2>
               <p style={{ fontSize: '13px', fontWeight: '600', color: '#64748b', margin: 0 }}>ArtisanFlow SaaS Integration</p>
@@ -571,7 +571,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
            </h1>
         </div>
         
-        <div style={{ height: '4px', backgroundColor: currentQuote.status === 'paid' ? '#10b981' : '#002878', width: '100%', marginBottom: '80px', marginTop: '30px' }}></div>
+        <div style={{ height: '3px', backgroundColor: currentQuote.status === 'paid' ? '#10b981' : '#002878', width: '100%', marginBottom: '40px', marginTop: '20px' }}></div>
 
         <div style={{ display: 'flex', gap: '80px', marginBottom: '80px' }}>
            <div style={{ flex: 1, backgroundColor: '#f8fafc', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
