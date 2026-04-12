@@ -34,6 +34,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   const [notifications, setNotifications] = useState<QuoteNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [lastSeen, setLastSeen] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
   const [preferences, setPreferences] = useState<any>({
     quotes_expired: true,
     quotes_viewed: true,
@@ -112,7 +113,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         .from('profiles')
         .select('notification_preferences, last_seen_notifications_at')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
       
       if (profile) {
         const dbLastSeen = profile?.last_seen_notifications_at ?? null
@@ -152,6 +153,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     }
 
     fetchInitialData()
+    setIsMounted(true)
 
     // 🕒 Periodical sync (Invisible background)
     const interval = setInterval(() => {
@@ -319,7 +321,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   }
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, notifications, markAllAsRead, clearAllNotifications, refetchUnreadCount }}>
+    <NotificationContext.Provider value={{ unreadCount: isMounted ? unreadCount : 0, notifications, markAllAsRead, clearAllNotifications, refetchUnreadCount }}>
       {children}
       <audio ref={audioRef} src="/sounds/notification.mp3" preload="auto" />
     </NotificationContext.Provider>
