@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
     }
 
-    const { quoteId, subject, message } = result.data
+    const { quoteId, subject, message, to } = result.data
 
     // 0. RATE LIMITING (3 requests per minute per user)
     const limit = await rateLimit(`send-email-${user.id}`, 3, 60000)
@@ -152,7 +152,7 @@ export async function POST(req: Request) {
     try {
       await sendEmail(
         smtpConfig,
-        quote.clients.email,
+        to || quote.clients.email,
         subject || `Devis ${quote.number} - ${profile.company_name}`,
         htmlEmail,
         `${message}\n\nConsulter le devis ici : ${shareUrl}`

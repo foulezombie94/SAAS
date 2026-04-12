@@ -138,7 +138,7 @@ export async function sendQuoteEmailAction(rawData: unknown) {
   const parsed = QuoteEmailSchema.safeParse(rawData);
   if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message };
 
-  const { quoteId, subject, message } = parsed.data;
+  const { quoteId, subject, message, to } = parsed.data;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -156,7 +156,7 @@ export async function sendQuoteEmailAction(rawData: unknown) {
         'Content-Type': 'application/json',
         'Cookie': cookieStore.toString() // Forward auth cookies
       },
-      body: JSON.stringify({ quoteId, subject, message })
+      body: JSON.stringify({ quoteId, subject, message, to })
     });
 
     const result = await response.json();

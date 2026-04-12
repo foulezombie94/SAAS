@@ -79,6 +79,7 @@ export const QuoteAcceptSchema = z.object({
 // Schéma pour l'envoi d'un devis par email
 export const QuoteEmailSchema = z.object({
   quoteId: z.string().uuid("ID de devis invalide"),
+  to: z.string().email("Email destinataire invalide").optional(),
   subject: sanitizeString.min(5, "Le sujet doit faire au moins 5 caractères"),
   message: sanitizeString.min(10, "Le message doit faire au moins 10 caractères"),
 }).strict();
