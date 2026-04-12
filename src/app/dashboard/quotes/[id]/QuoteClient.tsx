@@ -62,6 +62,12 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     message: `Bonjour ${currentQuote.clients?.name},\n\nVeuillez trouver ci-joint notre proposition commerciale concernant votre projet.\n\nVous pouvez consulter, signer et payer ce devis directement en ligne via le bouton sécurisé ci-dessous.\n\nRestant à votre disposition pour toute question.`
   })
   const quoteRef = useRef<HTMLDivElement>(null)
+
+  // 🔄 Sync state with props when they change (e.g. from router.refresh())
+  React.useEffect(() => {
+    setCurrentQuote(quote)
+    if (quote.signature_url) setSignature(quote.signature_url)
+  }, [quote])
   
   // 🛡️ SECURITY GRADE 3 : Technical vs Commercial expiration
   const isTokenExpired = currentQuote.public_token_expires_at && new Date(currentQuote.public_token_expires_at) < new Date()
@@ -76,11 +82,28 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         { event: 'UPDATE', schema: 'public', table: 'quotes', filter: `id=eq.${quote.id}` },
         (payload: RealtimePostgresUpdatePayload<Quote>) => {
           const updated = payload.new as Quote
-          setCurrentQuote(prev => ({ ...prev, ...updated }))
+          console.log("⚡ [Realtime] Mise à jour du devis reçue :", updated.id, updated.status)
+          
+          setCurrentQuote(prev => {
+             // 🛡️ DÉDUPLICATION : Si on a déjà des données plus fraîches ou identiques, on évite le flash
+             if (prev.status === updated.status && prev.last_viewed_at === updated.last_viewed_at) return prev
+             return { ...prev, ...updated }
+          })
+
+          const showToast = (type: string, title: string, desc: string) => {
+            const key = `AF_EVT_${updated.id}_${type}`
+            if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
+              localStorage.setItem(key, Date.now().toString())
+              toast.success(title, { description: desc })
+            }
+          }
+
           if (updated.status === 'paid') {
-             toast.success("Le client vient de payer !", {
-               description: "Le devis est maintenant marqué comme payé en temps réel."
-             })
+             showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant marqué comme payé.`)
+          } else if (updated.status === 'accepted') {
+             showToast('signed', "✍️ Devis signé !", `Le client a validé le devis #${updated.number}.`)
+          } else if (updated.last_viewed_at && updated.last_viewed_at !== currentQuote.last_viewed_at) {
+             showToast('viewed', "👀 Devis consulté !", `Le client est en train de regarder le devis #${updated.number}.`)
           }
         }
       )
@@ -297,9 +320,14 @@ export function QuoteClient({ quote }: QuoteClientProps) {
 
       if (!result.success) throw new Error(result.error);
 
+      // 🚀 MISE À JOUR DIRECTE : Pas besoin d'attendre le refresh pour l'UI
       setSignature(result.signatureUrl || null)
+      setCurrentQuote(prev => ({ ...prev, status: 'accepted', signature_url: result.signatureUrl }))
       setIsSigning(false)
+      
       toast.success("Devis signé et approuvé !")
+      
+      // On déclenche quand même le refresh pour synchroniser les Server Components et le cache
       router.refresh()
     } catch (e: any) {
       toast.error("Échec de la signature : " + e.message)

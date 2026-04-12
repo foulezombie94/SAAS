@@ -105,14 +105,19 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     })
 
     // 2. Notification Logic
+    // 🛡️ REPLICA IDENTITY GUARD : If oldQuote only has ID, we might get false positives on every update.
+    // We rely on the fact that if it's a REAL status change or view change, the value MUST be different from what we might have in cache.
+    // However, the localStorage dedup AF_EVT is our best defense.
+    
     const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
     const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
+    // For viewed, we check if last_viewed_at is defined and different from old (if available)
     const isViewed = !!newQuote.last_viewed_at && (!oldQuote || newQuote.last_viewed_at !== oldQuote.last_viewed_at)
 
     console.log("🕵️ [Realtime] Analyse du changement :", { isPaid, isAccepted, isViewed })
 
     if (!isPaid && !isAccepted && !isViewed) {
-       console.log("ℹ️ [Realtime] Changement ignoré (pas de signature/paiement/vue)")
+       console.log("ℹ️ [Realtime] Changement ignoré (pas de signature/paiement/vue significative)")
        return
     }
 
@@ -144,7 +149,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     ) return
 
     // Toast UI
-    if (isViewed) toast.info("👀 Devis consulté !", { description: `Le devis #${newQuote.number} vient d'être ouvert.` })
+    if (isViewed) toast.info("👀 Devis consulté !", { description: `Le devis #${newQuote.number} vient d'être ouvert par le client.` })
     if (isPaid) toast.success("🎉 Paiement reçu !", { description: `Le devis #${newQuote.number} a été payé.` })
     if (isAccepted) toast.success("✍️ Devis signé !", { description: `Le devis #${newQuote.number} a été accepté.` })
 
