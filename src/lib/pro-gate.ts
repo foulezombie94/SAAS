@@ -35,12 +35,24 @@ export const verifyProAccess = cache(async () => {
 })
 
 /**
- * Middleware-like check for Server Actions or API Routes.
- * Throws an error if the user is not Pro.
+ * 🔒 SERVER ACTION GUARD
+ * 
+ * Recommended for Server Actions to avoid Next.js error masking in production.
+ * Returns an object instead of throwing internally.
  */
 export async function ensurePro() {
-  const { isPro } = await verifyProAccess()
-  if (!isPro) {
-    throw new Error('Cette fonctionnalité est réservée aux membres ArtisanFlow Pro. Veuillez mettre à niveau votre abonnement.')
+  const { isPro, error: authError } = await verifyProAccess()
+  
+  if (authError) {
+    return { isPro: false, error: authError }
   }
+
+  if (!isPro) {
+    return { 
+      isPro: false, 
+      error: 'Cette fonctionnalité est réservée aux membres ArtisanFlow Pro. Veuillez mettre à niveau votre abonnement.' 
+    }
+  }
+
+  return { isPro: true, error: null }
 }
