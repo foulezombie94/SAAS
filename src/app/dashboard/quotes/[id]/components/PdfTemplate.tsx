@@ -115,7 +115,12 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
           <div className="h-64 bg-[#f8fafc] rounded-[2.5rem] border-4 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative shadow-inner group">
             <div className="absolute top-4 left-6 bg-[#4f46e5]/10 text-[#4f46e5] text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Validation Professionnelle</div>
             {quote.artisan_signature_url ? (
-               <img src={quote.artisan_signature_url} alt="Signature Artisan" className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply scale-150 transition-transform duration-500" />
+               <img 
+                 src={quote.artisan_signature_url} 
+                 alt="Signature Artisan" 
+                 crossOrigin="anonymous"
+                 className="max-h-[85%] max-w-[85%] object-contain" 
+               />
             ) : (
                <div className="flex flex-col items-center gap-3 opacity-20">
                  <div className="w-16 h-16 border-4 border-dashed border-[#cbd5e1] rounded-full" />
@@ -129,7 +134,12 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
           <div className="h-64 bg-[#f8fafc] rounded-[2.5rem] border-4 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative shadow-inner">
             <div className="absolute top-4 right-6 bg-emerald-100 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Accord Numérique Certifié</div>
             {quote.client_signature_url ? (
-               <img src={quote.client_signature_url} alt="Signature Client" className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply scale-150" />
+               <img 
+                 src={quote.client_signature_url} 
+                 alt="Signature Client" 
+                 crossOrigin="anonymous"
+                 className="max-h-[85%] max-w-[85%] object-contain" 
+               />
             ) : (
                <div className="flex flex-col items-center gap-3 opacity-20">
                  <div className="w-16 h-16 border-4 border-dashed border-[#cbd5e1] rounded-full" />

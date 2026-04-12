@@ -621,18 +621,28 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
            </tbody>
         </table>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '40px' }}>
-           <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '40px', gap: '30px' }}>
+           <div style={{ flex: 1, display: 'flex', gap: '30px', alignItems: 'flex-end' }}>
+              {currentQuote.artisan_signature_url && (
+                 <div style={{ textAlign: 'left', flex: 1, backgroundColor: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <p style={{ fontSize: '9px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.1em' }}>Cachet & Signature Artisan</p>
+                    <img 
+                      src={currentQuote.artisan_signature_url} 
+                      alt="Artisan Signature" 
+                      crossOrigin="anonymous"
+                      style={{ height: '60px', objectFit: 'contain', display: 'block' }} 
+                    />
+                 </div>
+              )}
               {signature && (
-                 <div style={{ textAlign: 'left' }}>
-                    <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '10px' }}>Approuvé par le client</p>
+                 <div style={{ textAlign: 'left', flex: 1, backgroundColor: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <p style={{ fontSize: '9px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.1em' }}>Bon Pour Accord (Client)</p>
                     <img 
                       src={signature} 
                       alt="Client Signature" 
                       crossOrigin="anonymous"
-                      style={{ height: '100px', mixBlendMode: 'multiply' }} 
+                      style={{ height: '60px', objectFit: 'contain', display: 'block' }} 
                     />
-                    <p style={{ fontSize: '9px', fontStyle: 'italic', marginTop: '5px', color: '#94a3b8' }}>Signé numériquement le {new Date().toLocaleDateString()}</p>
                  </div>
               )}
            </div>
