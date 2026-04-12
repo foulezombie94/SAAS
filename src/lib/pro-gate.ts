@@ -2,25 +2,32 @@ import { createClient } from '@/utils/supabase/server'
 import { cache } from 'react'
 
 /**
- * Version de vérification mise en cache au niveau de la requête (Request-scoped cache).
- * Cela évite de solliciter la base de données 5 fois si 5 Server Actions sont appelées
- * dans le même cycle de rendu.
+ * 🛰️ PRO ACCESS VERIFIER (Grade 4)
+ * 
+ * Pattern: Request-scoped cache (deduplication).
+ * Note: cache() is valid ONLY within the React render tree ( RSC / Actions ).
+ * In Route Handlers (API routes), this will hit the DB directly each time.
  */
 export const verifyProAccess = cache(async () => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  
+  // 🛡️ Explicit Auth Check
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (!user) {
-    throw new Error('Non autorisé')
+  if (authError || !user) {
+    console.error('[AUTH ERROR] verifyProAccess:', authError?.message)
+    return { isPro: false, userId: null, error: 'User not found or session expired' }
   }
 
-  const { data: profile, error } = await supabase
+  // 🕵️ Profile Selection
+  const { data: profile, error: dbError } = await supabase
     .from('profiles')
     .select('is_pro')
     .eq('id', user.id)
     .single()
 
-  if (error || !profile) {
+  if (dbError || !profile) {
+    console.warn('[DB WARNING] verifyProAccess:', dbError?.message)
     return { isPro: false, userId: user.id }
   }
 

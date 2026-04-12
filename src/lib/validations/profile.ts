@@ -15,9 +15,6 @@ export const profileSchema = z.object({
   statement_descriptor: statementDescriptorSchema.optional().nullable(),
   legal_form: sanitizeString.optional().nullable(),
   tva_intra: sanitizeString.optional().nullable(),
-  iban: z.string().optional().nullable(),
-  bic: z.string().optional().nullable(),
-  bank_name: z.string().optional().nullable(),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;

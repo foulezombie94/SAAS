@@ -42,7 +42,7 @@ export const DataService = {
     const client = supabase || await createClient()
     const { data, error } = await client
       .from('profiles')
-      .select('id, first_name, last_name, company_name, email, address, phone, siret, iban, bic, bank_name, business_description, legal_form, tva_intra, statement_descriptor, is_pro, preferred_language')
+      .select('id, first_name, last_name, company_name, email, address, phone, siret, business_description, legal_form, tva_intra, statement_descriptor, is_pro, preferred_language')
       .eq('id', userId)
       .single()
     

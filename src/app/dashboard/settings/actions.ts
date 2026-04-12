@@ -13,7 +13,7 @@ export async function getProfile(): Promise<Profile | null> {
   // SÉCURITÉ : Filtrage strict des champs identité (Grade 3) 🛡️
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language, notification_preferences, business_description, statement_descriptor, legal_form, tva_intra, iban, bic, bank_name')
+    .select('id, email, full_name, first_name, last_name, company_name, address, siret, phone, is_pro, plan, stripe_customer_id, stripe_account_id, stripe_details_submitted, stripe_charges_enabled, preferred_language, notification_preferences, business_description, statement_descriptor, legal_form, tva_intra')
     .eq('id', user.id)
     .single()
 
@@ -36,7 +36,7 @@ export async function getSensitiveProfileData() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('smtp_host, smtp_port, smtp_user, smtp_from, iban, bic, bank_name')
+    .select('smtp_host, smtp_port, smtp_user, smtp_from')
     .eq('id', user.id)
     .single()
 
@@ -77,9 +77,6 @@ export async function updateProfile(formData: ProfileInput) {
       statement_descriptor: validatedData.statement_descriptor,
       legal_form: validatedData.legal_form,
       tva_intra: validatedData.tva_intra,
-      iban: validatedData.iban,
-      bic: validatedData.bic,
-      bank_name: validatedData.bank_name,
     })
     .eq('id', user.id)
 
