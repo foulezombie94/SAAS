@@ -172,6 +172,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           filter: `user_id=eq.${userId}`
         },
         async (payload) => {
+          console.log("🔔 [Realtime] Payload received:", payload)
           const newQuote = payload.new as QuoteRow
           const oldQuote = payload.old as QuoteRow 
 
@@ -249,7 +250,9 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           await refetchUnreadCount()
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log(`📡 [Realtime] Status (Activity):`, status)
+      })
 
     // 🚀 PROFILE SYNC
     const profileChannel = supabase
@@ -272,7 +275,9 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log(`📡 [Realtime] Status (Profile):`, status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
