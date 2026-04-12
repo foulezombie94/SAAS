@@ -48,11 +48,17 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
   // 1. Realtime Push (Synchronisation Instantanée God Tier)
   useEffect(() => {
     const channel = supabase
-      .channel('quotes-realtime')
+      .channel(`quotes-list-sync-${userId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'quotes', filter: `user_id=eq.${userId}` },
-        () => revalidate()
+        { event: '*', schema: 'public', table: 'quotes' },
+        (payload: any) => {
+          // 🛡️ Client-side filter for safety
+          if (payload.new && payload.new.user_id === userId) {
+            console.log("🔄 Realtime update for quotes list")
+            revalidate()
+          }
+        }
       )
       .subscribe()
 

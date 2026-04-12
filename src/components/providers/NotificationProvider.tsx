@@ -128,15 +128,13 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
 
       const ts = lastSeenVal || '1970-01-01'
-      // 🚀 FIX: Utilisation de OR pour voir les consultations ET les changements de statut
-      // Si on utilise AND, une simple consultation d'un devis "sent" n'apparaîtra jamais.
-      const filter = `or(and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts}))`
       
       const { data: quotes } = await sb
         .from('quotes')
         .select('*, clients(name)')
         .eq('user_id', userId)
-        .or(filter)
+        // 🚀 OR filter simplifié pour garantir la visibilité des consultations
+        .or(`updated_at.gt.${ts},last_viewed_at.gt.${ts}`)
         .order('updated_at', { ascending: false })
         .limit(10)
       
@@ -164,34 +162,39 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
     }, 5 * 60 * 1000)
 
-    // 🛡️ REALTIME (ADVANCED & SILENT)
+    // ⚡ SHOTGUN REALTIME (No filters, No barriers)
     const channel = supabase
-      .channel(`user-activity-v7-${userId}`)
+      .channel(`global-sync-v10-${userId}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*', // Listen to everything
           schema: 'public',
           table: 'quotes'
-          // 🛡️ REMOVAL OF SERVER-SIDE FILTER: More robust Realtime delivery
         },
         async (payload) => {
-          console.log("🔔 [Realtime] Payload received:", payload)
+          console.log("🔥 [SHOTGUN] Payload received:", payload)
+          
           const newQuote = payload.new as QuoteRow
           const oldQuote = payload.old as QuoteRow 
 
-          // 🛡️ JSON FILTER: Security & Relevance check
+          // 🛡️ JSON FILTER (Client-side): Security check
           if (newQuote.user_id !== userId) return
-
-          // 🚀 LIVE UI REFRESH (Force le ré-affichage des stats/listes sur le Dashboard)
-          router.refresh()
-          console.log("🔄 [Realtime] UI Refresh triggered")
+          
+          // 🚀 INSTANT SYNC (Dual Strategy)
+          console.log("🔄 [SHOTGUN] Triggering global UI refresh & revalidation...")
+          router.refresh() // Sync Server Components (Dashboard Stats)
+          window.dispatchEvent(new CustomEvent('app:revalidate')) // Sync Client Components (Quotes List)
 
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
-          const isViewed = !!newQuote.last_viewed_at && (!oldQuote || !oldQuote.last_viewed_at)
+          // Condition de vue assouplie : tout changement de last_viewed_at est une notification
+          const isViewed = !!newQuote.last_viewed_at && (!oldQuote || newQuote.last_viewed_at !== oldQuote.last_viewed_at)
           
-          if (!isPaid && !isAccepted && !isViewed) return
+          if (!isPaid && !isAccepted && !isViewed) {
+             console.log("ℹ️ [SHOTGUN] Event ignored (No status/view change)", { isPaid, isAccepted, isViewed })
+             return
+          }
 
           const eventType = isPaid ? 'paid' : isAccepted ? 'signed' : 'viewed'
           const staticKey = `AF_EVT_${newQuote.id}_${eventType}`

@@ -157,9 +157,18 @@ export function useSyncCache<T>(
     }
   }, [key, fetcher, enabled]) // ✅ Propre
 
-  // 3. Cycle de vie (Mount + Polling)
+  // 3. Cycle de vie (Mount + Polling + Global Sync)
   useEffect(() => {
     if (!enabled) return
+    
+    // 🚀 GLOBAL SYNC LISTENER
+    // Permet à n'importe quel composant (ex: NotificationProvider) de déclencher un refresh global
+    const handleGlobalRevalidate = () => {
+      console.log(`[SyncCache] Global revalidation triggered for "${key}"`)
+      revalidate(true)
+    }
+    
+    window.addEventListener('app:revalidate', handleGlobalRevalidate)
 
     if (isFirstMount.current) {
       revalidate()
@@ -172,9 +181,16 @@ export function useSyncCache<T>(
            revalidate()
         }
       }, refreshInterval)
-      return () => clearInterval(interval)
+      return () => {
+        window.removeEventListener('app:revalidate', handleGlobalRevalidate)
+        clearInterval(interval)
+      }
     }
-  }, [revalidate, refreshInterval, enabled])
+
+    return () => {
+      window.removeEventListener('app:revalidate', handleGlobalRevalidate)
+    }
+  }, [revalidate, refreshInterval, enabled, key])
 
   return { data: state, isSyncing, lastUpdated, revalidate }
 }
