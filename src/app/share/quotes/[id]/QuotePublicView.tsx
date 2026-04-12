@@ -86,6 +86,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
   // 🚀 REAL-TIME VIEW RECORDING
   useEffect(() => {
     const recordView = async () => {
+      console.log("👀 [View] Tentative d'enregistrement de la consultation...")
       try {
         const response = await fetch('/api/quotes/view', {
           method: 'POST',
@@ -95,9 +96,13 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
             publicToken 
           })
         })
-        if (!response.ok) console.warn('[View] Verification failed or token invalid')
+        if (!response.ok) {
+           console.warn('[View] Échec de la vérification (Token invalide ou déjà consulté)')
+        } else {
+           console.log("✅ [View] Consultation enregistrée avec succès.")
+        }
       } catch (err) {
-        console.error('[View] Error:', err)
+        console.error('[View] Erreur réseau :', err)
       }
     }
 
@@ -162,6 +167,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
 
   const handleSaveSignature = async (dataUrl: string) => {
     setIsSavingSignature(true)
+    console.log("✍️ [Signature] Début du processus d'acceptation...")
     try {
       // 1. Send signature to storage & update (via API)
       const response = await fetch('/api/quotes/accept', {
@@ -175,13 +181,16 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
         })
       })
 
+      console.log("📡 [Signature] Réponse brute du serveur :", response.status)
       const result = await response.json()
       
       if (!response.ok) {
+        console.error("❌ [Signature] Erreur serveur :", result)
         // En cas d'erreur 403, on affiche le code d'erreur RPC (ex: PUB-404, EXP-403)
         throw new Error(result.error + (result.details ? ` (${result.details})` : ""))
       }
       
+      console.log("✅ [Signature] Succès ! Redirection ou mise à jour UI...")
       setSignature(result.signatureUrl)
       if (result.invoiceId) setInvoiceId(result.invoiceId)
       setIsSigning(false)

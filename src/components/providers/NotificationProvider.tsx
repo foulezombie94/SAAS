@@ -27,6 +27,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children, userId }: { children: React.ReactNode, userId: string | null }) {
   const router = useRouter()
+  const [isRefreshing, startTransition] = React.useTransition()
   const [supabase] = useState(() => createClient())
   const [notifications, setNotifications] = useState<QuoteNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -42,7 +43,6 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const preferencesRef = useRef(preferences)
   const lastSeenRef = useRef(lastSeen)
-  const processedRef = useRef<string[]>([])
   const lastPlayedRef = useRef(0)
   const hasFetchedRef = useRef(false)
   const audioLockRef = useRef(false)
@@ -91,21 +91,50 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     const oldQuote = payload.old as QuoteRow
 
     // 1. Instant sync through Next.js (Server Components refresh)
-    console.log("🔄 [Realtime] Status change detected. Refreshing UI...")
-    router.refresh()
+    // 🚀 USE_TRANSITION : Empêche l'interface de "sauter" pendant le re-fetch serveur
+    console.log("🔥 [Realtime] Nouveau changement détecté sur un devis !", { 
+       id: newQuote?.id, 
+       status: newQuote?.status,
+       oldStatus: oldQuote?.status,
+       lastViewed: newQuote?.last_viewed_at 
+    })
+    
+    startTransition(() => {
+      console.log("🔄 [Realtime] Déclenchement du rafraîchissement global (Next.js)...")
+      router.refresh()
+    })
 
     // 2. Notification Logic
     const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
     const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
     const isViewed = !!newQuote.last_viewed_at && (!oldQuote || newQuote.last_viewed_at !== oldQuote.last_viewed_at)
 
-    if (!isPaid && !isAccepted && !isViewed) return
+    console.log("🕵️ [Realtime] Analyse du changement :", { isPaid, isAccepted, isViewed })
+
+    if (!isPaid && !isAccepted && !isViewed) {
+       console.log("ℹ️ [Realtime] Changement ignoré (pas de signature/paiement/vue)")
+       return
+    }
 
     const eventType = isPaid ? 'paid' : isAccepted ? 'signed' : 'viewed'
     const staticKey = `AF_EVT_${newQuote.id}_${eventType}`
     
-    if (typeof window !== 'undefined' && localStorage.getItem(staticKey)) return
-    if (typeof window !== 'undefined') localStorage.setItem(staticKey, Date.now().toString())
+    if (typeof window !== 'undefined' && localStorage.getItem(staticKey)) {
+       console.log("🛡️ [Realtime] Événement déjà traité (déduplication active)")
+       return
+    }
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(staticKey, Date.now().toString())
+      
+      // 🛡️ MEMORY LEAK PROTECTION : Nettoyage périodique du localStorage
+      // On ne garde que les 30 derniers événements pour éviter de saturer le stockage
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('AF_EVT_'))
+      if (keys.length > 30) {
+        const sorted = keys.sort((a, b) => Number(localStorage.getItem(a)) - Number(localStorage.getItem(b)))
+        keys.slice(0, keys.length - 30).forEach(k => localStorage.removeItem(k))
+      }
+    }
 
     const prefs = preferencesRef.current
     if (
@@ -132,13 +161,19 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     }
 
     // Update list state
-    const { data: fullQuote } = await supabase
+    console.log("📡 [Realtime] Récupération des détails complets du devis...")
+    const { data: fullQuote, error: fetchError } = await supabase
       .from('quotes')
       .select('*, clients(name)')
       .eq('id', newQuote.id)
       .single()
 
+    if (fetchError) {
+      console.error("❌ [Realtime] Erreur lors de la récupération des détails :", fetchError)
+    }
+
     if (fullQuote) {
+      console.log("✅ [Realtime] Détails récupérés avec succès. Mise à jour de la liste locale.")
       const validated = {
         ...fullQuote,
         clients: Array.isArray(fullQuote.clients) ? fullQuote.clients[0] : fullQuote.clients
