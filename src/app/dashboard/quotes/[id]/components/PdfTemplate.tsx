@@ -58,7 +58,6 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
         <div className="flex flex-col justify-center border-l-[4px] border-[#4f46e5] pl-6">
            <p className="text-[#94a3b8] text-[9px] font-black uppercase tracking-[0.2em] mb-1">Désignation du projet</p>
            <p className="text-lg font-black text-[#0f172a] leading-tight mb-1">Installation & Services Professionnels</p>
-           <p className="text-md text-[#4f46e5] font-black italic">Réf : #{quote.number}</p>
         </div>
       </div>
 
