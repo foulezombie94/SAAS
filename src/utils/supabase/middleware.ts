@@ -46,7 +46,11 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/onboarding') ||
     (request.nextUrl.pathname.startsWith('/api') && 
      !request.nextUrl.pathname.startsWith('/api/webhooks') && 
-     !request.nextUrl.pathname.startsWith('/api/revalidate-profile'))
+     !request.nextUrl.pathname.startsWith('/api/revalidate-profile') &&
+     !request.nextUrl.pathname.startsWith('/api/quotes/view') &&
+     !request.nextUrl.pathname.startsWith('/api/quotes/accept') &&
+     !request.nextUrl.pathname.startsWith('/api/quotes/public') &&
+     !request.nextUrl.pathname.startsWith('/api/payments/create-session'))
 
   // 🛡️ CAS 1 : Utilisateur NON connecté sur une route protégée
   if (!user && isProtectedPath) {
