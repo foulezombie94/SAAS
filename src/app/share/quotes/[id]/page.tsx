@@ -35,6 +35,7 @@ export default async function PublicQuotePage({
   }
 
   // Fetch ONLY the safe Artisan's Profile fields
+  const { data: profile } = await supabase
     .from('profiles')
     .select('id, company_name, address, siret, phone, email, legal_form, tva_intra, stripe_charges_enabled')
     .eq('id', quote.user_id)
