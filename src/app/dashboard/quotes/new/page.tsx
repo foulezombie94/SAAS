@@ -63,6 +63,7 @@ export default function NewQuotePage() {
   ])
   const [estimatedStartDate, setEstimatedStartDate] = useState('')
   const [estimatedDuration, setEstimatedDuration] = useState('')
+  const [validityMonths, setValidityMonths] = useState(1)
 
   // Stats
   const [totalHt, setTotalHt] = useState(0)
@@ -152,7 +153,13 @@ export default function NewQuotePage() {
         terms: "",
         notes: "",
         estimated_start_date: estimatedStartDate ? new Date(estimatedStartDate).toISOString() : null,
-        estimated_duration: estimatedDuration || ""
+        estimated_duration: estimatedDuration || "",
+        valid_until: (() => {
+          const d = new Date();
+          d.setMonth(d.getMonth() + validityMonths);
+          return d.toISOString();
+        })(),
+        payment_method: "Virement ou Carte Bancaire"
       };
 
       const result = await createQuoteAction(payload);
@@ -379,13 +386,31 @@ export default function NewQuotePage() {
             </div>
           </section>
 
-          <Card className="p-8 bg-white rounded-2xl shadow-sm flex flex-col items-center gap-4 text-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-outline-variant/10">
-              <Plus size={32} />
+          <Card className="p-8 bg-white rounded-2xl shadow-sm space-y-6">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <Clock className="text-primary/40" size={20} />
+              <h3 className="text-sm font-black text-primary uppercase tracking-tighter">Validité & Paiement</h3>
             </div>
-            <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest leading-relaxed">
-              Une fois validé, vous pourrez envoyer ce devis par email ou SMS à votre client.
-            </p>
+            
+            <div className="space-y-4 text-left">
+              <label className="text-[0.6875rem] font-black uppercase tracking-[0.1em] text-on-surface-variant/60">Durée de validité</label>
+              <select 
+                value={validityMonths}
+                onChange={(e) => setValidityMonths(Number(e.target.value))}
+                className="w-full h-12 bg-surface-container-low border-none rounded-xl px-4 font-black text-primary uppercase tracking-tighter focus:ring-2 focus:ring-primary/20"
+              >
+                <option value={1}>1 Mois</option>
+                <option value={2}>2 Mois</option>
+                <option value={3}>3 Mois</option>
+              </select>
+            </div>
+
+            <div className="pt-4 border-t border-slate-50">
+              <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest leading-relaxed text-center">
+                Mode de règlement accepté :<br/>
+                <span className="text-primary">Virement ou Carte Bancaire</span>
+              </p>
+            </div>
           </Card>
         </div>
       </div>

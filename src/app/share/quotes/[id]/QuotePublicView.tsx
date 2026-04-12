@@ -391,7 +391,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
              </div>
              <div className="space-y-1">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Validité</p>
-                <p className="font-bold text-[#002878]">30 Jours</p>
+                <p className="font-bold text-[#002878]">{currentQuote.valid_until ? Math.ceil((new Date(currentQuote.valid_until).getTime() - new Date(currentQuote.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30.44)) : 1} Mois</p>
              </div>
              <div className="space-y-1">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Début Estimé</p>
@@ -516,10 +516,11 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
           {/* Legal Footer */}
           <div className="pt-12 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-8">
              <div className="space-y-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#002878]">Informations Légales</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#002878]">Modalités & Règlement</p>
                 <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
-                   SIRET : {currentQuote.profiles?.siret || 'En cours d\'immatriculation'} | ID : {currentQuote.profiles?.id.slice(0, 8).toUpperCase()}<br />
-                   {currentQuote.status === 'paid' ? 'Règlement : Carte Bancaire (Payé)' : 'Règlement : Carte Bancaire / Virement'}
+                   Règlement par virement ou carte bancaire. <br/>
+                   En cas de retard, une pénalité de 3x le taux légal + 40€ d'indemnité sera appliquée.<br/>
+                   Offre valable jusqu'au {currentQuote.valid_until ? new Date(currentQuote.valid_until).toLocaleDateString() : 'N/A'}
                 </p>
              </div>
              <div className="md:text-right flex flex-col md:items-end justify-center">
@@ -593,11 +594,12 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
               </div>
               <div>
                  <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Validité</p>
-                 <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>30 Jours</p>
+                 <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>{currentQuote.valid_until ? new Date(currentQuote.valid_until).toLocaleDateString() : '30 Jours'}</p>
               </div>
               <div style={{ gridColumn: 'span 2', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-                 <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Mode de règlement</p>
-                 <p style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Virement Bancaire</p>
+                 <p style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Paiement & Pénalités</p>
+                 <p style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b', margin: 0 }}>Virement ou Carte Bancaire</p>
+                 <p style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>Pénalités de retard : 3x taux légal + 40€ frais recouv.</p>
               </div>
            </div>
         </div>
@@ -677,29 +679,13 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
                  <p style={{ margin: 0 }}>{currentQuote.tax_rate === 0 ? "TVA non applicable, art. 293 B du CGI" : `N° TVA : ${currentQuote.profiles?.tva_intra || 'Non renseigné'}`}</p>
               </div>
               <div style={{ flex: 1, textAlign: 'right' }}>
-                 <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Règlement & Coordonnées</p>
-                 {currentQuote.status === 'paid' ? (
-                     <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: 0, color: '#166534', fontWeight: '900', fontSize: '14px', letterSpacing: '0.05em' }}>✓ PAYÉ LE {new Date(currentQuote.updated_at || Date.now()).toLocaleDateString()}</p>
-                        <p style={{ margin: '4px 0 0 0', color: '#475569', fontSize: '10px' }}>Mode : {currentQuote.payment_method === 'card' ? 'Carte Bancaire' : 'Virement Bancaire'}</p>
-                        <p style={{ marginTop: '10px', fontSize: '9px', fontWeight: 'bold', color: '#94a3b8' }}>IBAN ARTISAN : {currentQuote.profiles?.iban || 'N/A'}</p>
-                     </div>
-                  ) : (
-                     <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: 0, fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>Mode attendu : Virement / Carte</p>
-                        {currentQuote.profiles?.iban && (
-                           <div style={{ marginTop: '12px', fontSize: '11px', color: '#1e293b', lineHeight: '1.6' }}>
-                              <p style={{ margin: 0 }}>IBAN : <span style={{ fontWeight: '900' }}>{currentQuote.profiles.iban}</span></p>
-                              <p style={{ margin: 0 }}>BIC : {currentQuote.profiles.bic || 'NON RENSEIGNÉ'}</p>
-                              <p style={{ margin: 0 }}>Banque : {currentQuote.profiles.bank_name || 'N/A'}</p>
-                           </div>
-                        )}
-                     </div>
-                  )}
-              </div>
+                  <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Règlement</p>
+                  <p style={{ margin: 0, fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>Virement ou Carte Bancaire</p>
+                  <p style={{ margin: '8px 0 0 0', color: '#94a3b8', fontSize: '10px', fontStyle: 'italic' }}>Merci d'indiquer la référence #{currentQuote.number} pour tout virement.</p>
+               </div>
            </div>
            <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '9px', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-              Offre valable 30 jours • Début estimé : {currentQuote.estimated_start_date ? new Date(currentQuote.estimated_start_date).toLocaleDateString() : 'À confirmer'} • Durée : {currentQuote.estimated_duration || 'Selon prestations'}
+              Offre valable jusqu'au {currentQuote.valid_until ? new Date(currentQuote.valid_until).toLocaleDateString() : '30 jours'} • Début estimé : {currentQuote.estimated_start_date ? new Date(currentQuote.estimated_start_date).toLocaleDateString() : 'À confirmer'} • Durée : {currentQuote.estimated_duration || 'Selon prestations'}
            </div>
         </div>
       </div>

@@ -99,9 +99,6 @@ export default function SettingsPage() {
         statement_descriptor: profile.statement_descriptor || '',
         legal_form: profile.legal_form || '',
         tva_intra: profile.tva_intra || '',
-        iban: profile.iban || '',
-        bic: profile.bic || '',
-        bank_name: profile.bank_name || '',
       })
       if (result.success) {
         toast.success('Paramètres enregistrés avec succès')
@@ -497,37 +494,10 @@ export default function SettingsPage() {
             ></textarea>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 pt-6">
-            <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Banque</label>
-              <input 
-                className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-2 text-sm transition-all" 
-                type="text" 
-                placeholder="Nom de la banque"
-                value={profile.bank_name || ''}
-                onChange={(e) => setProfile({...profile, bank_name: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">BIC / SWIFT</label>
-              <input 
-                className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-2 text-sm transition-all" 
-                type="text" 
-                placeholder="XXXX FR XX"
-                value={profile.bic || ''}
-                onChange={(e) => setProfile({...profile, bic: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">IBAN</label>
-              <input 
-                className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-2 text-sm transition-all" 
-                type="text" 
-                placeholder="FR76 ..."
-                value={profile.iban || ''}
-                onChange={(e) => setProfile({...profile, iban: e.target.value})}
-              />
-            </div>
+          <div className="pt-6 border-t border-slate-200">
+             <p className="text-[10px] text-slate-400 italic">
+               Note: Vos coordonnées bancaires (RIB) doivent être renseignées dans la note de bas de page ci-dessus si vous acceptez les virements.
+             </p>
           </div>
         </div>
 

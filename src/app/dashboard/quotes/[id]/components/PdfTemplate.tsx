@@ -95,17 +95,17 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
       {/* TOTALS & PAYMENT SECTION */}
       <div className="grid grid-cols-2 gap-8 mb-12">
         <div className="bg-[#f8fafc] p-6 rounded-[1.5rem] border-2 border-[#f1f5f9] flex flex-col justify-center">
-          <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.2em] mb-4">Coordonnées Bancaires (Règlement)</p>
-          {profile?.iban ? (
-            <div className="space-y-2">
-              <p className="text-xs font-black text-[#0f172a] uppercase tracking-wider">{profile.bank_name || 'RIB / SWIFT'}</p>
-              <p className="font-mono text-[10px] text-[#475569] bg-white p-2 rounded-lg border border-[#e2e8f0] break-all">{profile.iban}</p>
-              <p className="text-[10px] font-bold text-[#64748b]">BIC : {profile.bic || 'N/A'}</p>
+          <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.2em] mb-4">Conditions de règlement</p>
+          <div className="space-y-3">
+            <p className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Mode de paiement : <span className="text-[#4f46e5] ml-2">Virement ou Carte Bancaire</span></p>
+            <div className="pt-2 space-y-2 border-t border-[#e2e8f0]">
+              <p className="text-[9px] font-bold text-[#64748b] leading-relaxed">
+                • Règlement à réception du devis ou selon l'échéance convenue.<br/>
+                • En cas de retard de paiement, une pénalité de 3 fois le taux d'intérêt légal sera appliquée, ainsi qu'une indemnité forfaitaire de 40€ pour frais de recouvrement.<br/>
+                • Pour les virements, merci d'indiquer la référence <span className="text-[#0f172a]">#{quote.number}</span>.
+              </p>
             </div>
-          ) : (
-             <p className="text-[10px] font-bold text-[#ef4444]">Aucune coordonnée bancaire renseignée dans les réglages.</p>
-          )}
-          <p className="mt-4 text-[9px] font-bold text-[#64748b] italic">ⓘ Veuillez indiquer le numéro de devis #{quote.number} dans l'objet de votre virement.</p>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -168,12 +168,15 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
         </div>
       </div>
 
-      {/* FOOTER - LEGAL MENTIONS */}
-      <div className="mt-20 pt-8 border-t-2 border-[#f1f5f9] text-center">
-         <p className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-[0.2em] leading-loose">
-           {profile?.company_name} - {profile?.legal_form} au capital de [Capital] - SIRET : {profile?.siret} <br/>
-           {quote.tax_rate === 0 ? "TVA non applicable, art. 293 B du CGI" : `N° TVA Intracommunautaire : ${profile?.tva_intra || 'Non renseigné'}`} <br/>
-           Offre valable pendant 30 jours à compter de la date d'émission.
+      <div className="mt-16 pt-8 border-t-2 border-[#f1f5f9] text-center">
+         <p className="text-[9px] text-[#94a3b8] font-bold uppercase tracking-[0.2em] leading-loose max-w-2xl mx-auto">
+           {profile?.company_name && <span className="text-[#0f172a]">{profile.company_name}</span>}
+           {profile?.legal_form && <span className="mx-1">- {profile.legal_form}</span>}
+           {profile?.siret && <span> - SIRET : {profile.siret}</span>}
+           <br/>
+           {quote.tax_rate === 0 ? "TVA non applicable, art. 293 B du CGI" : `N° TVA Intracommunautaire : ${profile?.tva_intra || 'Non renseigné'}`}
+           <br/>
+           <span className="text-[#4f46e5]">Offre valable jusqu'au {quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('fr-FR') : '30 jours après émission'}</span>
          </p>
       </div>
     </div>
