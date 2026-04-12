@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Quote } from '@/types/dashboard'
+import { cn } from '@/lib/utils'
 
 // 🏗️ Sub-components
 import { QuoteHeader } from './components/QuoteHeader'
