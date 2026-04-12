@@ -128,8 +128,8 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
 
       const ts = lastSeenVal || '1970-01-01'
-      // Filtre : (status change) OR (view change)
-      const filter = `or(and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts}))`
+      // 🛡️ REVERT TO AND (Strict Sync)
+      const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts})`
       
       const { data: quotes } = await sb
         .from('quotes')
@@ -171,13 +171,16 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'quotes',
-          filter: `user_id=eq.${userId}`
+          table: 'quotes'
+          // 🛡️ REMOVAL OF SERVER-SIDE FILTER: More robust Realtime delivery
         },
         async (payload) => {
           console.log("🔔 [Realtime] Payload received:", payload)
           const newQuote = payload.new as QuoteRow
           const oldQuote = payload.old as QuoteRow 
+
+          // 🛡️ JSON FILTER: Security & Relevance check
+          if (newQuote.user_id !== userId) return
 
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
@@ -251,6 +254,9 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           // 2. RECONCILIATION DU COMPTE (Invalidation Strategy)
           // C'est le SEUL moyen de garantir que le badge est juste
           await refetchUnreadCount()
+
+          // 🚀 LIVE UI UPDATE: Raffraîchit le Dashboard (Stats, Listes Server-side)
+          router.refresh()
         }
       )
       .subscribe((status) => {
