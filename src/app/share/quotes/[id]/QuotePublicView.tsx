@@ -161,19 +161,15 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
         useCORS: true,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
-          // 🛡️ DO NOT remove link tags (keeps layout)
-          // Instead, inject a high-priority style block to force-safe colors
+          // 🛡️ ULTIMATE SAFETY: Injected styles to force compatibility
           const style = clonedDoc.createElement('style');
           style.innerHTML = `
-            #pdf-template {
-              font-family: Arial, Helvetica, sans-serif !important;
-            }
-            #pdf-template * {
-              border-color: #e2e8f0 !important;
-            }
+            #pdf-template { font-family: Arial, sans-serif !important; }
+            #pdf-template * { border-color: #e2e8f0 !important; }
           `;
           clonedDoc.head.appendChild(style);
 
+          // 1. Sanitize all style tags
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const s = styleTags[i];
@@ -183,6 +179,24 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
                 .replace(/oklch\([^)]*\)/g, '#1e293b')
                 .replace(/color-mix\([^)]*\)/g, '#1e293b');
             }
+          }
+
+          // 2. Comprehensive Computed Style Scan (Safest Method)
+          const allElements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < allElements.length; i++) {
+            const el = allElements[i] as HTMLElement;
+            try {
+              const comp = window.getComputedStyle(el);
+              if (comp.color?.includes('lab') || comp.color?.includes('oklch')) {
+                el.style.color = '#1e293b';
+              }
+              if (comp.backgroundColor?.includes('lab') || comp.backgroundColor?.includes('oklch')) {
+                el.style.backgroundColor = el.tagName === 'DIV' ? '#ffffff' : 'transparent';
+              }
+              if (comp.borderColor?.includes('lab') || comp.borderColor?.includes('oklch')) {
+                el.style.borderColor = '#e2e8f0';
+              }
+            } catch (e) {}
           }
         }
       })
