@@ -530,7 +530,6 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-        </div>
 
         {/* Payments Section */}
         <div className="md:col-span-6 bg-slate-50 rounded-xl p-8 flex flex-col gap-6">
