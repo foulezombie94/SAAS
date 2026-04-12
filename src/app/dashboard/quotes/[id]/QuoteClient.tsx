@@ -48,11 +48,13 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         <QuoteHeader 
           quote={currentQuote}
           isGeneratingPdf={loading.isGeneratingPdf}
+          isGeneratingExcel={loading.isGeneratingExcel}
           isGeneratingLink={loading.isGeneratingLink}
           isGeneratingInvoice={loading.isGeneratingInvoice}
           isTokenExpired={isTokenExpired}
           onPrint={handlers.handlePrint}
           onDownloadPdf={handlers.handleDownloadPdf}
+          onDownloadExcel={handlers.handleDownloadExcel}
           onCopyShareLink={handlers.handleCopyShareLink}
           onCreateInvoice={handlers.handleCreateInvoice}
         />

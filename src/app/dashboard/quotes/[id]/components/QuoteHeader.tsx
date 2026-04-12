@@ -8,7 +8,8 @@ import {
   Share2, 
   ArrowLeft,
   Loader2,
-  FileCheck
+  FileCheck,
+  Table as TableIcon
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -16,11 +17,13 @@ import { cn } from '@/lib/utils'
 interface QuoteHeaderProps {
   quote: Quote
   isGeneratingPdf: boolean
+  isGeneratingExcel: boolean
   isGeneratingLink: boolean
   isGeneratingInvoice: boolean
   isTokenExpired: boolean | null
   onPrint: () => void
   onDownloadPdf: () => void
+  onDownloadExcel: () => void
   onCopyShareLink: () => void
   onCreateInvoice: () => void
 }
@@ -28,11 +31,13 @@ interface QuoteHeaderProps {
 export function QuoteHeader({
   quote,
   isGeneratingPdf,
+  isGeneratingExcel,
   isGeneratingLink,
   isGeneratingInvoice,
   isTokenExpired,
   onPrint,
   onDownloadPdf,
+  onDownloadExcel,
   onCopyShareLink,
   onCreateInvoice
 }: QuoteHeaderProps) {
@@ -70,7 +75,6 @@ export function QuoteHeader({
               Devis {quote.number}
             </h1>
             <div className="flex items-center gap-2">
-              {/* Fallback for missing Badge component */}
               <div className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm", statusConfig.class)}>
                 {statusConfig.label}
               </div>
@@ -93,6 +97,8 @@ export function QuoteHeader({
           <Printer className="w-4 h-4 mr-2" />
           Imprimer
         </Button>
+        
+        {/* BOUTON PDF */}
         <Button 
           variant="outline" 
           disabled={isGeneratingPdf}
@@ -102,6 +108,18 @@ export function QuoteHeader({
           {isGeneratingPdf ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
           PDF
         </Button>
+
+        {/* BOUTON EXCEL */}
+        <Button 
+          variant="outline" 
+          disabled={isGeneratingExcel}
+          onClick={onDownloadExcel}
+          className="h-10 px-4 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 shadow-sm transition-all"
+        >
+          {isGeneratingExcel ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <TableIcon className="w-4 h-4 mr-2" />}
+          Excel
+        </Button>
+
         <Button 
           variant="outline" 
           disabled={isGeneratingLink}
@@ -109,7 +127,7 @@ export function QuoteHeader({
           className="h-10 px-4 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 shadow-sm transition-all"
         >
           {isGeneratingLink ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Share2 className="w-4 h-4 mr-2" />}
-          Lien de partage
+          Partage
         </Button>
 
         {quote.status === 'accepted' && (
@@ -119,7 +137,7 @@ export function QuoteHeader({
             className="h-10 px-5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 transition-all ml-2"
           >
             {isGeneratingInvoice ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileCheck className="w-4 h-4 mr-2" />}
-            Générer Facture
+            Facturer
           </Button>
         )}
       </div>

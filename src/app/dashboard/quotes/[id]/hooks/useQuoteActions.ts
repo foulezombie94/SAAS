@@ -37,11 +37,32 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
 
     try {
       setIsGeneratingPdf(true)
+      
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc) => {
+          // 🛡️ CRITICAL FIX: html2canvas v1.4.1 doesn't support modern CSS color functions like lab() or oklch()
+          // These are often introduced by Tailwind v4 or modern browser defaults.
+          // We must purge these from the cloned document's head to prevent the parser from crashing.
+          const styleTags = clonedDoc.getElementsByTagName('style');
+          for (let i = 0; i < styleTags.length; i++) {
+            const style = styleTags[i];
+            if (style.innerHTML.includes('lab(') || style.innerHTML.includes('oklch(')) {
+              // Replace with simple fallback or remove
+              style.innerHTML = style.innerHTML.replace(/lab\([^)]+\)/g, '#000000');
+              style.innerHTML = style.innerHTML.replace(/oklch\([^)]+\)/g, '#000000');
+            }
+          }
+          
+          // Also check inline styles on the target element
+          const template = clonedDoc.getElementById('pdf-template');
+          if (template) {
+            template.style.fontFamily = 'Arial, sans-serif'; // Use standard font for PDF
+          }
+        }
       })
       
       const imgData = canvas.toDataURL('image/png')
