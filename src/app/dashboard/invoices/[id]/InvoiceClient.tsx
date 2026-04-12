@@ -44,13 +44,14 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
       const { jsPDF } = await import('jspdf')
       const html2canvas = (await import('html2canvas')).default
 
-      // 🛡️ AGGRESSIVE CLEANUP: Temporarily sanitize ALL real document styles 
-      // (Bypasses html2canvas parser crashing on modern CSS colors)
+      // 🛡️ REFINED CLEANUP: Temporarily sanitize styles without breaking layout
       const allStyles = Array.from(document.querySelectorAll('style'));
       const originalContents = allStyles.map(s => s.innerHTML);
       allStyles.forEach(s => {
         if (s.innerHTML.includes('lab(') || s.innerHTML.includes('oklch(')) {
-          s.innerHTML = s.innerHTML.replace(/lab\([^)]*\)/g, '#000').replace(/oklch\([^)]*\)/g, '#000');
+          s.innerHTML = s.innerHTML
+            .replace(/lab\([^)]*\)/g, '#1e293b')
+            .replace(/oklch\([^)]*\)/g, '#1e293b');
         }
       });
 
@@ -59,39 +60,33 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
         useCORS: true,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
-          // Remove external stylesheets to prevent fetch parsing failures
-          const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
-          links.forEach(l => l.remove());
+          // 🛡️ DO NOT remove link tags (keeps layout)
+          // Instead, inject a high-priority style block to force-safe colors
+          const style = clonedDoc.createElement('style');
+          style.innerHTML = `
+            #pdf-template {
+              font-family: Arial, Helvetica, sans-serif !important;
+            }
+            #pdf-template * {
+              border-color: #e2e8f0 !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
 
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
-            const style = styleTags[i];
-            if (style.innerHTML) {
-              style.innerHTML = style.innerHTML
-                .replace(/lab\([^)]*\)/g, '#000000')
-                .replace(/oklch\([^)]*\)/g, '#000000')
-                .replace(/color-mix\([^)]*\)/g, '#000000');
-            }
-          }
-          const allElements = clonedDoc.getElementsByTagName('*');
-          for (let i = 0; i < allElements.length; i++) {
-            const el = allElements[i] as HTMLElement;
-            if (el.style) {
-              if (el.style.color?.includes('lab') || el.style.color?.includes('oklch')) {
-                el.style.color = '#1e293b';
-              }
-              if (el.style.backgroundColor?.includes('lab') || el.style.backgroundColor?.includes('oklch')) {
-                el.style.backgroundColor = '#ffffff';
-              }
-              if (el.style.borderColor?.includes('lab') || el.style.borderColor?.includes('oklch')) {
-                el.style.borderColor = '#e2e8f0';
-              }
+            const s = styleTags[i];
+            if (s.innerHTML) {
+              s.innerHTML = s.innerHTML
+                .replace(/lab\([^)]*\)/g, '#1e293b')
+                .replace(/oklch\([^)]*\)/g, '#1e293b')
+                .replace(/color-mix\([^)]*\)/g, '#1e293b');
             }
           }
         }
       })
       
-      // 🔄 RESTORE original styles in the real DOM immediately
+      // 🔄 RESTORE original styles in the real DOM
       allStyles.forEach((s, i) => { s.innerHTML = originalContents[i]; });
 
       const imgData = canvas.toDataURL('image/png', 1.0)
