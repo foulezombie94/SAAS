@@ -726,7 +726,15 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
           </Button>
         )}
       </div>
+      </div>
 
+      {isSigning && (
+        <SignaturePad 
+          onSave={handleSaveSignature} 
+          onCancel={() => setIsSigning(false)} 
+          isLoading={isSavingSignature}
+        />
+      )}
     </>
   )
 }
