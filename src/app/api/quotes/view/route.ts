@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
+import { revalidatePath } from 'next/cache'
 
 export async function POST(req: Request) {
   try {
@@ -33,6 +34,9 @@ export async function POST(req: Request) {
     if (error || !data) {
       return NextResponse.json({ error: 'Accès refusé ou lien expiré' }, { status: 403 })
     }
+
+    // 🚀 Invalidation Cache Global pour le Dashboard
+    revalidatePath('/dashboard', 'layout')
 
     return NextResponse.json({ success: true })
 

@@ -51,13 +51,15 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
       .channel(`quotes-list-sync-${userId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'quotes' },
-        (payload: any) => {
-          // 🛡️ Client-side filter for safety
-          if (payload.new && payload.new.user_id === userId) {
-            console.log("🔄 Realtime update for quotes list")
-            revalidate()
-          }
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'quotes', 
+          filter: `user_id=eq.${userId}` 
+        },
+        () => {
+          console.log("🔄 Realtime update for quotes list")
+          revalidate()
         }
       )
       .subscribe()

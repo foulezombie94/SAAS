@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
-const CACHE_VERSION = 'v1.1'
-const DEFAULT_TTL = 1000 * 60 * 30 // 30 minutes
+const CACHE_VERSION = 'v1.4'
+const DEFAULT_TTL = 1000 * 60 * 60 // 1 hour
 
 interface CacheEnvelope<T> {
   data: T
@@ -157,18 +157,18 @@ export function useSyncCache<T>(
     }
   }, [key, fetcher, enabled]) // ✅ Propre
 
-  // 3. Cycle de vie (Mount + Polling + Global Sync)
+  // 3. Sync with Server Props (Essential for Next.js router.refresh())
+  useEffect(() => {
+    // Si les données initiales (venant du serveur) changent, on met à jour l'état local
+    // Cela permet à router.refresh() de fonctionner correctement avec ce hook.
+    if (initialData !== undefined && initialData !== null) {
+      setState(initialData)
+    }
+  }, [initialData])
+
+  // 4. Cycle de vie (Mount + Polling)
   useEffect(() => {
     if (!enabled) return
-    
-    // 🚀 GLOBAL SYNC LISTENER
-    // Permet à n'importe quel composant (ex: NotificationProvider) de déclencher un refresh global
-    const handleGlobalRevalidate = () => {
-      console.log(`[SyncCache] Global revalidation triggered for "${key}"`)
-      revalidate(true)
-    }
-    
-    window.addEventListener('app:revalidate', handleGlobalRevalidate)
 
     if (isFirstMount.current) {
       revalidate()
@@ -181,16 +181,9 @@ export function useSyncCache<T>(
            revalidate()
         }
       }, refreshInterval)
-      return () => {
-        window.removeEventListener('app:revalidate', handleGlobalRevalidate)
-        clearInterval(interval)
-      }
+      return () => clearInterval(interval)
     }
-
-    return () => {
-      window.removeEventListener('app:revalidate', handleGlobalRevalidate)
-    }
-  }, [revalidate, refreshInterval, enabled, key])
+  }, [revalidate, refreshInterval, enabled])
 
   return { data: state, isSyncing, lastUpdated, revalidate }
 }
