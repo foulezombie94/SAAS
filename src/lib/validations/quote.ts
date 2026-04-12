@@ -45,6 +45,8 @@ export const QuoteInsertSchema = z.object({
   payment_details: PaymentDetailsSchema.nullable().optional(),
   payment_method: z.string().nullable().optional(),
   valid_until: z.string().datetime().nullable().optional(),
+  estimated_start_date: z.string().datetime().nullable().optional(),
+  estimated_duration: z.string().nullable().optional(),
   items: z.array(QuoteItemInsertSchema).min(1, "Le devis doit contenir au moins une prestation")
 }).strict().superRefine((data, ctx) => {
   const epsilon = 0.01;

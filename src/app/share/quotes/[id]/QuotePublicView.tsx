@@ -349,11 +349,16 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
                  <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Artisan</p>
                     <h2 className="text-xl font-black text-[#002878] uppercase">{currentQuote.profiles?.company_name || 'Artisan Professionnel'}</h2>
+                    {currentQuote.profiles?.legal_form && <p className="text-[9px] font-black text-[#002878]/60 uppercase tracking-tighter">{currentQuote.profiles.legal_form}</p>}
                  </div>
               </div>
               <div className="pl-14 space-y-1">
                  <p className="text-sm font-bold text-slate-600 flex items-center gap-2"><MapPin size={14} /> {currentQuote.profiles?.address}</p>
-                 <p className="text-sm font-bold text-slate-400">France • Certifié ArtisanFlow</p>
+                 <div className="pt-2 grid grid-cols-1 gap-1 text-[10px] font-bold text-slate-400">
+                    <p>SIRET : <span className="text-slate-600">{currentQuote.profiles?.siret || 'N/A'}</span></p>
+                    <p>TVA : <span className="text-slate-600">{currentQuote.profiles?.tva_intra || 'N/A'}</span></p>
+                    <p>Tél : <span className="text-slate-600">{currentQuote.profiles?.phone || 'N/A'}</span></p>
+                 </div>
               </div>
             </div>
             
@@ -389,12 +394,12 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
                 <p className="font-bold text-[#002878]">30 Jours</p>
              </div>
              <div className="space-y-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Paiement</p>
-                <p className="font-bold text-[#002878]">Virement</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Début Estimé</p>
+                <p className="font-bold text-[#002878]">{currentQuote.estimated_start_date ? new Date(currentQuote.estimated_start_date).toLocaleDateString() : 'À confirmer'}</p>
              </div>
-             <div className="space-y-1 col-span-2 md:col-span-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Réf. Projet</p>
-                <p className="font-bold text-[#002878] truncate">Rénovation - {currentQuote.clients?.city}</p>
+             <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Durée</p>
+                <p className="font-bold text-[#002878]">{currentQuote.estimated_duration || 'Selon devis'}</p>
              </div>
           </div>
 
@@ -662,16 +667,17 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
            </div>
         </div>
 
-        <div style={{ marginTop: '100px', borderTop: '1px solid #e2e8f0', paddingTop: '40px' }}>
+        <div style={{ marginTop: '80px', borderTop: '1px solid #e2e8f0', paddingTop: '40px' }}>
            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', lineHeight: '1.8' }}>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1.5 }}>
                  <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Informations Légales</p>
+                 <p style={{ margin: 0 }}>{currentQuote.profiles?.company_name} - {currentQuote.profiles?.legal_form}</p>
+                 <p style={{ margin: 0 }}>Siège Social : {currentQuote.profiles?.address}</p>
                  <p style={{ margin: 0 }}>SIRET : {currentQuote.profiles?.siret || 'En cours d\'immatriculation'}</p>
-                 <p style={{ margin: 0 }}>ID Artisan : {currentQuote.profiles?.id.slice(0, 8).toUpperCase()}</p>
-                 <p style={{ margin: 0 }}>Document généré par ArtisanFlow SaaS.</p>
+                 <p style={{ margin: 0 }}>{currentQuote.tax_rate === 0 ? "TVA non applicable, art. 293 B du CGI" : `N° TVA : ${currentQuote.profiles?.tva_intra || 'Non renseigné'}`}</p>
               </div>
               <div style={{ flex: 1, textAlign: 'right' }}>
-                 <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Règlement</p>
+                 <p style={{ fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Règlement & Coordonnées</p>
                  {currentQuote.status === 'paid' ? (
                      <div style={{ textAlign: 'right' }}>
                         <p style={{ margin: 0, color: '#166534', fontWeight: '900', fontSize: '14px', letterSpacing: '0.05em' }}>✓ PAYÉ LE {new Date(currentQuote.updated_at || Date.now()).toLocaleDateString()}</p>
@@ -685,11 +691,15 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
                            <div style={{ marginTop: '12px', fontSize: '11px', color: '#1e293b', lineHeight: '1.6' }}>
                               <p style={{ margin: 0 }}>IBAN : <span style={{ fontWeight: '900' }}>{currentQuote.profiles.iban}</span></p>
                               <p style={{ margin: 0 }}>BIC : {currentQuote.profiles.bic || 'NON RENSEIGNÉ'}</p>
+                              <p style={{ margin: 0 }}>Banque : {currentQuote.profiles.bank_name || 'N/A'}</p>
                            </div>
                         )}
                      </div>
                   )}
               </div>
+           </div>
+           <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '9px', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+              Offre valable 30 jours • Début estimé : {currentQuote.estimated_start_date ? new Date(currentQuote.estimated_start_date).toLocaleDateString() : 'À confirmer'} • Durée : {currentQuote.estimated_duration || 'Selon prestations'}
            </div>
         </div>
       </div>

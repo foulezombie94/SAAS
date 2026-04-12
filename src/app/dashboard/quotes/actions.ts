@@ -45,7 +45,9 @@ export async function createQuoteAction(rawData: unknown) {
       p_items: data.items as any,
       p_payment_details: (data.payment_details || undefined) as any,
       p_payment_method: data.payment_method || undefined,
-      p_valid_until: data.valid_until || undefined
+      p_valid_until: data.valid_until || undefined,
+      p_estimated_start_date: data.estimated_start_date || undefined,
+      p_estimated_duration: data.estimated_duration || undefined
     });
 
     if (rpcError) {

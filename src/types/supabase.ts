@@ -261,6 +261,8 @@ export type Database = {
           notification_preferences: Json | null
           business_description: string | null
           statement_descriptor: string | null
+          legal_form: string | null
+          tva_intra: string | null
         }
         Insert: {
           address?: string | null
@@ -404,6 +406,8 @@ export type Database = {
           user_id: string
           valid_until: string | null
           last_viewed_at: string | null
+          estimated_start_date: string | null
+          estimated_duration: string | null
         }
         Insert: {
           client_id: string

@@ -97,6 +97,11 @@ export default function SettingsPage() {
         preferred_language: (profile.preferred_language as 'fr' | 'en' | 'es') || 'fr',
         business_description: profile.business_description || '',
         statement_descriptor: profile.statement_descriptor || '',
+        legal_form: profile.legal_form || '',
+        tva_intra: profile.tva_intra || '',
+        iban: profile.iban || '',
+        bic: profile.bic || '',
+        bank_name: profile.bank_name || '',
       })
       if (result.success) {
         toast.success('Paramètres enregistrés avec succès')
@@ -234,6 +239,32 @@ export default function SettingsPage() {
                 type="text"
                 value={profile.siret || ''}
                 onChange={(e) => setProfile({...profile, siret: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Forme Juridique</label>
+              <select 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm outline-none"
+                value={profile.legal_form || ''}
+                onChange={(e) => setProfile({...profile, legal_form: e.target.value})}
+              >
+                <option value="">Sélectionner...</option>
+                <option value="EI">EI (Auto-entrepreneur)</option>
+                <option value="SASU">SASU</option>
+                <option value="SARL">SARL / EURL</option>
+                <option value="SAS">SAS</option>
+                <option value="SA">SA</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">N° TVA Intracommunautaire</label>
+              <input 
+                className="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-[#00236f] focus:ring-0 px-0 py-2 transition-all font-medium text-sm" 
+                placeholder="FR 12 345678901" 
+                type="text"
+                value={profile.tva_intra || ''}
+                onChange={(e) => setProfile({...profile, tva_intra: e.target.value})}
               />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -465,6 +496,40 @@ export default function SettingsPage() {
               defaultValue="Le règlement des factures est attendu à réception."
             ></textarea>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 pt-6">
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Banque</label>
+              <input 
+                className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-2 text-sm transition-all" 
+                type="text" 
+                placeholder="Nom de la banque"
+                value={profile.bank_name || ''}
+                onChange={(e) => setProfile({...profile, bank_name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">BIC / SWIFT</label>
+              <input 
+                className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-2 text-sm transition-all" 
+                type="text" 
+                placeholder="XXXX FR XX"
+                value={profile.bic || ''}
+                onChange={(e) => setProfile({...profile, bic: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">IBAN</label>
+              <input 
+                className="w-full bg-white border border-slate-200 rounded-lg focus:border-[#00236f] focus:ring-2 focus:ring-blue-100 p-2 text-sm transition-all" 
+                type="text" 
+                placeholder="FR76 ..."
+                value={profile.iban || ''}
+                onChange={(e) => setProfile({...profile, iban: e.target.value})}
+              />
+            </div>
+          </div>
+        </div>
         </div>
 
         {/* Payments Section */}

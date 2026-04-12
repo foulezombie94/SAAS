@@ -23,6 +23,7 @@ import {
   FileText,
   PersonStanding,
   ListPlus,
+  Clock,
   Send
 } from 'lucide-react'
 import Link from 'next/link'
@@ -60,6 +61,8 @@ export default function NewQuotePage() {
   const [items, setItems] = useState<QuoteItem[]>([
     { id: '1', description: '', quantity: 1, unit_price: 0, total: 0 }
   ])
+  const [estimatedStartDate, setEstimatedStartDate] = useState('')
+  const [estimatedDuration, setEstimatedDuration] = useState('')
 
   // Stats
   const [totalHt, setTotalHt] = useState(0)
@@ -147,7 +150,9 @@ export default function NewQuotePage() {
         })),
         description: "", // Added to satisfy validation
         terms: "",
-        notes: ""
+        notes: "",
+        estimated_start_date: estimatedStartDate ? new Date(estimatedStartDate).toISOString() : null,
+        estimated_duration: estimatedDuration || ""
       };
 
       const result = await createQuoteAction(payload);
@@ -235,6 +240,34 @@ export default function NewQuotePage() {
                      <option key={c.id} value={c.id}>{c.name} ({c.email || 'Pas d\'email'})</option>
                   ))}
                </select>
+            </div>
+
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="space-y-4">
+                  <label className="text-[0.6875rem] font-black uppercase tracking-[0.1em] text-on-surface-variant/60">Date de début estimée</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 text-primary/40" size={20} />
+                    <input 
+                      type="date"
+                      value={estimatedStartDate}
+                      onChange={(e) => setEstimatedStartDate(e.target.value)}
+                      className="w-full h-16 bg-surface-container-low border-none rounded-xl pl-16 pr-6 font-black text-primary uppercase tracking-tighter focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+               </div>
+               <div className="space-y-4">
+                  <label className="text-[0.6875rem] font-black uppercase tracking-[0.1em] text-on-surface-variant/60">Durée estimée des travaux</label>
+                  <div className="relative">
+                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-primary/40" size={20} />
+                    <input 
+                      type="text"
+                      placeholder="Ex: 5 jours, 2 semaines..."
+                      value={estimatedDuration}
+                      onChange={(e) => setEstimatedDuration(e.target.value)}
+                      className="w-full h-16 bg-surface-container-low border-none rounded-xl pl-16 pr-6 font-black text-primary uppercase tracking-tighter focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+               </div>
             </div>
           </section>
 

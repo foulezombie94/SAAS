@@ -23,10 +23,15 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
           </div>
           <div className="text-sm space-y-2">
             <h3 className="font-black text-[#0f172a] text-xl">{profile?.company_name}</h3>
-            <p className="text-[#475569] font-medium whitespace-pre-line leading-relaxed max-w-sm">{profile?.address}</p>
-            <div className="pt-4 space-y-1 font-bold text-[#1e293b]">
-              <p>Email : {profile?.email}</p>
-              <p>Mobile : {profile?.phone}</p>
+            <p className="text-[#475569] font-medium whitespace-pre-line leading-relaxed max-w-sm">
+              {profile?.legal_form && <span className="font-black text-[#0f172a] block">{profile.legal_form}</span>}
+              {profile?.address}
+            </p>
+            <div className="pt-2 grid grid-cols-2 gap-x-4 gap-y-1 font-bold text-[#475569] text-xs">
+              <p>SIRET : <span className="text-[#0f172a]">{profile?.siret || 'Non renseigné'}</span></p>
+              <p>TVA : <span className="text-[#0f172a]">{profile?.tva_intra || 'Non renseigné'}</span></p>
+              <p>Email : <span className="text-[#0f172a]">{profile?.email}</span></p>
+              <p>Tél : <span className="text-[#0f172a]">{profile?.phone}</span></p>
             </div>
           </div>
         </div>
@@ -87,18 +92,32 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
         </table>
       </div>
 
-      {/* TOTALS SECTION */}
-      <div className="flex justify-end mb-12 pr-8">
-        <div className="w-96 space-y-4">
+      {/* TOTALS & PAYMENT SECTION */}
+      <div className="grid grid-cols-2 gap-8 mb-12">
+        <div className="bg-[#f8fafc] p-6 rounded-[1.5rem] border-2 border-[#f1f5f9] flex flex-col justify-center">
+          <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.2em] mb-4">Coordonnées Bancaires (Règlement)</p>
+          {profile?.iban ? (
+            <div className="space-y-2">
+              <p className="text-xs font-black text-[#0f172a] uppercase tracking-wider">{profile.bank_name || 'RIB / SWIFT'}</p>
+              <p className="font-mono text-[10px] text-[#475569] bg-white p-2 rounded-lg border border-[#e2e8f0] break-all">{profile.iban}</p>
+              <p className="text-[10px] font-bold text-[#64748b]">BIC : {profile.bic || 'N/A'}</p>
+            </div>
+          ) : (
+             <p className="text-[10px] font-bold text-[#ef4444]">Aucune coordonnée bancaire renseignée dans les réglages.</p>
+          )}
+          <p className="mt-4 text-[9px] font-bold text-[#64748b] italic">ⓘ Veuillez indiquer le numéro de devis #{quote.number} dans l'objet de votre virement.</p>
+        </div>
+
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <span className="text-[#94a3b8] uppercase text-xs font-black tracking-widest">Total Hors Taxes</span>
+            <span className="text-[#94a3b8] uppercase text-xs font-black tracking-widest">Total HT</span>
             <span className="font-black text-xl text-[#475569]">{quote.total_ht.toLocaleString('fr-FR')} €</span>
           </div>
           <div className="flex justify-between items-center pb-6 border-b-2 border-[#f1f5f9]">
             <span className="text-[#94a3b8] uppercase text-xs font-black tracking-widest">TVA ({quote.tax_rate}%)</span>
             <span className="font-black text-xl text-[#475569]">{(quote.total_ttc - quote.total_ht).toLocaleString('fr-FR')} €</span>
           </div>
-          <div className="flex justify-between items-center pt-4">
+          <div className="flex justify-between items-center pt-2">
             <span className="font-black uppercase text-xs tracking-[0.2em] text-[#0f172a]">Net à Payer TTC</span>
             <span className="text-5xl font-black text-[#4f46e5]">
               {quote.total_ttc.toLocaleString('fr-FR')} <span className="text-2xl ml-1">€</span>
@@ -150,11 +169,11 @@ export function PdfTemplate({ quote }: PdfTemplateProps) {
       </div>
 
       {/* FOOTER - LEGAL MENTIONS */}
-      <div className="mt-28 pt-10 border-t-2 border-[#f1f5f9] text-center">
-         <p className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-[0.3em] leading-loose">
-           ArtisanFlow SaaS - Gestion Professionnelle simplifiée <br/>
-           Auto-entrepreneur exonéré de TVA (Art. 293B du CGI) <br/>
-           Valable 30 jours à compter de l'émission
+      <div className="mt-20 pt-8 border-t-2 border-[#f1f5f9] text-center">
+         <p className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-[0.2em] leading-loose">
+           {profile?.company_name} - {profile?.legal_form} au capital de [Capital] - SIRET : {profile?.siret} <br/>
+           {quote.tax_rate === 0 ? "TVA non applicable, art. 293 B du CGI" : `N° TVA Intracommunautaire : ${profile?.tva_intra || 'Non renseigné'}`} <br/>
+           Offre valable pendant 30 jours à compter de la date d'émission.
          </p>
       </div>
     </div>

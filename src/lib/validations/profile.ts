@@ -13,6 +13,11 @@ export const profileSchema = z.object({
   preferred_language: z.enum(['fr', 'en', 'es']).default('fr'),
   business_description: businessDescriptionSchema,
   statement_descriptor: statementDescriptorSchema.optional().nullable(),
+  legal_form: sanitizeString.optional().nullable(),
+  tva_intra: sanitizeString.optional().nullable(),
+  iban: z.string().optional().nullable(),
+  bic: z.string().optional().nullable(),
+  bank_name: z.string().optional().nullable(),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
