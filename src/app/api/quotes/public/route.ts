@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
     const { data: quote, error } = await supabase
       .from('quotes')
-      .select('id, number, status, total_ht, total_ttc, tax_rate, signature_url, artisan_signature_url, client_signature_url, payment_method, paid_at, created_at, updated_at, clients(name, address, city, email), profiles(id, company_name, address, siret, phone, email, legal_form, tva_intra, iban, bic, bank_name, stripe_charges_enabled)')
+      .select('id, number, status, total_ht, total_ttc, tax_rate, signature_url, artisan_signature_url, client_signature_url, payment_method, paid_at, created_at, updated_at, clients(name, address, city, email), profiles(id, company_name, address, siret, phone, email, legal_form, tva_intra, stripe_charges_enabled)')
       .eq('id', quoteId)
       .eq('public_token', publicToken)
       .single()
