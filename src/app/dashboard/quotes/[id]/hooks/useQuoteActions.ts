@@ -28,7 +28,10 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
   const [isPaying, setIsPaying] = useState(false)
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
+  
+  // Modal/UI States
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [isSigPadOpen, setIsSigPadOpen] = useState(false)
 
   // 📄 DOWNLOAD PDF
   const handleDownloadPdf = useCallback(async () => {
@@ -44,23 +47,17 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
         logging: false,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
-          // 🛡️ CRITICAL FIX: html2canvas v1.4.1 doesn't support modern CSS color functions like lab() or oklch()
-          // These are often introduced by Tailwind v4 or modern browser defaults.
-          // We must purge these from the cloned document's head to prevent the parser from crashing.
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const style = styleTags[i];
             if (style.innerHTML.includes('lab(') || style.innerHTML.includes('oklch(')) {
-              // Replace with simple fallback or remove
               style.innerHTML = style.innerHTML.replace(/lab\([^)]+\)/g, '#000000');
               style.innerHTML = style.innerHTML.replace(/oklch\([^)]+\)/g, '#000000');
             }
           }
-          
-          // Also check inline styles on the target element
           const template = clonedDoc.getElementById('pdf-template');
           if (template) {
-            template.style.fontFamily = 'Arial, sans-serif'; // Use standard font for PDF
+            template.style.fontFamily = 'Arial, sans-serif';
           }
         }
       })
@@ -86,49 +83,108 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
     }
   }, [quote.number])
 
-  // 📊 DOWNLOAD EXCEL
+  // 📊 DOWNLOAD EXCEL (PREMIUM VERSION)
   const handleDownloadExcel = useCallback(async () => {
     try {
       setIsGeneratingExcel(true)
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Devis')
 
-      // Styles & Header
-      worksheet.columns = [
-        { header: 'Description', key: 'desc', width: 40 },
-        { header: 'Quantité', key: 'qty', width: 15 },
-        { header: 'Prix Unitaire HT', key: 'unit', width: 20 },
-        { header: 'Taux TVA', key: 'tax', width: 15 },
-        { header: 'Total HT', key: 'total', width: 20 }
-      ]
+      // 1. Branding Header
+      worksheet.mergeCells('A1:E1')
+      const headerCell = worksheet.getCell('A1')
+      headerCell.value = `ARTISAN FLOW - DEVIS #${quote.number}`
+      headerCell.font = { name: 'Arial Black', size: 16, color: { argb: 'FFFFFFFF' } }
+      headerCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+      headerCell.alignment = { horizontal: 'center', vertical: 'middle' }
+      worksheet.getRow(1).height = 40
 
+      // 2. Info Company & Client
+      worksheet.addRow([])
+      worksheet.addRow(['EMETTEUR', '', '', 'DESTINATAIRE'])
+      worksheet.getCell('A3').font = { bold: true, size: 10, color: { argb: 'FF94A3B8' } }
+      worksheet.getCell('D3').font = { bold: true, size: 10, color: { argb: 'FF94A3B8' } }
+      
+      worksheet.addRow([quote.profiles?.company_name || 'Artisan Flow', '', '', quote.clients?.name || 'Client'])
+      worksheet.getCell('A4').font = { bold: true }
+      worksheet.getCell('D4').font = { bold: true }
+      
+      worksheet.addRow([quote.profiles?.address || '', '', '', quote.clients?.address || ''])
+      worksheet.addRow([quote.profiles?.email || '', '', '', quote.clients?.city || ''])
+
+      worksheet.addRow([])
+      worksheet.addRow([])
+
+      // 3. Table Header
+      const tableHeaderRow = worksheet.addRow(['DESCRIPTION', 'QTÉ', 'PRIX UNIT. HT', 'TVA', 'TOTAL HT'])
+      tableHeaderRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } }
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 }
+        cell.alignment = { horizontal: 'center', vertical: 'middle' }
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        }
+      })
+
+      // 4. Data Rows
       quote.quote_items?.forEach(item => {
-        worksheet.addRow({
-          desc: item.description,
-          qty: item.quantity,
-          unit: item.unit_price,
-          tax: (item.tax_rate || quote.tax_rate || 20) + '%',
-          total: item.total_ht
+        const row = worksheet.addRow([
+          item.description,
+          item.quantity,
+          item.unit_price,
+          (item.tax_rate || quote.tax_rate || 20) + '%',
+          item.total_ht
+        ])
+        
+        row.getCell(3).numFmt = '#,##0.00 "€"'
+        row.getCell(5).numFmt = '#,##0.00 "€"'
+        row.alignment = { vertical: 'middle' }
+        
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFF1F5F9' } },
+            left: { style: 'thin', color: { argb: 'FFF1F5F9' } },
+            bottom: { style: 'thin', color: { argb: 'FFF1F5F9' } },
+            right: { style: 'thin', color: { argb: 'FFF1F5F9' } }
+          }
         })
       })
 
-      // Totals
+      // 5. Totals Section
       worksheet.addRow([])
-      worksheet.addRow(['', '', '', 'Total HT', quote.total_ht])
-      worksheet.addRow(['', '', '', 'Total TTC', quote.total_ttc])
+      const htRow = worksheet.addRow(['', '', '', 'TOTAL HT', quote.total_ht])
+      htRow.getCell(4).font = { bold: true, size: 11 }
+      htRow.getCell(5).font = { bold: true, size: 11 }
+      htRow.getCell(5).numFmt = '#,##0.00 "€"'
+
+      const ttcRow = worksheet.addRow(['', '', '', 'TOTAL TTC', quote.total_ttc])
+      ttcRow.getCell(4).font = { name: 'Arial Black', size: 12, color: { argb: 'FF4F46E5' } }
+      ttcRow.getCell(5).font = { name: 'Arial Black', size: 14, color: { argb: 'FF4F46E5' } }
+      ttcRow.getCell(5).numFmt = '#,##0.00 "€"'
+      worksheet.getRow(ttcRow.number).height = 30
+
+      // Columns Width
+      worksheet.getColumn(1).width = 50
+      worksheet.getColumn(2).width = 10
+      worksheet.getColumn(3).width = 20
+      worksheet.getColumn(4).width = 15
+      worksheet.getColumn(5).width = 20
 
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
       const url = window.URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `Devis_${quote.number}.xlsx`
+      anchor.download = `Devis_${quote.number}_${quote.clients?.name?.replace(/\s+/g, '_')}.xlsx`
       anchor.click()
       window.URL.revokeObjectURL(url)
-      toast.success("Excel téléchargé avec succès")
+      toast.success("Excel premium généré !")
     } catch (error) {
       console.error('Excel Generation Error:', error)
-      toast.error("Erreur lors de la génération du fichier Excel")
+      toast.error("Erreur lors de la génération Excel")
     } finally {
       setIsGeneratingExcel(false)
     }
@@ -139,7 +195,6 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
     try {
       setIsGeneratingLink(true)
       let token = quote.public_token
-      
       if (!token) {
         const result = await generateQuoteTokenAction(quote.id)
         if (result.success && result.token) {
@@ -153,34 +208,25 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
           throw new Error(result.error)
         }
       }
-
       const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${token}`
       await navigator.clipboard.writeText(shareUrl)
       toast.success("Lien de partage copié !")
     } catch (error: any) {
-      toast.error("Erreur lors de la copie du lien : " + error.message)
+      toast.error("Erreur link : " + error.message)
     } finally {
       setIsGeneratingLink(false)
     }
   }, [quote, setCurrentQuote])
 
-  // 🖨️ PRINT
-  const handlePrint = useCallback(() => {
-    window.print()
-  }, [])
-
   // ✍️ SAVE SIGNATURE
   const handleSaveSignature = useCallback(async (signatureData: string) => {
     try {
       setIsSigning(true)
-      // On utilise l'action côté client pour la signature artisan
       const result = await acceptQuoteAction({
         quoteId: quote.id,
         signatureDataUrl: signatureData
       })
-
       if (!result.success) throw new Error(result.error)
-
       const newSignature = result.signatureUrl || null
       setSignature(newSignature)
       setCurrentQuote(prev => ({ 
@@ -188,17 +234,17 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
         status: 'accepted' as const, 
         signature_url: newSignature 
       }))
-      
       setIsSigning(false)
+      setIsSigPadOpen(false)
       toast.success("Devis signé et approuvé !")
       router.refresh()
     } catch (e: any) {
-      toast.error("Échec de la signature : " + e.message)
+      toast.error("Échec : " + e.message)
       setIsSigning(false)
     }
   }, [quote.id, router, setCurrentQuote, setSignature])
 
-  // 💰 CREATE PAYMENT (STRIPE)
+  // 💰 CREATE PAYMENT
   const handleCreatePayment = useCallback(async () => {
     try {
       setIsPaying(true)
@@ -215,7 +261,7 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
       if (data.url) window.location.href = data.url
       else throw new Error(data.error || 'Erreur Stripe')
     } catch (error) {
-      toast.error("Erreur lors de l'initialisation du paiement")
+      toast.error("Erreur paiement")
     } finally {
       setIsPaying(false)
     }
@@ -227,13 +273,11 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
       setIsGeneratingInvoice(true)
       const result = await createInvoiceFromQuoteAction(quote.id)
       if (result.success) {
-        toast.success("Facture générée avec succès !")
+        toast.success("Facture générée !")
         router.push(`/dashboard/invoices/${result.invoiceId}`)
-      } else {
-        throw new Error(result.error)
-      }
+      } else throw new Error(result.error)
     } catch (e: any) {
-      toast.error("Erreur lors de la génération : " + e.message)
+      toast.error("Erreur : " + e.message)
     } finally {
       setIsGeneratingInvoice(false)
     }
@@ -251,13 +295,14 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
     },
     modals: {
       isEmailModalOpen,
-      setIsEmailModalOpen
+      setIsEmailModalOpen,
+      isSigPadOpen,
+      setIsSigPadOpen
     },
     handlers: {
       handleDownloadPdf,
       handleDownloadExcel,
       handleCopyShareLink,
-      handlePrint,
       handleSaveSignature,
       handleCreatePayment,
       handleCreateInvoice

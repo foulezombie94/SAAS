@@ -4,7 +4,6 @@ import { Quote } from '@/types/dashboard'
 import { 
   FileText, 
   Download, 
-  Printer, 
   Share2, 
   ArrowLeft,
   Loader2,
@@ -21,7 +20,6 @@ interface QuoteHeaderProps {
   isGeneratingLink: boolean
   isGeneratingInvoice: boolean
   isTokenExpired: boolean | null
-  onPrint: () => void
   onDownloadPdf: () => void
   onDownloadExcel: () => void
   onCopyShareLink: () => void
@@ -35,7 +33,6 @@ export function QuoteHeader({
   isGeneratingLink,
   isGeneratingInvoice,
   isTokenExpired,
-  onPrint,
   onDownloadPdf,
   onDownloadExcel,
   onCopyShareLink,
@@ -89,15 +86,6 @@ export function QuoteHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button 
-          variant="outline" 
-          onClick={onPrint}
-          className="h-10 px-4 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 shadow-sm transition-all"
-        >
-          <Printer className="w-4 h-4 mr-2" />
-          Imprimer
-        </Button>
-        
         {/* BOUTON PDF */}
         <Button 
           variant="outline" 

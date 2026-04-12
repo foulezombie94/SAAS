@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { SignaturePad } from '@/components/SignaturePad'
@@ -23,6 +23,8 @@ interface QuoteActionsPanelProps {
   isPaying: boolean
   isGeneratingInvoice: boolean
   isSigning: boolean
+  isSigPadOpen: boolean
+  setIsSigPadOpen: (open: boolean) => void
   onSaveSignature: (data: string) => void
   onCreatePayment: () => void
   onCreateInvoice: () => void
@@ -35,25 +37,21 @@ export function QuoteActionsPanel({
   isPaying,
   isGeneratingInvoice,
   isSigning,
+  isSigPadOpen,
+  setIsSigPadOpen,
   onSaveSignature,
   onCreatePayment,
   onCreateInvoice,
   onOpenEmailModal
 }: QuoteActionsPanelProps) {
-  const [isSigPadOpen, setIsSigPadOpen] = useState(false)
   
   const isPaid = quote.status === 'paid'
   const isAccepted = ['accepted', 'paid', 'invoiced'].includes(quote.status)
 
-  const handleSaveSignature = (data: string) => {
-    onSaveSignature(data)
-    setIsSigPadOpen(false)
-  }
-
   return (
     <div className="space-y-6 sticky top-8">
       {/* CARD: COMMAND CENTER */}
-      <Card className="border-slate-200/60 shadow-lg shadow-slate-200/20 overflow-hidden ring-1 ring-slate-200/50">
+      <Card id="command-center" className="border-slate-200/60 shadow-lg shadow-slate-200/20 overflow-hidden ring-1 ring-slate-200/50">
         <div className="bg-slate-900 border-b border-slate-800 py-5 px-6">
           <div className="text-white text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
             <Settings2 className="w-4 h-4 text-indigo-400" />
@@ -71,19 +69,27 @@ export function QuoteActionsPanel({
               
               <Button 
                 onClick={() => setIsSigPadOpen(true)}
-                className="w-full h-11 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 font-black uppercase tracking-tighter"
+                className={cn(
+                  "w-full h-11 font-black uppercase tracking-tighter transition-all",
+                  isSigPadOpen 
+                    ? "bg-slate-100 text-slate-500 border-slate-200" 
+                    : "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
+                )}
                 variant="outline"
+                disabled={isSigPadOpen}
               >
                 <PenTool className="w-4 h-4 mr-2" />
-                Signer le devis
+                {isSigPadOpen ? 'Signature en cours...' : 'Signer le devis'}
               </Button>
 
               {isSigPadOpen && (
-                <SignaturePad 
-                  onSave={handleSaveSignature} 
-                  onCancel={() => setIsSigPadOpen(false)} 
-                  isLoading={isSigning} 
-                />
+                <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <SignaturePad 
+                    onSave={onSaveSignature} 
+                    onCancel={() => setIsSigPadOpen(false)} 
+                    isLoading={isSigning} 
+                  />
+                </div>
               )}
 
               <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
@@ -172,12 +178,6 @@ export function QuoteActionsPanel({
           </div>
         </div>
       </Card>
-      
-      {/* ACTION: CALENDRIER */}
-      <Button variant="outline" className="w-full h-12 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 shadow-sm font-bold gap-3 transition-all border">
-        <Calendar className="w-5 h-5 text-slate-400" />
-        Planifier un RDV Chantier
-      </Button>
     </div>
   )
 }

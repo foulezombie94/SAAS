@@ -19,10 +19,6 @@ interface QuoteClientProps {
   quote: Quote
 }
 
-/**
- * 🎨 QuoteClient - Orchestrator Component
- * Refactored to follow SOLID principles: Split logic, UI, and Realtime.
- */
 export function QuoteClient({ quote }: QuoteClientProps) {
   
   // 1. Manage State & Realtime
@@ -40,6 +36,15 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     ? new Date(currentQuote.public_token_expires_at) < new Date() 
     : null
 
+  // Handler for direct signing from preview
+  const handleScrollToSign = () => {
+    modals.setIsSigPadOpen(true)
+    const element = document.getElementById('command-center')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -52,7 +57,6 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           isGeneratingLink={loading.isGeneratingLink}
           isGeneratingInvoice={loading.isGeneratingInvoice}
           isTokenExpired={isTokenExpired}
-          onPrint={handlers.handlePrint}
           onDownloadPdf={handlers.handleDownloadPdf}
           onDownloadExcel={handlers.handleDownloadExcel}
           onCopyShareLink={handlers.handleCopyShareLink}
@@ -71,6 +75,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             <QuotePreview 
               quote={currentQuote} 
               signature={signature} 
+              onSignArtisan={handleScrollToSign}
             />
           </div>
 
@@ -82,6 +87,8 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               isPaying={loading.isPaying}
               isGeneratingInvoice={loading.isGeneratingInvoice}
               isSigning={loading.isSigning}
+              isSigPadOpen={modals.isSigPadOpen}
+              setIsSigPadOpen={modals.setIsSigPadOpen}
               onSaveSignature={handlers.handleSaveSignature}
               onCreatePayment={handlers.handleCreatePayment}
               onCreateInvoice={handlers.handleCreateInvoice}
@@ -98,7 +105,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
         quote={currentQuote}
       />
 
-      {/* HIDDEN PDF TEMPLATE (Reference for html2canvas) */}
+      {/* HIDDEN PDF TEMPLATE */}
       <div className="fixed -left-[9999px] top-0">
         <PdfTemplate 
           quote={currentQuote} 

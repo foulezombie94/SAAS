@@ -1,14 +1,16 @@
 import React from 'react'
 import { Card } from '@/components/ui/Card'
 import { Quote } from '@/types/dashboard'
-import Image from 'next/image'
+import { PenLine } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface QuotePreviewProps {
   quote: Quote
   signature: string | null
+  onSignArtisan?: () => void
 }
 
-export function QuotePreview({ quote, signature }: QuotePreviewProps) {
+export function QuotePreview({ quote, signature, onSignArtisan }: QuotePreviewProps) {
   const profile = quote.profiles
   const client = quote.clients
 
@@ -114,22 +116,46 @@ export function QuotePreview({ quote, signature }: QuotePreviewProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t-2 border-dashed border-slate-100 pt-16 mt-16">
            <div className="space-y-4">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-4">Cachet & Signature de l'Artisan</span>
-              <div className="h-40 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-center italic text-slate-300 font-medium group transition-all hover:bg-white hover:border-indigo-100 hover:shadow-lg">
-                 Bon pour accord
+              <div 
+                onClick={onSignArtisan}
+                className={cn(
+                  "h-48 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center transition-all cursor-pointer group relative overflow-hidden",
+                  quote.status === 'accepted' || quote.status === 'paid' 
+                    ? "bg-slate-50 border-slate-200 cursor-default" 
+                    : "bg-indigo-50/30 border-indigo-200 hover:bg-white hover:border-indigo-400 hover:shadow-2xl hover:shadow-indigo-100"
+                )}
+              >
+                 {quote.status === 'accepted' || quote.status === 'paid' ? (
+                   <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <PenLine className="w-6 h-6 text-emerald-600" />
+                      </div>
+                      <span className="text-sm font-black text-emerald-700 uppercase tracking-widest">Devis Signé</span>
+                   </div>
+                 ) : (
+                   <>
+                    <PenLine className="w-8 h-8 text-indigo-400 mb-3 group-hover:scale-110 group-hover:text-indigo-600 transition-all" />
+                    <span className="text-sm font-black text-indigo-600 uppercase tracking-widest mb-1">Cliquer pour signer</span>
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Validation immédiate</span>
+                    <div className="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                   </>
+                 )}
               </div>
            </div>
            
            <div className="space-y-4 text-right">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-4">Signature du Client (Précédée de "Bon pour accord")</span>
-              <div className="h-40 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-center relative group transition-all hover:bg-white hover:border-indigo-100 hover:shadow-lg overflow-hidden">
+              <div className="h-48 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-center relative group transition-all hover:bg-white hover:border-indigo-100 hover:shadow-lg overflow-hidden">
                  {signature ? (
                    <img 
                     src={signature} 
                     alt="Signature" 
-                    className="max-h-[80%] max-w-[80%] object-contain mix-blend-multiply transition-transform group-hover:scale-110" 
+                    className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply transition-transform group-hover:scale-110" 
                    />
                  ) : (
-                   <span className="italic text-slate-300 font-medium">En attente de signature numérique</span>
+                   <div className="flex flex-col items-center gap-2 opacity-30">
+                     <span className="italic text-slate-400 font-medium text-sm">En attente de signature numérique</span>
+                   </div>
                  )}
               </div>
            </div>
