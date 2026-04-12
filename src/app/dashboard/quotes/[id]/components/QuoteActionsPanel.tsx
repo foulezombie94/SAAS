@@ -81,12 +81,8 @@ export function QuoteActionsPanel({
               </Button>
 
               {isSigPadOpen && (
-                <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <SignaturePad 
-                    onSave={onSaveSignature} 
-                    onCancel={() => setIsSigPadOpen(false)} 
-                    isLoading={isSigning} 
-                  />
+                <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+                  <p className="text-[10px] font-black uppercase text-indigo-600 animate-pulse">Signature en cours...</p>
                 </div>
               )}
 

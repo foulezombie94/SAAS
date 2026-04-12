@@ -285,10 +285,11 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
   }
 
   return (
-    <div className={cn(
-      "flex flex-col gap-8 pb-32 transition-all duration-700",
-      isSigning && "blur-md grayscale-[0.4] opacity-40 scale-[0.98] pointer-events-none"
-    )}>
+    <>
+      <div className={cn(
+        "flex flex-col gap-8 pb-32 transition-all duration-700",
+        isSigning && "blur-md grayscale-[0.4] opacity-40 scale-[0.98] pointer-events-none"
+      )}>
       {/* ... Success Overlay exactly as before ... */}
       {showSuccess && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-500">
@@ -726,13 +727,6 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
         )}
       </div>
 
-      {isSigning && (
-        <SignaturePad 
-          onSave={handleSaveSignature} 
-          onCancel={() => setIsSigning(false)} 
-          isLoading={isSavingSignature}
-        />
-      )}
-    </div>
+    </>
   )
 }
