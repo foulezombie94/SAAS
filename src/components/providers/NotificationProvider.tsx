@@ -128,8 +128,9 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
 
       const ts = lastSeenVal || '1970-01-01'
-      // 🛡️ REVERT TO AND (Strict Sync)
-      const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts})`
+      // 🚀 FIX: Utilisation de OR pour voir les consultations ET les changements de statut
+      // Si on utilise AND, une simple consultation d'un devis "sent" n'apparaîtra jamais.
+      const filter = `or(and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts}))`
       
       const { data: quotes } = await sb
         .from('quotes')
@@ -181,6 +182,10 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
 
           // 🛡️ JSON FILTER: Security & Relevance check
           if (newQuote.user_id !== userId) return
+
+          // 🚀 LIVE UI REFRESH (Force le ré-affichage des stats/listes sur le Dashboard)
+          router.refresh()
+          console.log("🔄 [Realtime] UI Refresh triggered")
 
           const isPaid = newQuote.status === 'paid' && (!oldQuote || oldQuote.status !== 'paid')
           const isAccepted = newQuote.status === 'accepted' && (!oldQuote || oldQuote.status !== 'accepted')
@@ -254,9 +259,6 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
           // 2. RECONCILIATION DU COMPTE (Invalidation Strategy)
           // C'est le SEUL moyen de garantir que le badge est juste
           await refetchUnreadCount()
-
-          // 🚀 LIVE UI UPDATE: Raffraîchit le Dashboard (Stats, Listes Server-side)
-          router.refresh()
         }
       )
       .subscribe((status) => {
