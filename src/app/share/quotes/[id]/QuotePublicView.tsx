@@ -321,16 +321,19 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
         This is what the client see on their screen (Desktop/Mobile).
       */}
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className={`h-24 ${currentQuote.status === 'paid' ? 'bg-emerald-600' : 'bg-[#002878]'} flex items-center justify-between px-8 text-white transition-colors duration-500`}>
+        <div className={`h-24 ${currentQuote.status === 'paid' ? 'bg-emerald-600' : signature ? 'bg-blue-600' : 'bg-[#002878]'} flex items-center justify-between px-8 text-white transition-colors duration-500`}>
            <div className="flex items-center gap-3">
               <FileText className="opacity-50" size={24} />
               <span className="font-black uppercase tracking-widest text-[10px]">
-                 {currentQuote.status === 'paid' ? 'Facture & Reçu d\'Achat' : 'Devis Officiel'}
+                 {currentQuote.status === 'paid' ? 'Facture & Reçu d\'Achat' : signature ? 'Devis Accepté & Signé' : 'Devis Officiel'}
               </span>
            </div>
            <div className="flex items-center gap-4">
-              <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 ${currentQuote.status === 'paid' ? 'bg-emerald-500 shadow-xl' : 'bg-white/10'}`}>
-                 {currentQuote.status === 'paid' ? '✓ RÉGLÉ' : '⚠ EN ATTENTE'}
+              <div className={cn(
+                "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 transition-all duration-500",
+                currentQuote.status === 'paid' ? "bg-emerald-500 shadow-xl" : signature ? "bg-blue-500 shadow-lg" : "bg-white/10"
+              )}>
+                 {currentQuote.status === 'paid' ? '✓ RÉGLÉ' : signature ? '✓ SIGNÉ' : '⚠ EN ATTENTE'}
               </div>
               <div className="text-right">
                  <p className="text-sm font-black uppercase tracking-tighter">REF: {currentQuote.number}</p>
@@ -720,13 +723,11 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
       </div>
 
       {isSigning && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-6">
-           <SignaturePad 
-             onSave={handleSaveSignature} 
-             onCancel={() => setIsSigning(false)} 
-             isLoading={isSavingSignature}
-           />
-        </div>
+        <SignaturePad 
+          onSave={handleSaveSignature} 
+          onCancel={() => setIsSigning(false)} 
+          isLoading={isSavingSignature}
+        />
       )}
     </div>
   )

@@ -58,7 +58,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel, is
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-[32px] p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-300">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-black text-[#002878]">Signature Client</h3>
