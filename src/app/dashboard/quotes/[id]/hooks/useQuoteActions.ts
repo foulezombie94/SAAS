@@ -47,14 +47,36 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
         logging: false,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
+          // 🛡️ SECURITY & STABILITY: Remove modern CSS color functions (lab, oklch) 
+          // that cause html2canvas to crash.
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const style = styleTags[i];
-            if (style.innerHTML.includes('lab(') || style.innerHTML.includes('oklch(')) {
-              style.innerHTML = style.innerHTML.replace(/lab\([^)]+\)/g, '#000000');
-              style.innerHTML = style.innerHTML.replace(/oklch\([^)]+\)/g, '#000000');
+            if (style.innerHTML) {
+              style.innerHTML = style.innerHTML
+                .replace(/lab\([^)]*\)/g, '#000000')
+                .replace(/oklch\([^)]*\)/g, '#000000')
+                .replace(/color-mix\([^)]*\)/g, '#000000');
             }
           }
+
+          // Also clean inline styles on all elements
+          const allElements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < allElements.length; i++) {
+            const el = allElements[i] as HTMLElement;
+            if (el.style) {
+              if (el.style.color?.includes('lab') || el.style.color?.includes('oklch')) {
+                el.style.color = '#1e293b'; // Default text color
+              }
+              if (el.style.backgroundColor?.includes('lab') || el.style.backgroundColor?.includes('oklch')) {
+                el.style.backgroundColor = '#ffffff'; // Default bg
+              }
+              if (el.style.borderColor?.includes('lab') || el.style.borderColor?.includes('oklch')) {
+                el.style.borderColor = '#e2e8f0'; // Default border
+              }
+            }
+          }
+
           const template = clonedDoc.getElementById('pdf-template');
           if (template) {
             template.style.fontFamily = 'Arial, sans-serif';

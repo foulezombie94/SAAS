@@ -148,7 +148,34 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
       const canvas = await html2canvas(printElement, {
         scale: 4,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc) => {
+          const styleTags = clonedDoc.getElementsByTagName('style');
+          for (let i = 0; i < styleTags.length; i++) {
+            const style = styleTags[i];
+            if (style.innerHTML) {
+              style.innerHTML = style.innerHTML
+                .replace(/lab\([^)]*\)/g, '#000000')
+                .replace(/oklch\([^)]*\)/g, '#000000')
+                .replace(/color-mix\([^)]*\)/g, '#000000');
+            }
+          }
+          const allElements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < allElements.length; i++) {
+            const el = allElements[i] as HTMLElement;
+            if (el.style) {
+              if (el.style.color?.includes('lab') || el.style.color?.includes('oklch')) {
+                el.style.color = '#1e293b';
+              }
+              if (el.style.backgroundColor?.includes('lab') || el.style.backgroundColor?.includes('oklch')) {
+                el.style.backgroundColor = '#ffffff';
+              }
+              if (el.style.borderColor?.includes('lab') || el.style.borderColor?.includes('oklch')) {
+                el.style.borderColor = '#e2e8f0';
+              }
+            }
+          }
+        }
       })
       const imgData = canvas.toDataURL('image/png', 1.0)
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
