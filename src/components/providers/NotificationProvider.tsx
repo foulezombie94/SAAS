@@ -92,6 +92,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
     }
     window.addEventListener('click', warmup, { once: true })
+    setIsMounted(true)
     return () => window.removeEventListener('click', warmup)
   }, [])
 
@@ -127,7 +128,8 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       }
 
       const ts = lastSeenVal || '1970-01-01'
-      const filter = `and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts})`
+      // Filtre : (status change) OR (view change)
+      const filter = `or(and(status.in.("paid","accepted","expired"),updated_at.gt.${ts}),and(last_viewed_at.not.is.null,last_viewed_at.gt.${ts}))`
       
       const { data: quotes } = await sb
         .from('quotes')
@@ -153,7 +155,6 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     }
 
     fetchInitialData()
-    setIsMounted(true)
 
     // 🕒 Periodical sync (Invisible background)
     const interval = setInterval(() => {

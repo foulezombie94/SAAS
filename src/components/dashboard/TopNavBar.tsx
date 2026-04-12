@@ -27,6 +27,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
   // 🛡️ OPTIMISATION RECHERCHE : Debounce de 500ms pour éviter de bombarder la DB
   useEffect(() => {
@@ -53,6 +54,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
+    setIsMounted(true)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
@@ -100,8 +102,8 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
                   : "bg-slate-50 text-slate-400 hover:bg-slate-100"
             )}
           >
-            <Bell size={20} className={cn(unreadCount > 0 && notifications.length > 0 && "animate-pulse")} />
-            {unreadCount > 0 && notifications.length > 0 && (
+            <Bell size={20} className={cn(isMounted && unreadCount > 0 && notifications.length > 0 && "animate-pulse")} />
+            {isMounted && unreadCount > 0 && notifications.length > 0 && (
               <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-secondary ring-2 ring-white shadow-sm" />
             )}
           </button>
