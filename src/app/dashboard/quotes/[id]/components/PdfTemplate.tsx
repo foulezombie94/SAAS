@@ -3,13 +3,13 @@ import { Quote } from '@/types/dashboard'
 
 interface PdfTemplateProps {
   quote: Quote
-  signature: string | null
 }
 
 /**
  * 📄 PDF Template - Optimized for high-visibility and capture
+ * Dual Signature Version
  */
-export function PdfTemplate({ quote, signature }: PdfTemplateProps) {
+export function PdfTemplate({ quote }: PdfTemplateProps) {
   const profile = quote.profiles
   const client = quote.clients
 
@@ -108,23 +108,35 @@ export function PdfTemplate({ quote, signature }: PdfTemplateProps) {
         </div>
       </div>
 
-      {/* SIGNATURES - INCREASED SIZE & CLARITY */}
+      {/* SIGNATURES - MAXIMUM VISIBILITY */}
       <div className="grid grid-cols-2 gap-20 pt-20 border-t-4 border-dashed border-[#f1f5f9]">
         <div className="space-y-8">
-          <p className="text-[#94a3b8] uppercase text-xs font-black tracking-[0.3em] text-center">Cachet & Signature Professionnelle</p>
-          <div className="h-56 bg-[#f8fafc] rounded-[2.5rem] border-4 border-dashed border-[#e2e8f0] flex items-center justify-center font-bold text-[#cbd5e1] text-xl uppercase tracking-widest italic">
-             Bon pour accord
+          <p className="text-[#94a3b8] uppercase text-[10px] font-black tracking-[0.3em] text-center mb-4">Cachet & Signature Artisan</p>
+          <div className="h-64 bg-[#f8fafc] rounded-[2.5rem] border-4 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative shadow-inner group">
+            <div className="absolute top-4 left-6 bg-[#4f46e5]/10 text-[#4f46e5] text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Validation Professionnelle</div>
+            {quote.artisan_signature_url ? (
+               <img src={quote.artisan_signature_url} alt="Signature Artisan" className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply scale-150 transition-transform duration-500" />
+            ) : (
+               <div className="flex flex-col items-center gap-3 opacity-20">
+                 <div className="w-16 h-16 border-4 border-dashed border-[#cbd5e1] rounded-full" />
+                 <span className="italic text-[#cbd5e1] font-bold text-xs uppercase tracking-widest text-center">EN ATTENTE ARTISAN</span>
+               </div>
+            )}
           </div>
         </div>
         <div className="space-y-8">
-          <p className="text-[#94a3b8] uppercase text-xs font-black tracking-[0.3em] text-center">Signature Client (Certifiée Numérique)</p>
-          <div className="h-56 bg-[#f8fafc] rounded-[2.5rem] border-4 border-dashed border-[#e2e8f0] flex items-center justify-center overflow-hidden relative shadow-inner">
-            {signature ? (
-               <img src={signature} alt="Signature" className="max-h-[90%] max-w-[90%] object-contain mix-blend-multiply scale-110" />
+          <p className="text-[#94a3b8] uppercase text-[10px] font-black tracking-[0.3em] text-center mb-4">Acceptation Client ("Bon pour accord")</p>
+          <div className="h-64 bg-[#f8fafc] rounded-[2.5rem] border-4 border-[#e2e8f0] flex items-center justify-center overflow-hidden relative shadow-inner">
+            <div className="absolute top-4 right-6 bg-emerald-100 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Accord Numérique Certifié</div>
+            {quote.client_signature_url ? (
+               <img src={quote.client_signature_url} alt="Signature Client" className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply scale-150" />
             ) : (
-               <span className="italic text-[#cbd5e1] font-bold text-lg uppercase tracking-widest">Signature Attendue</span>
+               <div className="flex flex-col items-center gap-3 opacity-20">
+                 <div className="w-16 h-16 border-4 border-dashed border-[#cbd5e1] rounded-full" />
+                 <span className="italic text-[#cbd5e1] font-bold text-xs uppercase tracking-widest text-center">EN ATTENTE CLIENT</span>
+               </div>
             )}
-            <div className="absolute bottom-4 right-8 text-[8px] text-[#cbd5e1] font-black uppercase tracking-widest">ArtisanFlow ID: {quote.id.slice(0,8)}</div>
+            <div className="absolute bottom-4 right-8 text-[7px] text-[#cbd5e1] font-black uppercase tracking-[0.2em]">AF-HASH: {quote.id.split('-')[0].toUpperCase()}</div>
           </div>
         </div>
       </div>
@@ -134,7 +146,7 @@ export function PdfTemplate({ quote, signature }: PdfTemplateProps) {
          <p className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-[0.3em] leading-loose">
            ArtisanFlow SaaS - Gestion Professionnelle simplifiée <br/>
            Auto-entrepreneur exonéré de TVA (Art. 293B du CGI) <br/>
-           SIRET : {profile?.company_name} - Valable 30 jours
+           Valable 30 jours à compter de l'émission
          </p>
       </div>
     </div>

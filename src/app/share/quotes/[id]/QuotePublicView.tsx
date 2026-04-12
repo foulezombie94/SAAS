@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/utils/supabase/client'
+import { cn } from '@/lib/utils'
 
 interface QuotePublicViewProps {
   quote: Quote
@@ -35,7 +36,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
   const [isSigning, setIsSigning] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
-  const [signature, setSignature] = useState<string | null>(quote.signature_url || null)
+  const [signature, setSignature] = useState<string | null>(quote.client_signature_url || null)
   const [isDone, setIsDone] = useState(false)
   const searchParams = useSearchParams()
 
@@ -58,6 +59,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
           // Handle profile mapping if needed
           profiles: data.profiles || data.artisan 
         }))
+        if (data.client_signature_url) setSignature(data.client_signature_url)
         if (data.invoice_id) setInvoiceId(data.invoice_id)
         return data
       }
@@ -369,62 +371,85 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
             ))}
           </div>
 
-          {/* Totals & Signature */}
-          <div className="flex flex-col md:flex-row items-end justify-between gap-10 pt-10 border-t-2 border-slate-50">
-            <div className="w-full md:flex-1">
-              {signature ? (
-                <div className="bg-green-50/50 p-6 rounded-2xl border border-green-100 relative overflow-hidden group">
-                  <div className="flex items-center gap-3 mb-4 relative z-10">
-                     <ShieldCheck className="text-green-600" size={18} />
-                     <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Devis Signé Numériquement</p>
+          {/* Totals & Dual Signatures */}
+          <div className="flex flex-col gap-10 pt-10 border-t-2 border-slate-50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               {/* Artisan Signature Block */}
+               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Validation Artisan</p>
+                    {currentQuote.artisan_signature_url ? (
+                      <img 
+                        src={currentQuote.artisan_signature_url} 
+                        alt="Artisan Signature" 
+                        crossOrigin="anonymous"
+                        className="h-24 object-contain mix-blend-multiply" 
+                      />
+                    ) : (
+                      <div className="h-24 flex items-center gap-3 text-slate-300">
+                        <Clock size={20} />
+                        <span className="text-[10px] font-bold uppercase">En attente signature artisan</span>
+                      </div>
+                    )}
                   </div>
-                  <img 
-                    src={signature} 
-                    alt="Client Signature" 
-                    crossOrigin="anonymous"
-                    className="h-24 object-contain mix-blend-multiply opacity-80 relative z-10" 
-                  />
-                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">Accord contractuel validé le {new Date().toLocaleDateString()}</p>
-                  
-                  {/* NEW: Payment button directly on the invoice */}
-                  {currentQuote.status !== 'paid' && currentQuote.profiles?.stripe_charges_enabled && (
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-4 italic">Certifié par ArtisanFlow SafeSign</p>
+               </div>
+
+               {/* Client Signature Block */}
+               <div className={cn(
+                  "p-6 rounded-2xl border flex flex-col justify-between relative overflow-hidden group transition-all",
+                  signature ? "bg-green-50 border-green-100" : "bg-orange-50 border-orange-100"
+               )}>
+                  <div>
+                    <p className={cn(
+                      "text-[10px] font-black uppercase tracking-widest mb-4",
+                      signature ? "text-green-600" : "text-orange-600"
+                    )}>Votre Signature (Client)</p>
+                    {signature ? (
+                      <img 
+                        src={signature} 
+                        alt="Client Signature" 
+                        crossOrigin="anonymous"
+                        className="h-24 object-contain mix-blend-multiply" 
+                      />
+                    ) : (
+                      <div className="h-24 flex items-center gap-3 text-orange-400/50">
+                        <PenTool size={20} />
+                        <span className="text-[10px] font-bold uppercase">Signature attendue</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-4 italic">Document contractuel à valeur juridique</p>
+               </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-end justify-between gap-10">
+              <div className="w-full md:flex-1">
+                {signature && currentQuote.status !== 'paid' && currentQuote.profiles?.stripe_charges_enabled && (
                     <Button 
                       onClick={handlePayment}
                       disabled={isPaying}
-                      className="mt-6 w-full h-14 rounded-xl bg-[#002878] hover:bg-[#083696] text-white font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-95"
+                      className="w-full h-14 rounded-xl bg-[#002878] hover:bg-[#083696] text-white font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-95"
                     >
-                      {isPaying ? (
-                        <Loader2 className="animate-spin" size={18} />
-                      ) : (
-                        <CreditCard size={18} />
-                      )}
-                      Régler par Carte Bancaire
+                      {isPaying ? <Loader2 className="animate-spin" size={18} /> : <CreditCard size={18} />}
+                      Passer au Paiement Sécurisé
                     </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100 flex items-center gap-4 text-orange-700">
-                   <AlertCircle size={24} className="shrink-0" />
-                   <div>
-                      <p className="text-xs font-black uppercase tracking-widest leading-none mb-1">Signature Requise</p>
-                      <p className="text-[10px] font-bold opacity-70">Veuillez valider le devis pour lancer le chantier.</p>
-                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <div className="w-full md:w-auto space-y-4">
-              <div className="flex justify-between md:justify-end gap-10 text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">
-                 <span>Sous-Total HT</span>
-                 <span>{currentQuote.total_ht} €</span>
-              </div>
-              <div className="flex justify-between md:justify-end gap-10 text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 pb-4 border-b border-slate-100">
-                 <span>TVA (20%)</span>
-                 <span>{(currentQuote.total_ht * 0.2).toFixed(2)} €</span>
-              </div>
-              <div className="bg-[#002878] text-white p-8 rounded-3xl flex justify-between items-center gap-10 shadow-xl shadow-blue-900/10 scale-105 origin-right">
-                 <span className="font-black uppercase tracking-[0.2em] text-[10px] opacity-40 leading-none">Net à Payer TTC</span>
-                 <span className="text-4xl font-black tracking-tighter leading-none whitespace-nowrap">{currentQuote.total_ttc} €</span>
+              <div className="w-full md:w-auto space-y-4">
+                <div className="flex justify-between md:justify-end gap-10 text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">
+                   <span>Sous-Total HT</span>
+                   <span>{currentQuote.total_ht} €</span>
+                </div>
+                <div className="flex justify-between md:justify-end gap-10 text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 pb-4 border-b border-slate-100">
+                   <span>TVA (20%)</span>
+                   <span>{(currentQuote.total_ttc - currentQuote.total_ht).toFixed(2)} €</span>
+                </div>
+                <div className="bg-[#002878] text-white p-8 rounded-3xl flex justify-between items-center gap-10 shadow-xl shadow-blue-900/10 scale-105 origin-right">
+                   <span className="font-black uppercase tracking-[0.2em] text-[10px] opacity-40 leading-none">Net à Payer TTC</span>
+                   <span className="text-4xl font-black tracking-tighter leading-none whitespace-nowrap">{currentQuote.total_ttc} €</span>
+                </div>
               </div>
             </div>
           </div>

@@ -64,14 +64,13 @@ export async function POST(req: Request) {
     }
 
 
-    // 3. ATOMIC TRANSACTION (RPC v3 - Zero Trust Split Flow)
-    // 🛡️ SECURITY GRADE 3 : We use adminSupabase to bypass RLS because Guests don't have a session.
-    // The RPC itself will verify the p_public_token.
+    // 3. ATOMIC TRANSACTION (RPC v4 - Dual Signature Flow)
     const adminSupabase = createAdminClient()
-    const { data: invoiceId, error: rpcError } = await adminSupabase.rpc('accept_quote_v3', {
+    const { data: quoteResult, error: rpcError } = await adminSupabase.rpc('accept_quote_v4', {
       p_public_token: publicToken || 'invalid_token_placeholder',
       p_quote_id: quoteId,
-      p_signature_url: finalSignatureUrl || ''
+      p_signature_url: finalSignatureUrl || '',
+      p_signer_type: 'client'
     });
 
     if (rpcError) {
@@ -79,13 +78,11 @@ export async function POST(req: Request) {
       console.error('[API/Accept] RPC Zero-Trust Refusal:', {
         message: rpcError.message,
         details: rpcError.details,
-        hint: rpcError.hint,
-        code: rpcError.code,
-        payload: { quoteId, hasToken: !!publicToken }
+        code: rpcError.code
       });
       return NextResponse.json({ 
         error: 'Accès refusé ou lien expiré', 
-        details: rpcError.message // Temporary unmask for debugging if needed
+        details: rpcError.message 
       }, { status: 403 });
     }
 
@@ -95,7 +92,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       success: true, 
       signatureUrl: finalSignatureUrl, 
-      invoiceId 
+      invoiceId: typeof quoteResult === 'object' ? (quoteResult as any)?.invoice_id : null
     })
 
   } catch (err: any) {

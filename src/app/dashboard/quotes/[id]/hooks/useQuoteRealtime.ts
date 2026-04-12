@@ -10,12 +10,10 @@ import { toast } from 'sonner'
  */
 export function useQuoteRealtime(initialQuote: Quote) {
   const [currentQuote, setCurrentQuote] = useState<Quote>(initialQuote)
-  const [signature, setSignature] = useState<string | null>(initialQuote.signature_url)
 
-  // 🔄 Sync state with props when they change (e.g. from router.refresh())
+  // 🔄 Sync state with props when they change
   useEffect(() => {
     setCurrentQuote(initialQuote)
-    if (initialQuote.signature_url) setSignature(initialQuote.signature_url)
   }, [initialQuote])
 
   // ⚡ Real-time synchronization
@@ -62,8 +60,6 @@ export function useQuoteRealtime(initialQuote: Quote) {
 
   return {
     currentQuote,
-    setCurrentQuote,
-    signature,
-    setSignature
+    setCurrentQuote
   }
 }

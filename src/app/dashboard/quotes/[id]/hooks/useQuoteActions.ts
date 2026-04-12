@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import ExcelJS from 'exceljs'
+import { createClient } from '@/utils/supabase/client'
 import { Quote } from '@/types/dashboard'
 import { 
   acceptQuoteAction, 
@@ -14,10 +15,9 @@ import {
 interface UseQuoteActionsProps {
   quote: Quote
   setCurrentQuote: React.Dispatch<React.SetStateAction<Quote>>
-  setSignature: (url: string | null) => void
 }
 
-export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuoteActionsProps) {
+export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps) {
   const router = useRouter()
   
   // Loading States
@@ -115,56 +115,81 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
       worksheet.addRow([])
       worksheet.addRow([])
 
-      // 3. Table Header
-      const tableHeaderRow = worksheet.addRow(['DESCRIPTION', 'QTÉ', 'PRIX UNIT. HT', 'TVA', 'TOTAL HT'])
-      tableHeaderRow.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } }
+      // 3. Table Header (Premium Indigo Style)
+      worksheet.columns = [
+        { header: 'DÉSIGNATION', key: 'desc', width: 45 },
+        { header: 'QUANTITÉ', key: 'qty', width: 12 },
+        { header: 'PRIX UNIT. HT (€)', key: 'price', width: 18 },
+        { header: 'TVA (%)', key: 'tax', width: 10 },
+        { header: 'TOTAL HT (€)', key: 'total', width: 18 },
+      ]
+
+      const headerRow = worksheet.getRow(worksheet.rowCount)
+      headerRow.height = 30
+      headerRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
         cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 }
         cell.alignment = { horizontal: 'center', vertical: 'middle' }
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        }
       })
 
-      // 4. Data Rows
-      quote.quote_items?.forEach(item => {
-        const row = worksheet.addRow([
-          item.description,
-          item.quantity,
-          item.unit_price,
-          (item.tax_rate || quote.tax_rate || 20) + '%',
-          item.total_ht
-        ])
+      // 4. Data Rows (Robust Mapping with zebra striping)
+      const items = quote.quote_items || []
+      items.forEach((item, index) => {
+        const qty = Number(item.quantity) || 1
+        const price = Number(item.unit_price) || 0
+        const row = worksheet.addRow({
+          desc: (item.description || 'PRESTATION').toUpperCase(),
+          qty: qty,
+          price: price,
+          tax: item.tax_rate || quote.tax_rate || 20,
+          total: (qty * price)
+        })
         
+        row.height = 25
+        row.alignment = { vertical: 'middle' }
+        if (index % 2 === 1) {
+          row.eachCell(cell => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } }
+          })
+        }
+
         row.getCell(3).numFmt = '#,##0.00 "€"'
         row.getCell(5).numFmt = '#,##0.00 "€"'
-        row.alignment = { vertical: 'middle' }
-        
-        row.eachCell((cell) => {
-          cell.border = {
-            top: { style: 'thin', color: { argb: 'FFF1F5F9' } },
-            left: { style: 'thin', color: { argb: 'FFF1F5F9' } },
-            bottom: { style: 'thin', color: { argb: 'FFF1F5F9' } },
-            right: { style: 'thin', color: { argb: 'FFF1F5F9' } }
-          }
-        })
+        row.getCell(1).font = { bold: true, color: { argb: 'FF1E293B' } }
       })
 
       // 5. Totals Section
       worksheet.addRow([])
-      const htRow = worksheet.addRow(['', '', '', 'TOTAL HT', quote.total_ht])
-      htRow.getCell(4).font = { bold: true, size: 11 }
-      htRow.getCell(5).font = { bold: true, size: 11 }
-      htRow.getCell(5).numFmt = '#,##0.00 "€"'
+      
+      const addSummary = (label: string, value: number, isFinal = false) => {
+        const row = worksheet.addRow(['', '', '', label, value])
+        row.height = 28
+        row.getCell(4).font = { bold: true, size: 10, color: { argb: 'FF64748B' } }
+        row.getCell(5).font = { bold: true, size: 11, color: { argb: 'FF1E293B' } }
+        row.getCell(5).numFmt = '#,##0.00 "€"'
+        
+        if (isFinal) {
+          row.getCell(4).font = { name: 'Arial Black', size: 12, color: { argb: 'FFFFFFFF' } }
+          row.getCell(5).font = { name: 'Arial Black', size: 14, color: { argb: 'FFFFFFFF' } }
+          row.getCell(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF002878' } }
+          row.getCell(5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF002878' } }
+        }
+      }
 
-      const ttcRow = worksheet.addRow(['', '', '', 'TOTAL TTC', quote.total_ttc])
-      ttcRow.getCell(4).font = { name: 'Arial Black', size: 12, color: { argb: 'FF4F46E5' } }
-      ttcRow.getCell(5).font = { name: 'Arial Black', size: 14, color: { argb: 'FF4F46E5' } }
-      ttcRow.getCell(5).numFmt = '#,##0.00 "€"'
-      worksheet.getRow(ttcRow.number).height = 30
+      addSummary('SOUS-TOTAL HT', quote.total_ht || 0)
+      addSummary('TVA (20%)', (quote.total_ttc || 0) - (quote.total_ht || 0))
+      addSummary('TOTAL TTC À RÉGLER', quote.total_ttc || 0, true)
+
+      // Signature Status
+      worksheet.addRow([])
+      const sigHeader = worksheet.addRow(['', 'ÉTAT DES SIGNATURES CONTRACTUELLES'])
+      sigHeader.font = { bold: true, size: 9, color: { argb: 'FF4F46E5' } }
+      
+      const artSig = worksheet.addRow(['', `ARTISAN : ${quote.artisan_signature_url ? 'SIGNÉ LE ' + new Date().toLocaleDateString() : 'EN ATTENTE'}`])
+      artSig.font = { size: 9, color: { argb: quote.artisan_signature_url ? 'FF059669' : 'FFD97706' }, bold: true }
+      
+      const cliSig = worksheet.addRow(['', `CLIENT : ${quote.client_signature_url ? 'SIGNÉ LE ' + new Date().toLocaleDateString() : 'EN ATTENTE'}`])
+      cliSig.font = { size: 9, color: { argb: quote.client_signature_url ? 'FF059669' : 'FFD97706' }, bold: true }
 
       // Columns Width
       worksheet.getColumn(1).width = 50
@@ -216,7 +241,7 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
     } finally {
       setIsGeneratingLink(false)
     }
-  }, [quote, setCurrentQuote])
+  }, [quote.id, quote.public_token, setCurrentQuote])
 
   // ✍️ SAVE SIGNATURE
   const handleSaveSignature = useCallback(async (signatureData: string) => {
@@ -224,25 +249,28 @@ export function useQuoteActions({ quote, setCurrentQuote, setSignature }: UseQuo
       setIsSigning(true)
       const result = await acceptQuoteAction({
         quoteId: quote.id,
-        signatureDataUrl: signatureData
+        signatureDataUrl: signatureData,
+        signerType: 'artisan'
       })
+      
       if (!result.success) throw new Error(result.error)
+      
       const newSignature = result.signatureUrl || null
-      setSignature(newSignature)
-      setCurrentQuote(prev => ({ 
-        ...prev, 
-        status: 'accepted' as const, 
-        signature_url: newSignature 
+      
+      setCurrentQuote(prev => ({
+        ...prev,
+        artisan_signature_url: newSignature
       }))
+      
       setIsSigning(false)
       setIsSigPadOpen(false)
-      toast.success("Devis signé et approuvé !")
+      toast.success("Votre signature (Artisan) a été enregistrée !")
       router.refresh()
     } catch (e: any) {
       toast.error("Échec : " + e.message)
       setIsSigning(false)
     }
-  }, [quote.id, router, setCurrentQuote, setSignature])
+  }, [quote.id, router, setCurrentQuote])
 
   // 💰 CREATE PAYMENT
   const handleCreatePayment = useCallback(async () => {

@@ -6,11 +6,10 @@ import { cn } from '@/lib/utils'
 
 interface QuotePreviewProps {
   quote: Quote
-  signature: string | null
   onSignArtisan?: () => void
 }
 
-export function QuotePreview({ quote, signature, onSignArtisan }: QuotePreviewProps) {
+export function QuotePreview({ quote, onSignArtisan }: QuotePreviewProps) {
   const profile = quote.profiles
   const client = quote.clients
 
@@ -117,26 +116,25 @@ export function QuotePreview({ quote, signature, onSignArtisan }: QuotePreviewPr
            <div className="space-y-4">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-4">Cachet & Signature de l'Artisan</span>
               <div 
-                onClick={onSignArtisan}
+                onClick={quote.artisan_signature_url ? undefined : onSignArtisan}
                 className={cn(
-                  "h-48 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center transition-all cursor-pointer group relative overflow-hidden",
-                  quote.status === 'accepted' || quote.status === 'paid' 
+                  "h-48 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center transition-all group relative overflow-hidden",
+                  quote.artisan_signature_url 
                     ? "bg-slate-50 border-slate-200 cursor-default" 
-                    : "bg-indigo-50/30 border-indigo-200 hover:bg-white hover:border-indigo-400 hover:shadow-2xl hover:shadow-indigo-100"
+                    : "bg-indigo-50/30 border-indigo-200 hover:bg-white hover:border-indigo-400 hover:shadow-2xl hover:shadow-indigo-100 cursor-pointer"
                 )}
               >
-                 {quote.status === 'accepted' || quote.status === 'paid' ? (
-                   <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <PenLine className="w-6 h-6 text-emerald-600" />
-                      </div>
-                      <span className="text-sm font-black text-emerald-700 uppercase tracking-widest">Devis Signé</span>
-                   </div>
+                 {quote.artisan_signature_url ? (
+                   <img 
+                    src={quote.artisan_signature_url} 
+                    alt="Signature Artisan" 
+                    className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply transition-transform group-hover:scale-110" 
+                   />
                  ) : (
                    <>
                     <PenLine className="w-8 h-8 text-indigo-400 mb-3 group-hover:scale-110 group-hover:text-indigo-600 transition-all" />
                     <span className="text-sm font-black text-indigo-600 uppercase tracking-widest mb-1">Cliquer pour signer</span>
-                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Validation immédiate</span>
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Validation Artisan</span>
                     <div className="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                    </>
                  )}
@@ -146,15 +144,15 @@ export function QuotePreview({ quote, signature, onSignArtisan }: QuotePreviewPr
            <div className="space-y-4 text-right">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-4">Signature du Client (Précédée de "Bon pour accord")</span>
               <div className="h-48 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-center relative group transition-all hover:bg-white hover:border-indigo-100 hover:shadow-lg overflow-hidden">
-                 {signature ? (
+                 {quote.client_signature_url ? (
                    <img 
-                    src={signature} 
-                    alt="Signature" 
+                    src={quote.client_signature_url} 
+                    alt="Signature Client" 
                     className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply transition-transform group-hover:scale-110" 
                    />
                  ) : (
                    <div className="flex flex-col items-center gap-2 opacity-30">
-                     <span className="italic text-slate-400 font-medium text-sm">En attente de signature numérique</span>
+                     <span className="italic text-slate-400 font-medium text-sm">En attente de signature client</span>
                    </div>
                  )}
               </div>

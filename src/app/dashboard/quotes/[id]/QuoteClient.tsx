@@ -22,13 +22,12 @@ interface QuoteClientProps {
 export function QuoteClient({ quote }: QuoteClientProps) {
   
   // 1. Manage State & Realtime
-  const { currentQuote, setCurrentQuote, signature, setSignature } = useQuoteRealtime(quote)
+  const { currentQuote, setCurrentQuote } = useQuoteRealtime(quote)
 
   // 2. Manage Business Actions & Handlers
   const { loading, modals, handlers } = useQuoteActions({ 
     quote: currentQuote, 
-    setCurrentQuote, 
-    setSignature 
+    setCurrentQuote
   })
 
   // 🛡️ SECURITY GRADE 3 : Technical vs Commercial expiration
@@ -74,7 +73,6 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           <div className="lg:col-span-2 order-2 lg:order-1">
             <QuotePreview 
               quote={currentQuote} 
-              signature={signature} 
               onSignArtisan={handleScrollToSign}
             />
           </div>
@@ -83,7 +81,6 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           <div className="order-1 lg:order-2">
             <QuoteActionsPanel 
               quote={currentQuote}
-              signature={signature}
               isPaying={loading.isPaying}
               isGeneratingInvoice={loading.isGeneratingInvoice}
               isSigning={loading.isSigning}
@@ -109,7 +106,6 @@ export function QuoteClient({ quote }: QuoteClientProps) {
       <div className="fixed -left-[9999px] top-0">
         <PdfTemplate 
           quote={currentQuote} 
-          signature={signature} 
         />
       </div>
 

@@ -24,6 +24,8 @@ export type Quote = Omit<Database['public']['Tables']['quotes']['Row'], 'status'
   clients: Client | null
   profiles?: Profile | null
   quote_items?: QuoteItem[] | null
+  artisan_signature_url?: string | null
+  client_signature_url?: string | null
 }
 
 export type QuoteNotification = Quote & {

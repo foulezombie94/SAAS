@@ -83,7 +83,7 @@ export async function acceptQuoteAction(rawData: unknown) {
   const parsed = QuoteAcceptSchema.safeParse(rawData);
   if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message };
 
-  const { quoteId, signatureDataUrl } = parsed.data;
+  const { quoteId, signatureDataUrl, signerType } = parsed.data;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -96,19 +96,18 @@ export async function acceptQuoteAction(rawData: unknown) {
   try {
     const adminSupabase = createAdminClient();
     
-    // Extract MIME type dynamically (mobile can produce jpeg/webp instead of png)
+    // Extract MIME type
     const mimeMatch = signatureDataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,/)
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/png'
     const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png'
     
     const base64Data = signatureDataUrl.split(',')[1];
     const buffer = Buffer.from(base64Data, 'base64');
-    const fileName = `sig_${quoteId}_${Date.now()}.${ext}`;
+    const fileName = `sig_${signerType}_${quoteId}_${Date.now()}.${ext}`;
 
     const { error: uploadError } = await adminSupabase.storage
       .from('signatures')
       .upload(fileName, buffer, { contentType: mimeType, upsert: true });
-
 
     if (uploadError) throw uploadError;
 
@@ -116,10 +115,11 @@ export async function acceptQuoteAction(rawData: unknown) {
       .from('signatures')
       .getPublicUrl(fileName);
 
-    const { error: rpcError } = await supabase.rpc('accept_quote_v3', {
+    const { error: rpcError } = await supabase.rpc('accept_quote_v4', {
       p_quote_id: quoteId,
-      p_public_token: '', // Not needed for authenticated artisan
-      p_signature_url: publicUrl
+      p_public_token: '', // Use empty string instead of null
+      p_signature_url: publicUrl,
+      p_signer_type: signerType
     });
 
     if (rpcError) throw rpcError;

@@ -69,7 +69,8 @@ export const QuoteAcceptSchema = z.object({
       "Format de signature invalide (image base64 attendu)"
     )
     .min(100, "La signature semble vide"),
-  publicToken: z.string().optional(), // Utilisé pour les signatures clients sans auth
+  publicToken: z.string().optional(),
+  signerType: z.enum(['artisan', 'client']),
 }).strict();
 
 

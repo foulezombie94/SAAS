@@ -392,6 +392,8 @@ export type Database = {
           payment_method: string | null
           public_token: string | null
           public_token_expires_at: string | null
+          artisan_signature_url: string | null
+          client_signature_url: string | null
           signature_url: string | null
           status: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id: string | null
@@ -413,6 +415,8 @@ export type Database = {
           payment_method?: string | null
           public_token?: string | null
           public_token_expires_at?: string | null
+          artisan_signature_url?: string | null
+          client_signature_url?: string | null
           signature_url?: string | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
@@ -434,6 +438,8 @@ export type Database = {
           payment_method?: string | null
           public_token?: string | null
           public_token_expires_at?: string | null
+          artisan_signature_url?: string | null
+          client_signature_url?: string | null
           signature_url?: string | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
@@ -501,6 +507,15 @@ export type Database = {
             }
             Returns: string
           }
+      accept_quote_v4: {
+        Args: {
+          p_public_token: string
+          p_quote_id: string
+          p_signature_url: string
+          p_signer_type: string
+        }
+        Returns: Json
+      }
       create_invoice_from_quote_v2: {
         Args: { p_quote_id: string }
         Returns: Json

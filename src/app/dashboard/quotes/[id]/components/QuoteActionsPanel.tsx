@@ -19,7 +19,6 @@ import { cn } from '@/lib/utils'
 
 interface QuoteActionsPanelProps {
   quote: Quote
-  signature: string | null
   isPaying: boolean
   isGeneratingInvoice: boolean
   isSigning: boolean
@@ -33,7 +32,6 @@ interface QuoteActionsPanelProps {
 
 export function QuoteActionsPanel({
   quote,
-  signature,
   isPaying,
   isGeneratingInvoice,
   isSigning,
@@ -59,12 +57,12 @@ export function QuoteActionsPanel({
           </div>
         </div>
         <div className="p-6 space-y-6">
-          {/* Espace Signature */}
-          {!signature && quote.status !== 'paid' && (
+          {/* Espace Signature Artisan */}
+          {!quote.artisan_signature_url && quote.status !== 'paid' && (
             <div className="space-y-3 pb-2 border-b border-slate-100 mb-6">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-3 font-bold">
                 <Zap className="w-3.5 h-3.5 text-amber-500" />
-                Validation Interne
+                Votre Signature (Artisan)
               </label>
               
               <Button 
@@ -79,7 +77,7 @@ export function QuoteActionsPanel({
                 disabled={isSigPadOpen}
               >
                 <PenTool className="w-4 h-4 mr-2" />
-                {isSigPadOpen ? 'Signature en cours...' : 'Signer le devis'}
+                {isSigPadOpen ? 'Ouverture...' : 'Signer pour valider'}
               </Button>
 
               {isSigPadOpen && (
@@ -93,7 +91,7 @@ export function QuoteActionsPanel({
               )}
 
               <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
-                Utilisez cette zone pour signer vous-même le devis <br/>si le client l'a déjà validé oralement.
+                Validez le devis de votre côté. <br/>Le client devra également signer pour l'acceptation finale.
               </p>
             </div>
           )}
@@ -169,7 +167,11 @@ export function QuoteActionsPanel({
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-slate-500 font-medium italic">Signé par :</span>
-            <span className="font-bold text-slate-900">{signature ? 'Client / Artisan' : 'En attente'}</span>
+            <span className="font-bold text-slate-900">
+               {quote.artisan_signature_url && quote.client_signature_url ? 'Tout le monde' : 
+                quote.artisan_signature_url ? 'Artisan uniquement' : 
+                quote.client_signature_url ? 'Client uniquement' : 'En attente'}
+            </span>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
             <p className="text-[10px] leading-relaxed text-slate-400 font-bold uppercase tracking-tight">
