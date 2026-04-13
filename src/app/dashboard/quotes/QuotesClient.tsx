@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
@@ -35,6 +36,7 @@ interface QuotesClientProps {
 }
 
 export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
+  const router = useRouter()
   const supabase = createClient()
 
   // 0. Fetcher pour la synchronisation (Source de Vérité)
@@ -65,8 +67,9 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
           filter: `user_id=eq.${userId}` 
         },
         () => {
-          console.log("🔄 Realtime update for quotes list")
+          console.log("🔄 [Realtime] Mise à jour de la liste détectée")
           revalidate()
+          router.refresh()
         }
       )
       .subscribe()
