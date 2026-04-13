@@ -3,7 +3,7 @@
 import React from 'react'
 import { Card } from '@/components/ui/Card'
 import { Quote } from '@/types/dashboard'
-import { PenLine, Building2, Landmark, Check } from 'lucide-react'
+import { PenLine, Landmark, Check, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface QuotePreviewProps {
@@ -149,16 +149,16 @@ export function QuotePreview({ quote, onSignArtisan }: QuotePreviewProps) {
           <div className="w-80 space-y-4 bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
             <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-slate-400">
               <span>Total HT</span>
-              <span className="font-mono text-sm text-slate-900">{quote.total_ht.toLocaleString('fr-FR')} €</span>
+              <span className="font-mono text-sm text-slate-900">{(quote.total_ht ?? 0).toLocaleString('fr-FR')} €</span>
             </div>
             <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-slate-400">
               <span>TVA (20%)</span>
-              <span className="font-mono text-sm text-slate-900">{(quote.total_ttc - quote.total_ht).toLocaleString('fr-FR')} €</span>
+              <span className="font-mono text-sm text-slate-900">{((quote.total_ttc ?? 0) - (quote.total_ht ?? 0)).toLocaleString('fr-FR')} €</span>
             </div>
             <div className="pt-4 border-t-2 border-primary flex justify-between items-center">
               <span className="text-sm font-black uppercase tracking-tighter text-primary">Net à Payer</span>
               <span className="text-3xl font-black text-primary tracking-tighter font-mono italic">
-                {quote.total_ttc.toLocaleString('fr-FR')} €
+                {(quote.total_ttc ?? 0).toLocaleString('fr-FR')} €
               </span>
             </div>
           </div>
