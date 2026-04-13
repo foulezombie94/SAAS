@@ -90,11 +90,12 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'accepted': return 'bg-emerald-50 text-emerald-700 border-emerald-100'
-      case 'sent': return 'bg-blue-50 text-blue-700 border-blue-100'
-      case 'rejected': return 'bg-rose-50 text-rose-700 border-rose-100'
-      case 'invoiced': return 'bg-purple-50 text-purple-700 border-purple-100'
-      default: return 'bg-slate-50 text-slate-500 border-slate-100'
+      case 'accepted': return 'bg-[#e6fcf5] text-[#0ca678]'
+      case 'sent': return 'bg-[#e7f5ff] text-[#228be6]'
+      case 'rejected': return 'bg-rose-50 text-rose-700'
+      case 'invoiced': return 'bg-purple-50 text-purple-700'
+      case 'draft': return 'bg-[#3e2400] text-white'
+      default: return 'bg-slate-100 text-slate-500'
     }
   }
 
@@ -104,7 +105,7 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
       case 'sent': return 'Envoyé'
       case 'rejected': return 'Refusé'
       case 'invoiced': return 'Facturé'
-      case 'draft': return 'Brouillon'
+      case 'draft': return 'En Attente'
       default: return status
     }
   }
@@ -179,12 +180,12 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
       </div>
 
       <div className="space-y-4">
-        <div className="hidden md:grid grid-cols-12 px-12 py-4 text-[0.6875rem] font-black uppercase tracking-[0.2em] text-slate-400">
+        <div className="hidden md:grid grid-cols-12 px-12 py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
           <div className="col-span-2">Dossier</div>
           <div className="col-span-4">Mandataire</div>
           <div className="col-span-2">Émission</div>
-          <div className="col-span-2">État</div>
-          <div className="col-span-2 text-right">Volume TTC</div>
+          <div className="col-span-2 text-center">État</div>
+          <div className="col-span-2 text-right pr-4">Volume TTC</div>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -193,40 +194,38 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
               <Card className="p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group-hover:scale-[1.01] active:scale-[0.99] rounded-3xl">
                 <div className="col-span-2">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">N°</span>
-                    <span className="font-black text-primary tracking-tighter text-xl uppercase italic underline decoration-primary/10 group-hover:decoration-primary/40 transition-all">{quote.number}</span>
+                    <span className="text-xs font-black text-slate-300 uppercase tracking-widest mb-1">N°</span>
+                    <span className="font-black text-primary tracking-tighter text-2xl uppercase italic underline decoration-primary/10 group-hover:decoration-primary/40 transition-all">{quote.number}</span>
                   </div>
                 </div>
 
                 <div className="col-span-4 flex items-center gap-6">
-                  <div className="h-14 w-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black text-xl group-hover:bg-primary group-hover:text-on-primary transition-all uppercase shadow-sm">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black text-2xl group-hover:bg-primary group-hover:text-on-primary transition-all uppercase shadow-sm">
                     {quote.clients?.name?.charAt(0) || 'C'}
                   </div>
                   <div>
-                    <h4 className="font-black text-primary uppercase tracking-tighter text-lg group-hover:text-primary-container transition-colors">{quote.clients?.name || 'Client Inconnu'}</h4>
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">
-                      <Clock size={10} /> Validité à confirmer
+                    <h4 className="font-black text-primary uppercase tracking-tighter text-xl group-hover:text-primary-container transition-colors">{quote.clients?.name || 'Client Inconnu'}</h4>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">
+                      <Clock size={12} /> Validité à confirmer
                     </div>
                   </div>
                 </div>
                 
-                <div className="col-span-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                <div className="col-span-2 flex items-center text-sm font-black text-slate-400 uppercase tracking-widest">
                    {quote.created_at ? new Date(quote.created_at).toLocaleDateString() : 'N/A'}
                 </div>
 
-                <div className="col-span-2">
-                  <span className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${getStatusStyle(quote.status || 'draft')}`}>
+                <div className="col-span-2 flex items-center justify-center">
+                  <span className={`inline-flex items-center justify-center h-12 w-36 rounded-md font-black text-xs uppercase tracking-widest shadow-sm transition-all ${getStatusStyle(quote.status || 'draft')}`}>
                     {getStatusLabel(quote.status || 'draft')}
                   </span>
                 </div>
 
-                <div className="col-span-2 text-right">
-                  <div className="flex flex-col">
-                    <span className="font-black text-primary text-2xl tracking-tighter group-hover:scale-105 transition-transform">
+                <div className="col-span-2 flex flex-col justify-center text-right pr-4">
+                    <span className="font-black text-primary text-3xl tracking-tighter group-hover:scale-105 transition-transform origin-right">
                       {Number(quote.total_ttc).toLocaleString('fr-FR')} €
                     </span>
-                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Net à payer</span>
-                  </div>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">Net à payer</span>
                 </div>
               </Card>
             </Link>
