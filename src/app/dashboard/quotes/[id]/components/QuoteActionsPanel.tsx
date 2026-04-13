@@ -142,50 +142,64 @@ export function QuoteActionsPanel({
             <Trash2 className="w-[1.125rem] h-[1.125rem]" strokeWidth={2.5} />
           </Button>
         </div>
+            className="flex-1 h-[3.25rem] bg-[#f0f2f5] hover:bg-[#e4e7ec] rounded-md text-[#002266] transition-colors"
+          >
+            {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" strokeWidth={2} />}
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            className="flex-1 h-[3.25rem] bg-[#f0f2f5] hover:bg-red-100 rounded-md text-[#D32F2F] hover:text-red-700 transition-colors"
+          >
+            <Trash2 className="w-5 h-5 fill-[#D32F2F] text-[#D32F2F]" strokeWidth={2} />
+          </Button>
+        </div>
       </div>
 
-      {/* PENDING CLIENT APPROVAL BANNER (if applicable) */}
+      {/* Carte 2 : Barre d'état */}
       {isPending && (
-        <div className="bg-[#523600] text-[#ffac1c] rounded-md px-5 py-4 flex items-center justify-start gap-4 shadow-md">
-          <Info className="w-6 h-6 fill-[#ffac1c] text-[#523600] shrink-0" />
-          <span className="font-extrabold text-[12px] tracking-widest uppercase leading-tight">
-            PENDING CLIENT<br/>APPROVAL
+        <div className="bg-[#8C5500] text-[#facc15] rounded-md px-5 py-4 flex items-center justify-center gap-3 shadow-md">
+          <div className="bg-[#facc15] text-[#8C5500] rounded-full p-0.5 shadow-sm">
+            <Info className="w-5 h-5" strokeWidth={2.5} />
+          </div>
+          <span className="font-extrabold text-[12px] tracking-wider uppercase">
+            EN ATTENTE D'APPROBATION DU CLIENT
           </span>
         </div>
       )}
 
-      {/* PROJECT OVERVIEW */}
-      <div className="bg-[#f0f2f5] p-5 rounded-lg shadow-sm">
-        <h3 className="text-[10px] font-black uppercase text-[#8896aa] tracking-[0.15em] mb-5">Project Overview</h3>
+      {/* Fiche 3 : Aperçu du projet */}
+      <div className="bg-white p-5 rounded-lg shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]">
+        <h3 className="text-[11px] font-black uppercase text-gray-500 tracking-widest mb-5">APERÇU DU PROJET</h3>
         
         <div className="space-y-5">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-md shadow-sm flex items-center justify-center shrink-0">
-              <Calendar className="w-5 h-5 text-[#002f87]" strokeWidth={2.5} />
+            <div className="w-12 h-12 bg-[#f0f2f5] rounded-md shadow-sm flex items-center justify-center shrink-0">
+              <Calendar className="w-5 h-5 text-[#002266]" strokeWidth={2} />
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase text-[#8896aa] tracking-[0.1em]">Estimated Start</span>
-              <span className="font-extrabold text-[#111] text-[14px]">{createdDate}</span>
+              <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">DÉBUT ESTIMÉ</span>
+              <span className="font-extrabold text-gray-900 text-[14px] capitalize">{createdDate}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-md shadow-sm flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5 text-[#002f87]" strokeWidth={2.5} />
+            <div className="w-12 h-12 bg-[#f0f2f5] rounded-md shadow-sm flex items-center justify-center shrink-0">
+              <Timer className="w-5 h-5 text-[#002266]" strokeWidth={2} />
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase text-[#8896aa] tracking-[0.1em]">Project Duration</span>
-              <span className="font-extrabold text-[#111] text-[14px]">14 Working Days</span>
+              <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">DURÉE DU PROJET</span>
+              <span className="font-extrabold text-gray-900 text-[14px]">14 jours ouvrables</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-md shadow-sm flex items-center justify-center shrink-0">
-              <BookMarked className="w-5 h-5 text-[#002f87]" strokeWidth={2.5} />
+            <div className="w-12 h-12 bg-[#f0f2f5] rounded-md shadow-sm flex items-center justify-center shrink-0">
+              <Wallet className="w-5 h-5 text-[#002266]" strokeWidth={2} />
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase text-[#8896aa] tracking-[0.1em]">Taxable Region</span>
-              <span className="font-extrabold text-[#111] text-[14px]">UK Standard (20%)</span>
+              <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">RÉGION IMPOSABLE</span>
+              <span className="font-extrabold text-gray-900 text-[14px]">Royaume-Uni (20 %)</span>
             </div>
           </div>
         </div>
