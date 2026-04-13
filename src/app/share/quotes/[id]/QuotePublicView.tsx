@@ -204,11 +204,12 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
       // 🔄 RESTORE original styles in the real DOM
       allStyles.forEach((s, i) => { s.innerHTML = originalContents[i]; });
       
-      const imgData = canvas.toDataURL('image/png', 1.0)
+      // OPTIMIZATION: Convert to compressed JPEG to drastically reduce PDF weight (under 50KB logo equivalent)
+      const imgData = canvas.toDataURL('image/jpeg', 0.8)
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST')
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST')
       pdf.save(`Devis_${quote.number}.pdf`)
       toast.success("Téléchargement réussi !")
     } catch (e) {

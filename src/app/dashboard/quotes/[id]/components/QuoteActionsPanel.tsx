@@ -11,7 +11,7 @@ import {
   Wallet,
   Loader2,
   PenTool,
-  Printer,
+  Table as TableIcon,
   Timer
 } from 'lucide-react'
 import { Quote } from '@/types/dashboard'
@@ -52,10 +52,10 @@ export function QuoteActionsPanel({
   const isPaid = quote.status === 'paid'
   const isAccepted = ['accepted', 'paid', 'invoiced'].includes(quote.status)
   
-  // Format Date in French
-  const createdDate = new Date(quote.created_at || new Date()).toLocaleDateString('fr-FR', {
+  // Format Date safely
+  const createdDate = new Date(quote.created_at || new Date()).toLocaleDateString('en-US', {
+    month: 'short',
     day: 'numeric',
-    month: 'long',
     year: 'numeric'
   })
 
@@ -65,9 +65,9 @@ export function QuoteActionsPanel({
   return (
     <div className="space-y-4 sticky top-8 p-1 bg-[#F7F7F9] rounded-lg">
       
-      {/* Carte 1 : Centre de commandement */}
+      {/* COMMAND CENTER */}
       <div className="bg-white p-5 rounded-lg shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]">
-        <h3 className="text-[11px] font-black uppercase text-gray-500 tracking-widest mb-4">CENTRE DE COMMANDE</h3>
+        <h3 className="text-[11px] font-black uppercase text-[#8896aa] tracking-widest mb-4">COMMAND CENTER</h3>
         
         {/* Espace Signature Artisan (Always on top if missing) */}
         {!quote.artisan_signature_url && quote.status !== 'paid' && (
@@ -78,12 +78,12 @@ export function QuoteActionsPanel({
                 "w-full h-[3.25rem] rounded-md font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] shadow-sm",
                 isSigPadOpen 
                   ? "bg-slate-200 text-slate-500 hover:bg-slate-200" 
-                  : "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white border-none"
+                  : "bg-gradient-to-r from-[#eea400] to-[#e69800] hover:from-[#e69800] hover:to-[#df8f00] text-white border-none"
               )}
               disabled={isSigPadOpen}
             >
               <PenTool className="w-5 h-5" />
-              {isSigPadOpen ? 'OUVERTURE...' : 'SIGNER'}
+              {isSigPadOpen ? 'OPENING...' : 'SIGN (ARTISAN)'}
             </Button>
           </div>
         )}
@@ -91,58 +91,46 @@ export function QuoteActionsPanel({
         <div className="space-y-3">
           <Button 
             onClick={onOpenEmailModal}
-            className="w-full h-[3.25rem] bg-[#F29900] hover:bg-[#d98900] text-gray-900 border-none shadow-sm rounded-md font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
+            className="w-full h-[3.25rem] bg-[#eea400] hover:bg-[#df9000] text-black border-none shadow-md rounded-md font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
           >
-            <Send className="w-[1.25rem] h-[1.25rem] fill-gray-900" strokeWidth={2} />
-            ENVOYER AU CLIENT
+            <Send className="w-[1.25rem] h-[1.25rem] fill-black" strokeWidth={2.5} />
+            SEND TO CLIENT
           </Button>
 
           <Button 
             onClick={onCreatePayment}
             disabled={isPaying || isPaid}
-            className="w-full h-[3.25rem] bg-white hover:bg-gray-50 text-[#002266] border border-gray-200 shadow-sm rounded-md font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-all hover:scale-[1.02]"
+            className="w-full h-[3.25rem] bg-white hover:bg-slate-50 text-[#002266] border border-slate-200 shadow-sm rounded-md font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-all hover:scale-[1.02]"
           >
             {isPaying ? <Loader2 className="w-[1.25rem] h-[1.25rem] animate-spin" /> : <LinkIcon className="w-[1.25rem] h-[1.25rem]" strokeWidth={2.5} />}
-            LIEN DE PAIEMENT
+            PAYMENT LINK
           </Button>
 
           <Button 
             onClick={onCreateInvoice}
             disabled={isGeneratingInvoice || !isAccepted}
-            className="w-full h-[3.25rem] bg-[#002266] hover:bg-[#001540] text-white shadow-sm border-none rounded-md font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
+            className="w-full h-[3.25rem] bg-[#002266] hover:bg-[#001540] text-white shadow-md border-none rounded-md font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
           >
             {isGeneratingInvoice ? <Loader2 className="w-[1.25rem] h-[1.25rem] animate-spin" /> : <FileText className="w-[1.25rem] h-[1.25rem] fill-white" />}
-            <span>CONVERTIR EN<br/>FACTURE</span>
+            <span className="flex-1 text-center pr-2">CONVERT TO<br/>INVOICE</span>
           </Button>
         </div>
 
-        {/* Barre d'icônes d'action */}
-        <div className="flex items-center justify-between gap-3 pt-5 border-t border-gray-100 mt-5">
+        {/* Action icons bar */}
+        <div className="flex items-center justify-between gap-3 pt-5 border-t border-slate-100 mt-5">
           <Button 
             variant="ghost" 
             onClick={onDownloadPdf}
             disabled={isGeneratingPdf}
-            className="flex-1 h-[3.25rem] bg-[#f0f2f5] hover:bg-[#e4e7ec] rounded-md text-[#002266] transition-colors"
+            className="flex-1 h-[3.25rem] bg-[#e9ebef] hover:bg-[#dde0e5] rounded-md text-[#002266] transition-colors"
           >
-            {isGeneratingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" strokeWidth={2} />}
+            {isGeneratingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" strokeWidth={2.5} />}
           </Button>
           
           <Button 
             variant="ghost" 
             onClick={onDownloadExcel}
             disabled={isGeneratingExcel}
-            className="flex-1 h-[3.25rem] bg-[#f0f2f5] hover:bg-[#e4e7ec] rounded-md text-[#002266] transition-colors"
-          >
-            {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" strokeWidth={2} />}
-          </Button>
-
-          <Button 
-            variant="ghost" 
-            className="flex-1 h-[3.25rem] bg-[#f0f2f5] hover:bg-red-100 rounded-md text-[#D32F2F] hover:text-red-700 transition-colors"
-          >
-            <Trash2 className="w-5 h-5 fill-[#D32F2F] text-[#D32F2F]" strokeWidth={2} />
-          </Button>
-        </div>
             className="flex-1 h-[3.25rem] bg-[#e9ebef] hover:bg-[#dde0e5] rounded-md text-[#002266] transition-colors"
           >
             {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <TableIcon className="w-5 h-5" strokeWidth={2.5} />}
