@@ -27,6 +27,7 @@ import { useSyncCache } from '@/lib/hooks/useSyncCache'
 import { createClient } from '@/utils/supabase/client'
 import { useDebounce } from '@/lib/hooks/useDebounce'
 import { getQuotesServer } from '@/app/dashboard/data-actions'
+import { cn } from '@/lib/utils'
 
 interface QuotesClientProps {
   initialQuotes: Quote[]
