@@ -33,22 +33,23 @@ export function QuoteSnapshot({ quote, onOpenPreview }: QuoteSnapshotProps) {
 
       <Card 
         onClick={onOpenPreview}
-        className="relative aspect-[3/4.2] bg-slate-200/50 border border-slate-200/50 shadow-diffused rounded-[2.5rem] overflow-hidden cursor-pointer group transition-all duration-700 hover:shadow-3xl hover:border-primary/20"
+        className="relative aspect-[3/4.2] bg-slate-50 border border-slate-200/50 shadow-diffused rounded-[2.5rem] overflow-hidden cursor-pointer group transition-all duration-700 hover:shadow-3xl hover:border-primary/20"
       >
-        {/* 📄 THE PIXEL-PERFECT MINIATURE (Scaled Live Version) */}
-        <div className="absolute inset-4 overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-700 group-hover:scale-[1.03] group-hover:-rotate-1">
+        {/* 📄 THE PIXEL-PERFECT MINIATURE (Dynamic Filling) */}
+        <div className="absolute inset-2 md:inset-4 overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-700 group-hover:scale-[1.03] group-hover:-rotate-1">
           {/* 
-              Scaling Wrapper: We render the REAL QuotePreview at full size 
-              but scale it down to fit the container. 
-              Approx width of A4 in px is ~800px. Container is ~300px. Scale ~0.37.
+              Scaling Wrapper: 
+              - Use a large base width (e.g. 1000px) for the real component
+              - Scale it down to fit the actual card width
+              - Added 'origin-top' to keep visibility clear
           */}
-          <div className="absolute top-0 left-0 w-[800px] origin-top-left pointer-events-none select-none scale-[0.38] md:scale-[0.35] lg:scale-[0.32]">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] origin-top pointer-events-none select-none scale-[0.4] md:scale-[0.45] lg:scale-[0.48] transition-transform duration-700">
              <QuotePreview quote={quote} />
           </div>
         </div>
 
         {/* 👁️ PREMIUM OVERLAY */}
-        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 backdrop-blur-[0px] group-hover:backdrop-blur-[3px] transition-all duration-700 flex flex-col items-center justify-center gap-4">
+        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 backdrop-blur-[0px] group-hover:backdrop-blur-[3px] transition-all duration-700 flex flex-col items-center justify-center gap-4 z-20">
           <div className="w-16 h-16 rounded-[2rem] bg-white shadow-3xl flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-all duration-700 ease-out-back transform rotate-12 group-hover:rotate-0">
             <Eye size={28} strokeWidth={2.5} />
           </div>
@@ -58,13 +59,11 @@ export function QuoteSnapshot({ quote, onOpenPreview }: QuoteSnapshotProps) {
           </div>
         </div>
 
-        {/* Status indicator pill */}
+        {/* Pulse Status Indicator (Top Corner Only) */}
         <div className={cn(
-           "absolute top-10 right-10 px-3 py-1 rounded-full z-10 text-[8px] font-black uppercase tracking-widest shadow-xl border-l-2",
-           quote.status === 'accepted' ? 'bg-emerald-500 text-white border-emerald-300' : 'bg-orange-500 text-white border-orange-300',
-        )}>
-          {quote.status === 'accepted' ? 'Accepté' : 'En attente'}
-        </div>
+           "absolute top-6 right-6 w-3 h-3 rounded-full z-30 ring-4 ring-white shadow-xl",
+           quote.status === 'accepted' ? 'bg-emerald-500 animate-pulse shadow-emerald-500/50' : 'bg-orange-500 animate-pulse shadow-orange-500/50',
+        )} />
       </Card>
 
       {/* 📊 CONTEXTUAL METRICS */}
