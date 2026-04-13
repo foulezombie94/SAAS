@@ -33,36 +33,31 @@ export function QuoteSnapshot({ quote, onOpenPreview }: QuoteSnapshotProps) {
 
       <Card 
         onClick={onOpenPreview}
-        className="relative aspect-[3/4.2] bg-slate-50 border border-slate-200/50 shadow-diffused rounded-[2.5rem] overflow-hidden cursor-pointer group transition-all duration-700 hover:shadow-3xl hover:border-primary/20"
+        className="relative aspect-[3/4.2] bg-white border border-slate-200 shadow-diffused rounded-[2.5rem] overflow-hidden cursor-pointer group transition-all duration-700 hover:shadow-3xl hover:border-primary/20"
       >
-        {/* 📄 THE PIXEL-PERFECT MINIATURE (Dynamic Filling) */}
-        <div className="absolute inset-2 md:inset-4 overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-700 group-hover:scale-[1.03] group-hover:-rotate-1">
+        {/* 📄 THE PIXEL-PERFECT MINIATURE (VRAI DEVIS) */}
+        <div className="absolute inset-0 overflow-hidden transition-all duration-700 group-hover:scale-[1.05]">
           {/* 
-              Scaling Wrapper: 
-              - Use a large base width (e.g. 1000px) for the real component
-              - Scale it down to fit the actual card width
-              - Added 'origin-top' to keep visibility clear
+              Full Space Filling Technique:
+              - Render the real component with a fixed width 
+              - Scale it precisely to match the card width (no inset/padding)
           */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] origin-top pointer-events-none select-none scale-[0.4] md:scale-[0.45] lg:scale-[0.48] transition-transform duration-700">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] origin-top pointer-events-none select-none scale-[0.42] md:scale-[0.45] lg:scale-[0.48]">
              <QuotePreview quote={quote} />
           </div>
         </div>
 
         {/* 👁️ PREMIUM OVERLAY */}
-        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 backdrop-blur-[0px] group-hover:backdrop-blur-[3px] transition-all duration-700 flex flex-col items-center justify-center gap-4 z-20">
+        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 backdrop-blur-[0px] group-hover:backdrop-blur-[2px] transition-all duration-700 flex flex-col items-center justify-center gap-4 z-20">
           <div className="w-16 h-16 rounded-[2rem] bg-white shadow-3xl flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-all duration-700 ease-out-back transform rotate-12 group-hover:rotate-0">
             <Eye size={28} strokeWidth={2.5} />
           </div>
-          <div className="flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 translate-y-8 group-hover:translate-y-0 transition-all duration-700 delay-100">
-             <span className="text-[12px] font-black uppercase tracking-[0.4em] text-primary">VOIR DOCUMENT RÉEL</span>
-             <span className="text-[8px] font-bold text-primary/40 uppercase tracking-widest">Plein Écran HD</span>
-          </div>
         </div>
 
-        {/* Pulse Status Indicator (Top Corner Only) */}
+        {/* Pulse Status Indicator */}
         <div className={cn(
            "absolute top-6 right-6 w-3 h-3 rounded-full z-30 ring-4 ring-white shadow-xl",
-           quote.status === 'accepted' ? 'bg-emerald-500 animate-pulse shadow-emerald-500/50' : 'bg-orange-500 animate-pulse shadow-orange-500/50',
+           quote.status === 'accepted' ? 'bg-emerald-500 animate-pulse' : 'bg-orange-500 animate-pulse',
         )} />
       </Card>
 
