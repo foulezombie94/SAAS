@@ -96,6 +96,10 @@ export function QuoteClient({ quote }: QuoteClientProps) {
                 onCreatePayment={handlers.handleCreatePayment}
                 onCreateInvoice={handlers.handleCreateInvoice}
                 onOpenEmailModal={() => modals.setIsEmailModalOpen(true)}
+                onDownloadPdf={handlers.handleDownloadPdf}
+                onDownloadExcel={handlers.handleDownloadExcel}
+                isGeneratingPdf={loading.isGeneratingPdf}
+                isGeneratingExcel={loading.isGeneratingExcel}
               />
             </div>
           </div>
