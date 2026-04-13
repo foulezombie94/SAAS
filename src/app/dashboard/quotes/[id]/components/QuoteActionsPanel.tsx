@@ -62,7 +62,7 @@ export function QuoteActionsPanel({
   })
 
   // Pending Status Banner check
-  const isPending = quote.status === 'draft' || quote.status === 'sent' || quote.status === 'consulted'
+  const isPending = ['draft', 'sent'].includes(quote.status) || (quote.status === 'accepted' && !quote.artisan_signature_url && !quote.client_signature_url)
 
   return (
     <div className="space-y-6 sticky top-8">
