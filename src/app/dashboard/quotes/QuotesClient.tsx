@@ -14,7 +14,13 @@ import {
   TrendingUp,
   Calendar,
   RefreshCw,
-  Loader2
+  Loader2,
+  Check,
+  Send,
+  MessageSquare,
+  PenTool,
+  Banknote,
+  Receipt
 } from 'lucide-react'
 import { Quote } from '@/types/dashboard'
 import { useSyncCache } from '@/lib/hooks/useSyncCache'
@@ -110,6 +116,27 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
     }
   }
 
+  const getStepIndex = (s: string) => {
+    switch (s) {
+      case 'draft': return 0;
+      case 'sent': return 1;
+      case 'consulted': return 2;
+      case 'accepted': return 3;
+      case 'paid': return 4;
+      case 'invoiced': return 5;
+      default: return 0;
+    }
+  }
+
+  const stepperSteps = [
+    { label: 'CREATED', icon: Check },
+    { label: 'SENT', icon: Send },
+    { label: 'CONSULTED', icon: MessageSquare },
+    { label: 'SIGNED', icon: PenTool },
+    { label: 'PAID', icon: Banknote },
+    { label: 'INVOICED', icon: Receipt },
+  ];
+
   return (
     <div className="space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between self-stretch gap-8">
@@ -180,12 +207,11 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
       </div>
 
       <div className="space-y-4">
-        <div className="hidden md:grid grid-cols-12 px-12 py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+        <div className="hidden md:grid grid-cols-12 px-12 py-4 text-[0.6875rem] font-black uppercase tracking-[0.2em] text-slate-400">
           <div className="col-span-2">Dossier</div>
-          <div className="col-span-4">Mandataire</div>
-          <div className="col-span-2">Émission</div>
-          <div className="col-span-2 text-center">État</div>
-          <div className="col-span-2 text-right pr-4">Volume TTC</div>
+          <div className="col-span-3">Mandataire</div>
+          <div className="col-span-5 text-center">État</div>
+          <div className="col-span-2 text-right">Volume TTC</div>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -194,31 +220,56 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
               <Card className="p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-none shadow-sm hover:shadow-2xl transition-all cursor-pointer bg-white group-hover:scale-[1.01] active:scale-[0.99] rounded-3xl">
                 <div className="col-span-2">
                   <div className="flex flex-col">
-                    <span className="text-xs font-black text-slate-300 uppercase tracking-widest mb-1">N°</span>
-                    <span className="font-black text-primary tracking-tighter text-2xl uppercase italic underline decoration-primary/10 group-hover:decoration-primary/40 transition-all">{quote.number}</span>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">N°</span>
+                    <span className="font-black text-primary tracking-tighter text-xl uppercase italic underline decoration-primary/10 group-hover:decoration-primary/40 transition-all">{quote.number}</span>
                   </div>
                 </div>
 
-                <div className="col-span-4 flex items-center gap-6">
-                  <div className="h-16 w-16 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black text-2xl group-hover:bg-primary group-hover:text-on-primary transition-all uppercase shadow-sm">
+                <div className="col-span-3 flex items-center gap-6">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black text-xl group-hover:bg-primary group-hover:text-on-primary transition-all uppercase shadow-sm shrink-0">
                     {quote.clients?.name?.charAt(0) || 'C'}
                   </div>
-                  <div>
-                    <h4 className="font-black text-primary uppercase tracking-tighter text-xl group-hover:text-primary-container transition-colors">{quote.clients?.name || 'Client Inconnu'}</h4>
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">
-                      <Clock size={12} /> Validité à confirmer
+                  <div className="min-w-0">
+                    <h4 className="font-black text-primary uppercase tracking-tighter text-lg truncate group-hover:text-primary-container transition-colors">{quote.clients?.name || 'Client Inconnu'}</h4>
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">
+                       {quote.created_at ? new Date(quote.created_at).toLocaleDateString() : 'N/A'}
                     </div>
                   </div>
                 </div>
-                
-                <div className="col-span-2 flex items-center text-sm font-black text-slate-400 uppercase tracking-widest">
-                   {quote.created_at ? new Date(quote.created_at).toLocaleDateString() : 'N/A'}
-                </div>
 
-                <div className="col-span-2 flex items-center justify-center">
-                  <span className={`inline-flex items-center justify-center h-12 w-36 rounded-md font-black text-xs uppercase tracking-widest shadow-sm transition-all ${getStatusStyle(quote.status || 'draft')}`}>
-                    {getStatusLabel(quote.status || 'draft')}
-                  </span>
+                <div className="col-span-5 flex items-center justify-center -mx-4">
+                  <div className="flex items-center justify-between w-full max-w-sm">
+                    {stepperSteps.map((step, idx) => {
+                       const currentStatusIndex = getStepIndex(quote.status || 'draft');
+                       const isActive = idx <= currentStatusIndex;
+                       const isPast = idx < currentStatusIndex;
+                       const Icon = step.icon;
+                       
+                       return (
+                         <React.Fragment key={step.label}>
+                           <div className="flex flex-col items-center gap-2 relative z-10 bg-white px-1">
+                             <div className={`w-8 h-8 rounded-[12px] flex items-center justify-center transition-all ${
+                               isActive 
+                                 ? 'bg-[#002878] text-white shadow-[0_4px_12px_rgba(0,40,120,0.2)]' 
+                                 : 'bg-white border-2 border-slate-100 text-slate-300'
+                             }`}>
+                               <Icon size={14} strokeWidth={isActive ? 3 : 2} />
+                             </div>
+                             <span className={`text-[7px] font-black uppercase tracking-[0.2em] absolute -bottom-4 whitespace-nowrap ${
+                               isActive ? 'text-[#002878]' : 'text-slate-300'
+                             }`}>
+                               {step.label}
+                             </span>
+                           </div>
+                           {idx < stepperSteps.length - 1 && (
+                             <div className={`h-[2px] flex-1 rounded-full -mx-2 relative top-[-8px] ${
+                               isPast ? 'bg-[#002878]' : 'bg-slate-100'
+                             }`} />
+                           )}
+                         </React.Fragment>
+                       )
+                    })}
+                  </div>
                 </div>
 
                 <div className="col-span-2 flex flex-col justify-center text-right pr-4">
