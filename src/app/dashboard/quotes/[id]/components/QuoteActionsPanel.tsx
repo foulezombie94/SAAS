@@ -115,11 +115,11 @@ export function QuoteActionsPanel({
         </Button>
 
         {/* Action icons bar */}
-        <div className="pt-4 mt-4 border-t border-[#c5c5d3]/30 flex justify-between gap-2">
+        <div className="pt-4 mt-4 border-t border-[#c5c5d3]/30 flex justify-between gap-3">
           <Button 
             onClick={onDownloadPdf}
             disabled={isGeneratingPdf}
-            className="flex-1 bg-[#e3e1e9] p-3 h-auto rounded text-[#00236f] hover:bg-[#00236f] hover:text-white transition-all shadow-none border-none"
+            className="flex-1 bg-white p-3 h-[3.25rem] rounded-lg text-[#00236f] hover:bg-slate-50 transition-all shadow-sm border border-slate-200"
           >
             {isGeneratingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" strokeWidth={2.5} />}
           </Button>
@@ -127,13 +127,13 @@ export function QuoteActionsPanel({
           <Button 
             onClick={onDownloadExcel}
             disabled={isGeneratingExcel}
-            className="flex-1 bg-[#e3e1e9] p-3 h-auto rounded text-[#00236f] hover:bg-[#00236f] hover:text-white transition-all shadow-none border-none"
+            className="flex-1 bg-white p-3 h-[3.25rem] rounded-lg text-[#00236f] hover:bg-slate-50 transition-all shadow-sm border border-slate-200"
           >
             {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <TableIcon className="w-5 h-5" strokeWidth={2.5} />}
           </Button>
 
           <Button 
-            className="flex-1 bg-[#e3e1e9] p-3 h-auto rounded text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-none border-none"
+            className="flex-1 bg-white p-3 h-[3.25rem] rounded-lg text-[#ba1a1a] hover:bg-red-50 transition-all shadow-sm border border-red-100"
           >
             <Trash2 className="w-5 h-5" strokeWidth={2.5} />
           </Button>
