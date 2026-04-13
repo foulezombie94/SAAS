@@ -14,7 +14,7 @@ import {
   PenTool,
   Table as TableIcon,
   Clock,
-  Briefcase
+  BookMarked
 } from 'lucide-react'
 import { Quote } from '@/types/dashboard'
 import { cn } from '@/lib/utils'
@@ -65,19 +65,19 @@ export function QuoteActionsPanel({
   const isPending = ['draft', 'sent'].includes(quote.status) || (quote.status === 'accepted' && !quote.artisan_signature_url && !quote.client_signature_url)
 
   return (
-    <div className="space-y-6 sticky top-8">
+    <div className="space-y-4 sticky top-8">
       
       {/* COMMAND CENTER */}
-      <div className="bg-[#f4f5f7] p-6 lg:p-8 rounded-[24px] space-y-4 shadow-sm border border-slate-100/50">
-        <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Command Center</h3>
+      <div className="bg-[#f2f4f7] p-5 rounded-lg space-y-4">
+        <h3 className="text-[11px] font-black uppercase text-[#7b8a9d] tracking-widest mb-2">Command Center</h3>
         
         {/* Espace Signature Artisan (Always on top if missing) */}
         {!quote.artisan_signature_url && quote.status !== 'paid' && (
-          <div className="space-y-3 pb-4 mb-4 border-b border-slate-200/60">
+          <div className="space-y-3 pb-3 mb-3 border-b border-slate-200/60">
             <Button 
               onClick={() => setIsSigPadOpen(true)}
               className={cn(
-                "w-full h-12 rounded-xl font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] shadow-sm",
+                "w-full h-12 rounded font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] shadow-sm",
                 isSigPadOpen 
                   ? "bg-slate-200 text-slate-500 hover:bg-slate-200" 
                   : "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white border-none"
@@ -92,101 +92,99 @@ export function QuoteActionsPanel({
 
         <Button 
           onClick={onOpenEmailModal}
-          className="w-full h-14 bg-[#f09a00] hover:bg-[#d88a00] text-slate-900 border-none shadow-sm rounded-xl font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
+          className="w-full h-[3.25rem] bg-[#eea400] hover:bg-[#d89400] text-[#111] border-none shadow-sm rounded-md font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
         >
-          <Send className="w-5 h-5 fill-slate-900" />
+          <Send className="w-[1.125rem] h-[1.125rem] fill-[#111]" strokeWidth={2.5} />
           SEND TO CLIENT
         </Button>
 
         <Button 
           onClick={onCreatePayment}
           disabled={isPaying || isPaid}
-          className="w-full h-14 bg-white hover:bg-slate-50 text-[#002878] border border-slate-200 shadow-sm rounded-xl font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
+          className="w-full h-[3.25rem] bg-white hover:bg-slate-50 text-[#001e5c] border border-slate-200 shadow-sm rounded-md font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
         >
-          {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : <LinkIcon className="w-5 h-5" />}
+          {isPaying ? <Loader2 className="w-[1.125rem] h-[1.125rem] animate-spin" /> : <LinkIcon className="w-[1.125rem] h-[1.125rem]" strokeWidth={2.5} />}
           PAYMENT LINK
         </Button>
 
         <Button 
           onClick={onCreateInvoice}
           disabled={isGeneratingInvoice || !isAccepted}
-          className="w-full h-14 bg-[#002878] hover:bg-[#001f5c] text-white shadow-sm border-none rounded-xl font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
+          className="w-full h-[3.25rem] bg-[#002266] hover:bg-[#001a4d] text-white shadow-sm border-none rounded-md font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
         >
-          {isGeneratingInvoice ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5 fill-white" />}
+          {isGeneratingInvoice ? <Loader2 className="w-[1.125rem] h-[1.125rem] animate-spin" /> : <FileText className="w-[1.125rem] h-[1.125rem] fill-white" />}
           CONVERT TO INVOICE
         </Button>
 
-        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-200/70 mt-6">
+        <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200/70 mt-3">
           <Button 
             variant="ghost" 
             onClick={onDownloadPdf}
             disabled={isGeneratingPdf}
-            className="h-14 bg-slate-200/50 hover:bg-slate-200 rounded-xl text-[#002878] transition-colors"
+            className="h-12 bg-[#e9ebef] hover:bg-[#dde0e5] rounded-md text-[#001e5c] transition-colors"
           >
-            {isGeneratingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+            {isGeneratingPdf ? <Loader2 className="w-[1.125rem] h-[1.125rem] animate-spin" /> : <Download className="w-[1.125rem] h-[1.125rem]" strokeWidth={2.5} />}
           </Button>
           
           <Button 
             variant="ghost" 
             onClick={onDownloadExcel}
             disabled={isGeneratingExcel}
-            className="h-14 bg-slate-200/50 hover:bg-slate-200 rounded-xl text-[#002878] transition-colors"
+            className="h-12 bg-[#e9ebef] hover:bg-[#dde0e5] rounded-md text-[#001e5c] transition-colors"
           >
-            {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <TableIcon className="w-5 h-5" />}
+            {isGeneratingExcel ? <Loader2 className="w-[1.125rem] h-[1.125rem] animate-spin" /> : <TableIcon className="w-[1.125rem] h-[1.125rem]" strokeWidth={2.5} />}
           </Button>
 
           <Button 
             variant="ghost" 
-            className="h-14 bg-slate-200/50 hover:bg-red-100 rounded-xl text-red-600 hover:text-red-700 transition-colors"
+            className="h-12 bg-[#e9ebef] hover:bg-red-100 rounded-md text-[#cc0000] hover:text-red-700 transition-colors"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-[1.125rem] h-[1.125rem]" strokeWidth={2.5} />
           </Button>
         </div>
       </div>
 
       {/* PENDING CLIENT APPROVAL BANNER (if applicable) */}
       {isPending && (
-        <div className="bg-[#4d3300] text-[#ffb82e] rounded-[16px] p-5 flex items-center gap-4 shadow-lg shadow-amber-900/10">
-          <div className="bg-[#ffb82e] text-[#4d3300] rounded-full p-1.5 flex items-center justify-center shrink-0">
-            <Info className="w-4 h-4 font-black" strokeWidth={3} />
-          </div>
-          <span className="font-black text-[13px] tracking-widest uppercase leading-tight">
+        <div className="bg-[#4d3300] text-[#ffb82e] rounded-md p-4 flex items-center justify-center gap-3 shadow-sm border border-[#5c3e00]">
+          <Info className="w-[1.125rem] h-[1.125rem] fill-[#ffb82e] text-[#4d3300]" />
+          <span className="font-black text-xs tracking-widest uppercase mt-0.5">
             Pending Client Approval
           </span>
         </div>
       )}
 
       {/* PROJECT OVERVIEW */}
-      <div className="bg-[#f4f5f7] p-6 lg:p-8 rounded-[24px] space-y-6 shadow-sm border border-slate-100/50">
-        <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">Project Overview</h3>
+      <div className="bg-[#f2f4f7] p-5 rounded-lg space-y-5">
+        <h3 className="text-[11px] font-black uppercase text-[#7b8a9d] tracking-widest mb-4">Project Overview</h3>
         
-        <div className="flex items-center gap-5">
-          <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
-            <Calendar className="w-5 h-5 text-[#002878]" />
+        <div className="flex items-center gap-4">
+          <div className="w-[2.75rem] h-[2.75rem] bg-white rounded shadow-sm flex items-center justify-center shrink-0 border border-slate-100">
+            <Calendar className="w-[1.125rem] h-[1.125rem] text-[#001e5c]" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest leading-none">Estimated Start</span>
-            <span className="font-bold text-slate-800 text-sm">{createdDate}</span>
+            <span className="text-[10px] font-black uppercase text-[#8896aa] tracking-widest leading-none">Estimated Start</span>
+            <span className="font-bold text-[#2a3039] text-[13px]">{createdDate}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
-          <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5 text-[#002878]" />
+        <div className="flex items-center gap-4">
+          <div className="w-[2.75rem] h-[2.75rem] bg-white rounded shadow-sm flex items-center justify-center shrink-0 border border-slate-100">
+            <Clock className="w-[1.125rem] h-[1.125rem] text-[#001e5c]" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest leading-none">Project Duration</span>
-            <span className="font-bold text-slate-800 text-sm">14 Working Days</span>
+            <span className="text-[10px] font-black uppercase text-[#8896aa] tracking-widest leading-none">Project Duration</span>
+            <span className="font-bold text-[#2a3039] text-[13px]">14 Working Days</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
-          <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
-            <Briefcase className="w-5 h-5 text-[#002878]" /> 
+        <div className="flex items-center gap-4">
+          <div className="w-[2.75rem] h-[2.75rem] bg-white rounded shadow-sm flex items-center justify-center shrink-0 border border-slate-100">
+            <BookMarked className="w-[1.125rem] h-[1.125rem] text-[#001e5c]" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest leading-none">Taxable Region</span>
-            <span className="font-bold text-slate-800 text-sm">UK Standard (20%)</span>
+            <span className="text-[10px] font-black uppercase text-[#8896aa] tracking-widest leading-none">Taxable Region</span>
+            <span className="font-bold text-[#2a3039] text-[13px]">UK Standard (20%)</span>
           </div>
         </div>
       </div>
