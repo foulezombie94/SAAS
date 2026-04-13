@@ -184,28 +184,28 @@ export default async function DashboardPage({
         </div>
         
         <Card className="rounded-2xl shadow-diffused overflow-hidden border-none bg-white py-4">
-          <div className="grid grid-cols-4 px-8 py-3 text-[0.625rem] font-black uppercase tracking-widest text-[#5e6c84]/60">
+          <div className="grid grid-cols-4 px-10 py-5 text-xs font-black uppercase tracking-widest text-[#5e6c84]/70">
             <span>Client</span>
             <span>Référence</span>
             <span>Montant</span>
-            <span className="text-right">Statut</span>
+            <span className="text-right pr-6">Statut</span>
           </div>
           
           <div className="border-b border-dashed border-[#4A90E2]/40 mx-8 mb-4"></div>
 
           <div className="space-y-1">
             {(quotes as Quote[] || []).slice(0, 5).map((quote) => (
-              <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`} className="grid grid-cols-4 px-8 py-4 items-center hover:bg-slate-50/50 transition-all cursor-pointer group rounded-lg mx-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-primary font-black text-xs shadow-sm border border-slate-200">
+              <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`} className="grid grid-cols-4 px-10 py-5 items-center hover:bg-slate-50/50 transition-all cursor-pointer group rounded-xl mx-2">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary font-black text-sm shadow-sm border border-slate-200">
                     {quote.clients?.name?.charAt(0) || 'C'}
                   </div>
-                  <span className="font-bold text-[#1a1b21] tracking-tight text-sm">{quote.clients?.name || 'Client Inconnu'}</span>
+                  <span className="font-bold text-[#1a1b21] tracking-tight text-base">{quote.clients?.name || 'Client Inconnu'}</span>
                 </div>
-                <span className="text-[#5e6c84] font-bold text-xs tracking-tight">{quote.number}</span>
-                <span className="font-black text-lg tracking-tighter text-[#1a1b21]">{Number(quote.total_ttc).toLocaleString('fr-FR')}€</span>
+                <span className="text-[#5e6c84] font-bold text-sm tracking-tight">{quote.number}</span>
+                <span className="font-black text-xl tracking-tighter text-[#1a1b21]">{Number(quote.total_ttc).toLocaleString('fr-FR')}€</span>
                 <div className="text-right">
-                  <span className={`inline-flex items-center justify-center h-12 w-32 rounded-sm font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 ${
+                  <span className={`inline-flex items-center justify-center h-12 w-36 rounded-md font-black text-xs uppercase tracking-widest transition-transform active:scale-95 shadow-sm ${
                     quote.status === 'accepted' ? 'bg-[#e6fcf5] text-[#0ca678]' :
                     quote.status === 'sent' ? 'bg-[#e7f5ff] text-[#228be6]' :
                     quote.status === 'draft' ? 'bg-[#3e2400] text-white' :
