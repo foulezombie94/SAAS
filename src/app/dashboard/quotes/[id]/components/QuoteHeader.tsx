@@ -14,7 +14,12 @@ export function QuoteHeader({
   isTokenExpired
 }: QuoteHeaderProps) {
   
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (status: string, hasBeenViewed: boolean) => {
+    // Priority: If the client has viewed it, show 'Consulté' instead of 'Envoyé'
+    if (status === 'sent' && hasBeenViewed) {
+      return { label: 'Consulté', class: 'bg-indigo-100 text-indigo-700 border-indigo-200' }
+    }
+
     switch (status) {
       case 'draft': return { label: 'Brouillon', class: 'bg-slate-100 text-slate-700 border-slate-200' }
       case 'sent': return { label: 'Envoyé', class: 'bg-blue-100 text-blue-700 border-blue-200' }
@@ -26,7 +31,7 @@ export function QuoteHeader({
     }
   }
 
-  const statusConfig = getStatusConfig(quote.status)
+  const statusConfig = getStatusConfig(quote.status, !!quote.last_viewed_at)
 
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

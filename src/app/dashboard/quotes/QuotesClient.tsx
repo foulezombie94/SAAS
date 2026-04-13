@@ -94,7 +94,9 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
     totalValue: filteredQuotes.reduce((acc: number, q: Quote) => acc + Number(q.total_ttc), 0)
   }), [filteredQuotes])
 
-  const getStatusStyle = (status: string) => {
+  const getStatusStyle = (status: string, hasBeenViewed?: boolean) => {
+    if (status === 'sent' && hasBeenViewed) return 'bg-indigo-50 text-indigo-700'
+
     switch (status) {
       case 'accepted': return 'bg-[#e6fcf5] text-[#0ca678]'
       case 'sent': return 'bg-[#e7f5ff] text-[#228be6]'
@@ -105,7 +107,9 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
     }
   }
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string, hasBeenViewed?: boolean) => {
+    if (status === 'sent' && hasBeenViewed) return 'Consulté'
+    
     switch (status) {
       case 'accepted': return 'Accepté'
       case 'sent': return 'Envoyé'
@@ -201,7 +205,15 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
                 <div className="col-span-2">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">N°</span>
-                    <span className="font-black text-primary tracking-tighter text-xl uppercase italic underline decoration-primary/10 group-hover:decoration-primary/40 transition-all">{quote.number}</span>
+                    <div className="flex flex-col gap-2">
+                      <span className="font-black text-primary tracking-tighter text-xl uppercase italic underline decoration-primary/10 group-hover:decoration-primary/40 transition-all">{quote.number}</span>
+                      <div className={cn(
+                        "inline-flex self-start px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-sm",
+                        getStatusStyle(quote.status || 'draft', !!quote.last_viewed_at)
+                      )}>
+                        {getStatusLabel(quote.status || 'draft', !!quote.last_viewed_at)}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
