@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { X, Download, Printer, Share2 } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { X, Download, Printer, Share2, FileText } from 'lucide-react'
 import { QuotePreview } from './QuotePreview'
 import { Quote } from '@/types/dashboard'
 import { Button } from '@/components/ui/Button'
@@ -15,18 +16,29 @@ interface FullPreviewModalProps {
 
 export function FullPreviewModal({ isOpen, onClose, quote, onDownloadPdf }: FullPreviewModalProps) {
   
-  // ⌨️ Close on Escape
+  // ⌨️ Close on Escape & 🔒 Body Scroll Lock
   useEffect(() => {
+    if (!isOpen) return
+
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
+    
+    // Lock scroll
+    const originalStyle = window.getComputedStyle(document.body).overflow
+    document.body.style.overflow = 'hidden'
+    
     window.addEventListener('keydown', handleEsc)
-    return () => window.removeEventListener('keydown', handleEsc)
-  }, [onClose])
+    
+    return () => {
+      window.removeEventListener('keydown', handleEsc)
+      document.body.style.overflow = originalStyle
+    }
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
       {/* 🌫️ BACKDROP */}
       <div 
@@ -95,6 +107,7 @@ export function FullPreviewModal({ isOpen, onClose, quote, onDownloadPdf }: Full
       `}</style>
     </div>
   )
-}
 
-import { FileText } from 'lucide-react'
+  // Use portal to attach to body
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null
+}
