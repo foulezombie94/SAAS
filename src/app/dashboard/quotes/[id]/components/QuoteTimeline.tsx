@@ -17,12 +17,12 @@ interface Step {
 
 export function QuoteTimeline({ status, lastViewedAt }: QuoteTimelineProps) {
   const steps: Step[] = [
-    { id: 'created', label: 'CREATED', icon: Check, active: true },
-    { id: 'sent', label: 'SENT', icon: Send, active: status !== 'draft' },
-    { id: 'consulted', label: 'CONSULTED', icon: MessageSquare, active: !!lastViewedAt },
-    { id: 'signed', label: 'SIGNED', icon: PenTool, active: ['accepted', 'paid', 'invoiced'].includes(status) },
-    { id: 'paid', label: 'PAID', icon: Banknote, active: status === 'paid' },
-    { id: 'invoiced', label: 'INVOICED', icon: Receipt, active: status === 'invoiced' },
+    { id: 'created', label: 'CRÉÉ', icon: Check, active: true },
+    { id: 'sent', label: 'ENVOYÉ', icon: Send, active: status !== 'draft' },
+    { id: 'consulted', label: 'CONSULTÉ', icon: MessageSquare, active: !!lastViewedAt },
+    { id: 'signed', label: 'SIGNÉ', icon: PenTool, active: ['accepted', 'paid', 'invoiced'].includes(status) },
+    { id: 'paid', label: 'PAYÉ', icon: Banknote, active: status === 'paid' },
+    { id: 'invoiced', label: 'FACTURÉ', icon: Receipt, active: status === 'invoiced' },
   ]
 
   return (

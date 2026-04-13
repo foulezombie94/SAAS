@@ -220,12 +220,12 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
                 <div className="col-span-5 flex items-center justify-center -mx-4">
                   <div className="flex items-center justify-between w-full max-w-sm">
                     {[
-                      { id: 'created', label: 'CREATED', icon: Check, active: true },
-                      { id: 'sent', label: 'SENT', icon: Send, active: quote.status !== 'draft' },
-                      { id: 'consulted', label: 'CONSULTED', icon: MessageSquare, active: !!quote.last_viewed_at },
-                      { id: 'signed', label: 'SIGNED', icon: PenTool, active: ['accepted', 'paid', 'invoiced'].includes(quote.status || 'draft') },
-                      { id: 'paid', label: 'PAID', icon: Banknote, active: ['paid', 'invoiced'].includes(quote.status || 'draft') }, 
-                      { id: 'invoiced', label: 'INVOICED', icon: Receipt, active: quote.status === 'invoiced' },
+                      { id: 'created', label: 'CRÉÉ', icon: Check, active: true },
+                      { id: 'sent', label: 'ENVOYÉ', icon: Send, active: quote.status !== 'draft' },
+                      { id: 'consulted', label: 'CONSULTÉ', icon: MessageSquare, active: !!quote.last_viewed_at },
+                      { id: 'signed', label: 'SIGNÉ', icon: PenTool, active: ['accepted', 'paid', 'invoiced'].includes(quote.status || 'draft') },
+                      { id: 'paid', label: 'PAYÉ', icon: Banknote, active: ['paid', 'invoiced'].includes(quote.status || 'draft') }, 
+                      { id: 'invoiced', label: 'FACTURÉ', icon: Receipt, active: quote.status === 'invoiced' },
                     ].map((step, idx, arr) => {
                        const isActive = step.active;
                        const isNextActive = idx < arr.length - 1 && arr[idx + 1].active;
