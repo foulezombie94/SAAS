@@ -146,45 +146,47 @@ export function QuoteActionsPanel({
 
       {/* PENDING CLIENT APPROVAL BANNER (if applicable) */}
       {isPending && (
-        <div className="bg-[#4d3300] text-[#ffb82e] rounded-md p-4 flex items-center justify-center gap-3 shadow-sm border border-[#5c3e00]">
-          <Info className="w-[1.125rem] h-[1.125rem] fill-[#ffb82e] text-[#4d3300]" />
-          <span className="font-black text-xs tracking-widest uppercase mt-0.5">
-            Pending Client Approval
+        <div className="bg-[#523600] text-[#ffac1c] rounded-md px-5 py-4 flex items-center justify-start gap-4 shadow-md">
+          <Info className="w-6 h-6 fill-[#ffac1c] text-[#523600] shrink-0" />
+          <span className="font-extrabold text-[12px] tracking-widest uppercase leading-tight">
+            PENDING CLIENT<br/>APPROVAL
           </span>
         </div>
       )}
 
       {/* PROJECT OVERVIEW */}
-      <div className="bg-[#f2f4f7] p-5 rounded-lg space-y-5">
-        <h3 className="text-[11px] font-black uppercase text-[#7b8a9d] tracking-widest mb-4">Project Overview</h3>
+      <div className="bg-[#f0f2f5] p-5 rounded-lg shadow-sm">
+        <h3 className="text-[10px] font-black uppercase text-[#8896aa] tracking-[0.15em] mb-5">Project Overview</h3>
         
-        <div className="flex items-center gap-4">
-          <div className="w-[2.75rem] h-[2.75rem] bg-white rounded shadow-sm flex items-center justify-center shrink-0 border border-slate-100">
-            <Calendar className="w-[1.125rem] h-[1.125rem] text-[#001e5c]" strokeWidth={2.5} />
+        <div className="space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-md shadow-sm flex items-center justify-center shrink-0">
+              <Calendar className="w-5 h-5 text-[#002f87]" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] font-black uppercase text-[#8896aa] tracking-[0.1em]">Estimated Start</span>
+              <span className="font-extrabold text-[#111] text-[14px]">{createdDate}</span>
+            </div>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-black uppercase text-[#8896aa] tracking-widest leading-none">Estimated Start</span>
-            <span className="font-bold text-[#2a3039] text-[13px]">{createdDate}</span>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-4">
-          <div className="w-[2.75rem] h-[2.75rem] bg-white rounded shadow-sm flex items-center justify-center shrink-0 border border-slate-100">
-            <Clock className="w-[1.125rem] h-[1.125rem] text-[#001e5c]" strokeWidth={2.5} />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-md shadow-sm flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5 text-[#002f87]" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] font-black uppercase text-[#8896aa] tracking-[0.1em]">Project Duration</span>
+              <span className="font-extrabold text-[#111] text-[14px]">14 Working Days</span>
+            </div>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-black uppercase text-[#8896aa] tracking-widest leading-none">Project Duration</span>
-            <span className="font-bold text-[#2a3039] text-[13px]">14 Working Days</span>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-4">
-          <div className="w-[2.75rem] h-[2.75rem] bg-white rounded shadow-sm flex items-center justify-center shrink-0 border border-slate-100">
-            <BookMarked className="w-[1.125rem] h-[1.125rem] text-[#001e5c]" strokeWidth={2.5} />
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-black uppercase text-[#8896aa] tracking-widest leading-none">Taxable Region</span>
-            <span className="font-bold text-[#2a3039] text-[13px]">UK Standard (20%)</span>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-md shadow-sm flex items-center justify-center shrink-0">
+              <BookMarked className="w-5 h-5 text-[#002f87]" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] font-black uppercase text-[#8896aa] tracking-[0.1em]">Taxable Region</span>
+              <span className="font-extrabold text-[#111] text-[14px]">UK Standard (20%)</span>
+            </div>
           </div>
         </div>
       </div>
