@@ -61,21 +61,26 @@ export function useQuoteRealtime(initialQuote: Quote) {
              }
 
              // 2. Gestion des Notifications (Toasts)
-             const showToast = (type: string, title: string, desc: string, hash?: string) => {
-               const key = `AF_EVT_${updated.id}_${type}_${hash || ''}`
+             const showToast = (type: string, title: string, desc: string) => {
+               const key = `AF_EVT_${updated.id}_${type}`
                if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
                  localStorage.setItem(key, Date.now().toString())
                  toast.success(title, { description: desc })
                }
              }
 
-             if (updated.status === 'paid' && prev.status !== 'paid') {
+             // Déclencheurs spécifiques pour éviter le spam
+             const justBecameConsulted = updated.last_viewed_at && !prev.last_viewed_at;
+             const justSigned = updated.status === 'accepted' && prev.status !== 'accepted';
+             const justPaid = updated.status === 'paid' && prev.status !== 'paid';
+
+             if (justPaid) {
                 showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant marqué comme payé.`)
-             } else if (updated.status === 'accepted' && prev.status !== 'accepted') {
+             } else if (justSigned) {
                 showToast('signed', "✍️ Devis signé !", `Le client a validé le devis #${updated.number}.`)
-             } else if (updated.last_viewed_at && updated.last_viewed_at !== prev.last_viewed_at) {
-                showToast('viewed', "👀 Devis consulté !", `Le client est en train de regarder le devis #${updated.number}.`, updated.last_viewed_at)
-             } else if (updated.artisan_signature_url && prev.artisan_signature_url !== updated.artisan_signature_url) {
+             } else if (justBecameConsulted) {
+                showToast('viewed', "👀 Devis consulté !", `Le client est en train de regarder le devis #${updated.number}.`)
+             } else if (updated.artisan_signature_url && !prev.artisan_signature_url) {
                 showToast('artisan_signed', "✍️ Signature artisan ajoutée !", `Le devis #${updated.number} a été signé par l'artisan.`)
              }
 
