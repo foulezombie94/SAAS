@@ -176,39 +176,45 @@ export default async function DashboardPage({
 
       {/* Recent Activity List */}
       <section className="space-y-4">
-        <div className="flex justify-between items-center px-1">
-          <h4 className="text-xl font-black text-primary uppercase tracking-tighter">Activités Récentes</h4>
+        <div className="flex justify-between items-center px-1 pt-4">
+          <h4 className="text-xl font-black text-[#1a1b21] tracking-tighter uppercase">Activités Récentes</h4>
           <Link href="/dashboard/quotes">
-            <Button variant="ghost" className="font-black uppercase tracking-widest text-[10px]">Voir tout</Button>
+            <span className="font-black text-primary text-[10px] uppercase tracking-widest hover:underline cursor-pointer">Voir tout</span>
           </Link>
         </div>
         
-        <Card className="rounded-2xl shadow-diffused overflow-hidden border-none bg-white">
-          <div className="grid grid-cols-4 px-8 py-3 bg-surface-container-low/50 text-[0.625rem] font-black uppercase tracking-widest text-on-surface-variant/50">
+        <Card className="rounded-2xl shadow-diffused overflow-hidden border-none bg-white py-4">
+          <div className="grid grid-cols-4 px-8 py-3 text-[0.625rem] font-black uppercase tracking-widest text-[#5e6c84]/60">
             <span>Client</span>
             <span>Référence</span>
             <span>Montant</span>
             <span className="text-right">Statut</span>
           </div>
-          <div className="divide-y divide-slate-100/30">
+          
+          <div className="border-b border-dashed border-[#4A90E2]/40 mx-8 mb-4"></div>
+
+          <div className="space-y-1">
             {(quotes as Quote[] || []).slice(0, 5).map((quote) => (
-              <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`} className="grid grid-cols-4 px-8 py-4 items-center hover:bg-surface-container-low/20 transition-all cursor-pointer group active:bg-surface-container-low/40">
+              <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`} className="grid grid-cols-4 px-8 py-4 items-center hover:bg-slate-50/50 transition-all cursor-pointer group rounded-lg mx-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-primary font-black text-xs group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-primary font-black text-xs shadow-sm border border-slate-200">
                     {quote.clients?.name?.charAt(0) || 'C'}
                   </div>
-                  <span className="font-black text-primary tracking-tighter uppercase text-sm">{quote.clients?.name || 'Client Inconnu'}</span>
+                  <span className="font-bold text-[#1a1b21] tracking-tight text-sm">{quote.clients?.name || 'Client Inconnu'}</span>
                 </div>
-                <span className="text-on-surface-variant font-bold text-xs tracking-tight">{quote.number}</span>
-                <span className="font-black text-base tracking-tighter text-on-surface">{Number(quote.total_ttc).toLocaleString('fr-FR')}€</span>
+                <span className="text-[#5e6c84] font-bold text-xs tracking-tight">{quote.number}</span>
+                <span className="font-black text-lg tracking-tighter text-[#1a1b21]">{Number(quote.total_ttc).toLocaleString('fr-FR')}€</span>
                 <div className="text-right">
-                  <span className={`inline-flex items-center h-8 px-4 rounded-full font-black text-[9px] uppercase tracking-widest shadow-sm ${
-                    quote.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                    quote.status === 'draft' ? 'bg-tertiary-container/10 text-on-tertiary-container' :
-                    quote.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                  <span className={`inline-flex items-center justify-center h-12 w-32 rounded-sm font-black text-[10px] uppercase tracking-widest transition-transform active:scale-95 ${
+                    quote.status === 'accepted' ? 'bg-[#e6fcf5] text-[#0ca678]' :
+                    quote.status === 'sent' ? 'bg-[#e7f5ff] text-[#228be6]' :
+                    quote.status === 'draft' ? 'bg-[#3e2400] text-white' :
                     'bg-slate-100 text-slate-500'
                   }`}>
-                    {quote.status}
+                    {quote.status === 'accepted' ? 'ACCEPTÉ' : 
+                     quote.status === 'sent' ? 'ENVOYÉ' : 
+                     quote.status === 'draft' ? 'EN ATTENTE' : 
+                     quote.status}
                   </span>
                 </div>
               </Link>
