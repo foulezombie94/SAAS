@@ -73,15 +73,19 @@ export function useQuoteRealtime(initialQuote: Quote) {
              const justBecameConsulted = updated.last_viewed_at && !prev.last_viewed_at;
              const justSigned = updated.status === 'accepted' && prev.status !== 'accepted';
              const justPaid = updated.status === 'paid' && prev.status !== 'paid';
+             
+             // On s'assure qu'une signature artisan n'alerte pas si le devis est déjà signé/accepté
+             const artisanJustSigned = updated.artisan_signature_url && !prev.artisan_signature_url && updated.status !== 'accepted';
 
              if (justPaid) {
                 showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant marqué comme payé.`)
              } else if (justSigned) {
-                showToast('signed', "✍️ Devis signé !", `Le client a validé le devis #${updated.number}.`)
+                // On utilise la clé 'signature' pour que ça bloque aussi les futures alertes 'artisan_signed'
+                showToast('signature', "✍️ Devis signé !", `Le client a validé le devis #${updated.number}.`)
              } else if (justBecameConsulted) {
                 showToast('viewed', "👀 Devis consulté !", `Le client est en train de regarder le devis #${updated.number}.`)
-             } else if (updated.artisan_signature_url && !prev.artisan_signature_url) {
-                showToast('artisan_signed', "✍️ Signature artisan ajoutée !", `Le devis #${updated.number} a été signé par l'artisan.`)
+             } else if (artisanJustSigned) {
+                showToast('signature', "✍️ Signature artisan ajoutée !", `Le devis #${updated.number} a été signé par l'artisan.`)
              }
 
              return { ...prev, ...updated };
