@@ -134,10 +134,10 @@ export function QuotePreview({ quote, onSignArtisan }: QuotePreviewProps) {
                     <p className="font-black text-slate-900 text-base mb-1 tracking-tight">{item.description}</p>
                     <p className="text-xs text-slate-400 italic font-medium">Prestation de service certifiée ArtisanFlow.</p>
                   </td>
-                  <td className="px-4 py-5 text-center font-black text-slate-600 font-mono italic">{item.quantity.toFixed(2)}</td>
+                  <td className="px-4 py-5 text-center font-black text-slate-600 font-mono italic">{(item.quantity ?? 0).toFixed(2)}</td>
                   <td className="px-4 py-5 text-center font-bold text-slate-400 uppercase text-[10px] tracking-widest">Pce</td>
-                  <td className="px-4 py-5 text-right font-bold text-slate-600 font-mono italic">{item.unit_price.toLocaleString('fr-FR')} €</td>
-                  <td className="px-6 py-5 text-right font-black text-slate-900 font-mono text-base italic">{item.total_price.toLocaleString('fr-FR')} €</td>
+                  <td className="px-4 py-5 text-right font-bold text-slate-600 font-mono italic">{(item.unit_price ?? 0).toLocaleString('fr-FR')} €</td>
+                  <td className="px-6 py-5 text-right font-black text-slate-900 font-mono text-base italic">{(item.total_price ?? 0).toLocaleString('fr-FR')} €</td>
                 </tr>
               ))}
             </tbody>
