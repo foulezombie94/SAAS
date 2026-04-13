@@ -82,7 +82,7 @@ export function QuoteActionsPanel({
               disabled={isSigPadOpen}
             >
               <PenTool className="w-5 h-5 fill-current" />
-              {isSigPadOpen ? 'OPENING...' : 'SIGN (ARTISAN)'}
+              {isSigPadOpen ? 'OUVERTURE...' : 'SIGNER (ARTISAN)'}
             </button>
           </div>
         )}
@@ -92,7 +92,7 @@ export function QuoteActionsPanel({
           className="w-full bg-[#ef9900] text-[#2a1700] hover:text-[#2a1700] p-4 h-auto rounded font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 shadow-lg border-none"
         >
           <Send className="w-5 h-5 fill-current" strokeWidth={2.5} />
-          SEND TO CLIENT
+          ENVOYER AU CLIENT
         </button>
 
         <button 
@@ -101,7 +101,7 @@ export function QuoteActionsPanel({
           className="w-full bg-white text-[#00236f] hover:text-[#00236f] border border-[#00236f]/20 p-4 h-auto rounded font-bold flex items-center justify-center gap-3 hover:bg-[#faf8ff] transition-all scale-100 active:scale-95 disabled:opacity-50"
         >
           {isGeneratingLink ? <Loader2 className="w-5 h-5 animate-spin" /> : <LinkIcon className="w-5 h-5" strokeWidth={2.5} />}
-          GENERATE LINK
+          GÉNÉRER LE LIEN
         </button>
 
         <button 
@@ -110,7 +110,7 @@ export function QuoteActionsPanel({
           className="w-full bg-[#00236f] text-white hover:text-white p-4 h-auto rounded font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 border-none disabled:opacity-50"
         >
           {isGeneratingInvoice ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5 fill-current" />}
-          <span className="text-center">CONVERT TO INVOICE</span>
+          <span className="text-center">CONVERTIR EN FACTURE</span>
         </button>
 
         {/* Action icons bar */}
@@ -143,7 +143,7 @@ export function QuoteActionsPanel({
       {isPending && (
         <div className="bg-[#5c3800]/10 text-[#ef9900] h-14 rounded-xl flex items-center px-6 gap-4 border border-[#ef9900]/20">
           <Info className="w-5 h-5 fill-[#ef9900] text-white" strokeWidth={2.5} />
-          <span className="font-bold text-sm tracking-wide uppercase">PENDING CLIENT APPROVAL</span>
+          <span className="font-bold text-sm tracking-wide uppercase">EN ATTENTE DU CLIENT</span>
         </div>
       )}
 

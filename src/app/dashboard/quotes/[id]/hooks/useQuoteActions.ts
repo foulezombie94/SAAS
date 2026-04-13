@@ -278,13 +278,29 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       }
       const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${token}`
       await navigator.clipboard.writeText(shareUrl)
+
+      // Automatically mark as sent if it was a draft
+      if (quote.status === 'draft') {
+        const supabase = createClient()
+        const { error: updateError } = await supabase
+          .from('quotes')
+          .update({ status: 'sent', updated_at: new Date().toISOString() })
+          .eq('id', quote.id)
+        
+        if (!updateError) {
+          setCurrentQuote(prev => ({ ...prev, status: 'sent' }))
+        } else {
+          console.error("Failed to update quote status to sent:", updateError)
+        }
+      }
+
       toast.success("Lien de partage copié !")
     } catch (error: any) {
       toast.error("Erreur link : " + error.message)
     } finally {
       setIsGeneratingLink(false)
     }
-  }, [quote.id, quote.public_token, setCurrentQuote])
+  }, [quote.id, quote.public_token, quote.status, setCurrentQuote])
 
   // ✍️ SAVE SIGNATURE
   const handleSaveSignature = useCallback(async (signatureData: string) => {
