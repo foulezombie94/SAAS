@@ -7,8 +7,9 @@ import { cn } from '@/lib/utils'
 // 🏗️ Sub-components
 import { QuoteHeader } from './components/QuoteHeader'
 import { QuoteTimeline } from './components/QuoteTimeline'
-import { QuotePreview } from './components/QuotePreview'
+import { QuoteSnapshot } from './components/QuoteSnapshot'
 import { QuoteActionsPanel } from './components/QuoteActionsPanel'
+import { FullPreviewModal } from './components/FullPreviewModal'
 import { EmailModal } from './components/EmailModal'
 import { PdfTemplate } from './components/PdfTemplate'
 import { SignaturePad } from '@/components/SignaturePad'
@@ -37,8 +38,12 @@ export function QuoteClient({ quote }: QuoteClientProps) {
     ? new Date(currentQuote.public_token_expires_at) < new Date() 
     : null
 
+  // 3. State for Preview Modal
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false)
+
   // Handler for direct signing from preview
   const handleScrollToSign = () => {
+    setIsPreviewOpen(false) // Close preview if open
     modals.setIsSigPadOpen(true)
     const element = document.getElementById('command-center')
     if (element) {
@@ -60,23 +65,23 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             isTokenExpired={isTokenExpired}
           />
 
-          {/* TIMELINE SECTION */}
-          <QuoteTimeline 
-            status={currentQuote.status} 
-            lastViewedAt={currentQuote.last_viewed_at} 
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* MAIN DOCUMENT PREVIEW (Left) */}
-            <div className="lg:col-span-2 order-2 lg:order-1">
-              <QuotePreview 
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* 📸 DOCUMENT SNAPSHOT (Left - Col 5) */}
+            <div className="lg:col-span-5 order-2 lg:order-1 sticky top-8">
+              <QuoteSnapshot 
                 quote={currentQuote} 
-                onSignArtisan={handleScrollToSign}
+                onOpenPreview={() => setIsPreviewOpen(true)}
               />
             </div>
 
-            {/* COMMAND CENTER (Right) */}
-            <div className="order-1 lg:order-2">
+            {/* 🕹️ COMMAND CENTER & TIMELINE (Right - Col 7) */}
+            <div className="lg:col-span-7 order-1 lg:order-2 space-y-8">
+              {/* TIMELINE SECTION (Moved here for better vertical balance) */}
+              <QuoteTimeline 
+                status={currentQuote.status} 
+                lastViewedAt={currentQuote.last_viewed_at} 
+              />
+
               <QuoteActionsPanel 
                 quote={currentQuote}
                 isGeneratingInvoice={loading.isGeneratingInvoice}
@@ -95,6 +100,14 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             </div>
           </div>
         </div>
+
+        {/* 🎬 FULLSCREEN PREVIEW MODAL */}
+        <FullPreviewModal 
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          quote={currentQuote}
+          onDownloadPdf={handlers.handleDownloadPdf}
+        />
 
         {/* MODALS & PORTALS */}
         <EmailModal 
