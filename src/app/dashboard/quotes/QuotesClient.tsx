@@ -116,26 +116,6 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
     }
   }
 
-  const getStepIndex = (s: string) => {
-    switch (s) {
-      case 'draft': return 0;
-      case 'sent': return 1;
-      case 'consulted': return 2;
-      case 'accepted': return 3;
-      case 'paid': return 4;
-      case 'invoiced': return 5;
-      default: return 0;
-    }
-  }
-
-  const stepperSteps = [
-    { label: 'CREATED', icon: Check },
-    { label: 'SENT', icon: Send },
-    { label: 'CONSULTED', icon: MessageSquare },
-    { label: 'SIGNED', icon: PenTool },
-    { label: 'PAID', icon: Banknote },
-    { label: 'INVOICED', icon: Receipt },
-  ];
 
   return (
     <div className="space-y-12">
@@ -239,10 +219,16 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
 
                 <div className="col-span-5 flex items-center justify-center -mx-4">
                   <div className="flex items-center justify-between w-full max-w-sm">
-                    {stepperSteps.map((step, idx) => {
-                       const currentStatusIndex = getStepIndex(quote.status || 'draft');
-                       const isActive = idx <= currentStatusIndex;
-                       const isPast = idx < currentStatusIndex;
+                    {[
+                      { id: 'created', label: 'CREATED', icon: Check, active: true },
+                      { id: 'sent', label: 'SENT', icon: Send, active: quote.status !== 'draft' },
+                      { id: 'consulted', label: 'CONSULTED', icon: MessageSquare, active: !!quote.last_viewed_at },
+                      { id: 'signed', label: 'SIGNED', icon: PenTool, active: ['accepted', 'paid', 'invoiced'].includes(quote.status || 'draft') },
+                      { id: 'paid', label: 'PAID', icon: Banknote, active: ['paid', 'invoiced'].includes(quote.status || 'draft') }, 
+                      { id: 'invoiced', label: 'INVOICED', icon: Receipt, active: quote.status === 'invoiced' },
+                    ].map((step, idx, arr) => {
+                       const isActive = step.active;
+                       const isNextActive = idx < arr.length - 1 && arr[idx + 1].active;
                        const Icon = step.icon;
                        
                        return (
@@ -261,9 +247,9 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
                                {step.label}
                              </span>
                            </div>
-                           {idx < stepperSteps.length - 1 && (
+                           {idx < arr.length - 1 && (
                              <div className={`h-[2px] flex-1 rounded-full -mx-2 relative top-[-8px] ${
-                               isPast ? 'bg-[#002878]' : 'bg-slate-100'
+                               isNextActive ? 'bg-[#002878]' : 'bg-slate-100'
                              }`} />
                            )}
                          </React.Fragment>
