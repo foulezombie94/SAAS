@@ -57,15 +57,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           {/* HEADER SECTION */}
           <QuoteHeader 
             quote={currentQuote}
-            isGeneratingPdf={loading.isGeneratingPdf}
-            isGeneratingExcel={loading.isGeneratingExcel}
-            isGeneratingLink={loading.isGeneratingLink}
-            isGeneratingInvoice={loading.isGeneratingInvoice}
             isTokenExpired={isTokenExpired}
-            onDownloadPdf={handlers.handleDownloadPdf}
-            onDownloadExcel={handlers.handleDownloadExcel}
-            onCopyShareLink={handlers.handleCopyShareLink}
-            onCreateInvoice={handlers.handleCreateInvoice}
           />
 
           {/* TIMELINE SECTION */}

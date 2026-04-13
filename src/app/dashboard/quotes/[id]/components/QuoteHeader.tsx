@@ -1,42 +1,17 @@
 import React from 'react'
-import { Button } from '@/components/ui/Button'
 import { Quote } from '@/types/dashboard'
-import { 
-  FileText, 
-  Download, 
-  Share2, 
-  ArrowLeft,
-  Loader2,
-  FileCheck,
-  Table as TableIcon
-} from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface QuoteHeaderProps {
   quote: Quote
-  isGeneratingPdf: boolean
-  isGeneratingExcel: boolean
-  isGeneratingLink: boolean
-  isGeneratingInvoice: boolean
   isTokenExpired: boolean | null
-  onDownloadPdf: () => void
-  onDownloadExcel: () => void
-  onCopyShareLink: () => void
-  onCreateInvoice: () => void
 }
 
 export function QuoteHeader({
   quote,
-  isGeneratingPdf,
-  isGeneratingExcel,
-  isGeneratingLink,
-  isGeneratingInvoice,
-  isTokenExpired,
-  onDownloadPdf,
-  onDownloadExcel,
-  onCopyShareLink,
-  onCreateInvoice
+  isTokenExpired
 }: QuoteHeaderProps) {
   
   const getStatusConfig = (status: string) => {
@@ -64,9 +39,6 @@ export function QuoteHeader({
           Retour aux devis
         </Link>
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 ring-1 ring-white">
-            <FileText className="w-6 h-6 text-white" />
-          </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none mb-1.5 flex items-center gap-2">
               Devis {quote.number}
@@ -83,51 +55,6 @@ export function QuoteHeader({
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        {/* BOUTON PDF */}
-        <Button 
-          variant="outline" 
-          disabled={isGeneratingPdf}
-          onClick={onDownloadPdf}
-          className="h-10 px-4 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 shadow-sm transition-all"
-        >
-          {isGeneratingPdf ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-          PDF
-        </Button>
-
-        {/* BOUTON EXCEL */}
-        <Button 
-          variant="outline" 
-          disabled={isGeneratingExcel}
-          onClick={onDownloadExcel}
-          className="h-10 px-4 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 shadow-sm transition-all"
-        >
-          {isGeneratingExcel ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <TableIcon className="w-4 h-4 mr-2" />}
-          Excel
-        </Button>
-
-        <Button 
-          variant="outline" 
-          disabled={isGeneratingLink}
-          onClick={onCopyShareLink}
-          className="h-10 px-4 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 shadow-sm transition-all"
-        >
-          {isGeneratingLink ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Share2 className="w-4 h-4 mr-2" />}
-          Partage
-        </Button>
-
-        {quote.status === 'accepted' && (
-          <Button 
-            disabled={isGeneratingInvoice}
-            onClick={onCreateInvoice}
-            className="h-10 px-5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 transition-all ml-2"
-          >
-            {isGeneratingInvoice ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileCheck className="w-4 h-4 mr-2" />}
-            Facturer
-          </Button>
-        )}
       </div>
     </div>
   )
