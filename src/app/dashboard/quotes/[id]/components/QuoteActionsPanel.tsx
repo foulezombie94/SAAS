@@ -25,28 +25,29 @@ interface QuoteActionsPanelProps {
   isSigPadOpen: boolean
   setIsSigPadOpen: (open: boolean) => void
   onSaveSignature: (data: string) => void
-  onCreatePayment: () => void
+  onCopyShareLink: () => void
   onCreateInvoice: () => void
   onOpenEmailModal: () => void
   onDownloadPdf?: () => void
   onDownloadExcel?: () => void
   isGeneratingPdf?: boolean
   isGeneratingExcel?: boolean
+  isGeneratingLink?: boolean
 }
 
 export function QuoteActionsPanel({
   quote,
-  isPaying,
   isGeneratingInvoice,
   isSigPadOpen,
   setIsSigPadOpen,
-  onCreatePayment,
+  onCopyShareLink,
   onCreateInvoice,
   onOpenEmailModal,
   onDownloadPdf,
   onDownloadExcel,
   isGeneratingPdf,
-  isGeneratingExcel
+  isGeneratingExcel,
+  isGeneratingLink
 }: QuoteActionsPanelProps) {
   
   const isPaid = quote.status === 'paid'
@@ -97,12 +98,12 @@ export function QuoteActionsPanel({
         </Button>
 
         <Button 
-          onClick={onCreatePayment}
-          disabled={isPaying || isPaid}
+          onClick={onCopyShareLink}
+          disabled={isGeneratingLink}
           className="w-full bg-white text-[#00236f] hover:text-[#00236f] border border-[#00236f]/20 p-4 h-auto rounded font-bold flex items-center justify-center gap-3 hover:bg-[#faf8ff] transition-all scale-100 active:scale-95"
         >
-          {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : <LinkIcon className="w-5 h-5" strokeWidth={2.5} />}
-          PAYMENT LINK
+          {isGeneratingLink ? <Loader2 className="w-5 h-5 animate-spin" /> : <LinkIcon className="w-5 h-5" strokeWidth={2.5} />}
+          GENERATE LINK
         </Button>
 
         <Button 

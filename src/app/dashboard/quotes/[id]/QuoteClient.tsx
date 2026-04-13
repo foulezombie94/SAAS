@@ -79,19 +79,18 @@ export function QuoteClient({ quote }: QuoteClientProps) {
             <div className="order-1 lg:order-2">
               <QuoteActionsPanel 
                 quote={currentQuote}
-                isPaying={loading.isPaying}
                 isGeneratingInvoice={loading.isGeneratingInvoice}
-                isSigning={loading.isSigning}
                 isSigPadOpen={modals.isSigPadOpen}
                 setIsSigPadOpen={modals.setIsSigPadOpen}
                 onSaveSignature={handlers.handleSaveSignature}
-                onCreatePayment={handlers.handleCreatePayment}
+                onCopyShareLink={handlers.handleCopyShareLink}
                 onCreateInvoice={handlers.handleCreateInvoice}
                 onOpenEmailModal={() => modals.setIsEmailModalOpen(true)}
                 onDownloadPdf={handlers.handleDownloadPdf}
                 onDownloadExcel={handlers.handleDownloadExcel}
                 isGeneratingPdf={loading.isGeneratingPdf}
                 isGeneratingExcel={loading.isGeneratingExcel}
+                isGeneratingLink={loading.isGeneratingLink}
               />
             </div>
           </div>
