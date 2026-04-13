@@ -69,7 +69,7 @@ export function QuotePreview({ quote, onSignArtisan }: QuotePreviewProps) {
               Devis <span className="text-slate-200">/</span> #{quote.number}
             </h1>
             <p className="text-sm font-bold text-slate-400 mt-2 uppercase tracking-widest">
-              Référence : {quote.reference || `PROJET-${quote.id.substring(0, 4).toUpperCase()}`}
+              Référence : {`PROJET-${quote.id.substring(0, 4).toUpperCase()}`}
             </p>
           </div>
           <div className={cn(
