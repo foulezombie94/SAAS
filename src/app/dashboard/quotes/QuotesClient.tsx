@@ -200,13 +200,13 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
                 </div>
 
                 <div className="col-span-4 flex items-center gap-6">
-                  <div className="h-16 w-16 rounded-[20px] bg-[#f4f5f7] flex items-center justify-center text-[#1a1b21] font-black text-2xl transition-all uppercase shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/5 flex items-center justify-center text-primary font-black text-2xl group-hover:bg-primary group-hover:text-on-primary transition-all uppercase shadow-sm">
                     {quote.clients?.name?.charAt(0) || 'C'}
                   </div>
                   <div>
-                    <h4 className="font-black text-[#1a1b21] uppercase tracking-tighter text-xl transition-colors">{quote.clients?.name || 'Client Inconnu'}</h4>
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">
-                      <Clock size={10} className="opacity-50" /> Validité à confirmer
+                    <h4 className="font-black text-primary uppercase tracking-tighter text-xl group-hover:text-primary-container transition-colors">{quote.clients?.name || 'Client Inconnu'}</h4>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">
+                      <Clock size={12} /> Validité à confirmer
                     </div>
                   </div>
                 </div>
@@ -216,7 +216,7 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
                 </div>
 
                 <div className="col-span-2 flex items-center justify-center">
-                  <span className={`inline-flex items-center justify-center px-4 py-2 rounded-full font-black text-[9px] uppercase tracking-widest shadow-sm transition-all ${getStatusStyle(quote.status || 'draft')}`}>
+                  <span className={`inline-flex items-center justify-center h-12 w-36 rounded-md font-black text-xs uppercase tracking-widest shadow-sm transition-all ${getStatusStyle(quote.status || 'draft')}`}>
                     {getStatusLabel(quote.status || 'draft')}
                   </span>
                 </div>
