@@ -19,9 +19,7 @@ import { cn } from '@/lib/utils'
 
 interface QuoteActionsPanelProps {
   quote: Quote
-  isPaying: boolean
   isGeneratingInvoice: boolean
-  isSigning: boolean
   isSigPadOpen: boolean
   setIsSigPadOpen: (open: boolean) => void
   onSaveSignature: (data: string) => void
