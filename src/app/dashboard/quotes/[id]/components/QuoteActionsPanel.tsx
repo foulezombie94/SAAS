@@ -63,97 +63,88 @@ export function QuoteActionsPanel({
   const isPending = ['draft', 'sent'].includes(quote.status) || (quote.status === 'accepted' && !quote.artisan_signature_url && !quote.client_signature_url)
 
   return (
-    <div className="space-y-4 sticky top-8 flex flex-col gap-2">
+    <div className="space-y-6 sticky top-8">
       
       {/* COMMAND CENTER */}
-      <div className="bg-[#f3f4f8] p-5 rounded-md">
-        <h3 className="text-[10px] font-black uppercase text-[#818c9f] tracking-widest mb-4">COMMAND CENTER</h3>
+      <div className="bg-[#eeedf4] p-6 rounded-xl space-y-4 shadow-md">
+        <h3 className="text-[0.6875rem] font-bold tracking-[0.1em] text-slate-500 uppercase mb-4">Command Center</h3>
         
         {/* Espace Signature Artisan (Always on top if missing) */}
         {!quote.artisan_signature_url && quote.status !== 'paid' && (
-          <div className="pb-4 mb-4 border-b border-gray-200">
+          <div className="pb-4 border-b border-[#c5c5d3]/30">
             <Button 
               onClick={() => setIsSigPadOpen(true)}
               className={cn(
-                "w-full h-12 rounded-sm font-black text-sm flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]",
+                "w-full p-4 rounded font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 shadow-lg",
                 isSigPadOpen 
-                  ? "bg-slate-200 text-slate-500 hover:bg-slate-200" 
-                  : "bg-[#ea9c00] hover:bg-[#d68e00] text-black border-none"
+                  ? "bg-slate-200 text-slate-500 hover:bg-slate-200 shadow-none border-none" 
+                  : "bg-[#00236f] text-white border-none"
               )}
               disabled={isSigPadOpen}
             >
-              <PenTool className="w-5 h-5 fill-black" />
+              <PenTool className="w-5 h-5 fill-current" />
               {isSigPadOpen ? 'OPENING...' : 'SIGN (ARTISAN)'}
             </Button>
           </div>
         )}
 
-        <div className="space-y-3">
-          <Button 
-            onClick={onOpenEmailModal}
-            className="w-full h-12 bg-[#ea9c00] hover:bg-[#d68e00] text-black border-none rounded-sm shadow-sm font-black text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
-          >
-            <Send className="w-[18px] h-[18px] fill-black" strokeWidth={2.5} />
-            SEND TO CLIENT
-          </Button>
+        <Button 
+          onClick={onOpenEmailModal}
+          className="w-full bg-[#ef9900] text-[#2a1700] hover:text-[#2a1700] p-4 h-auto rounded font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 shadow-lg border-none"
+        >
+          <Send className="w-5 h-5 fill-current" strokeWidth={2.5} />
+          SEND TO CLIENT
+        </Button>
 
-          <Button 
-            onClick={onCreatePayment}
-            disabled={isPaying || isPaid}
-            className="w-full h-12 bg-white hover:bg-slate-50 text-[#072161] shadow-[0_1px_3px_rgba(0,0,0,0.05)] border-none rounded-sm font-black text-[13px] uppercase tracking-wide flex items-center justify-center gap-3 transition-all hover:scale-[1.02]"
-          >
-            {isPaying ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <LinkIcon className="w-[18px] h-[18px]" strokeWidth={2.5} />}
-            PAYMENT LINK
-          </Button>
+        <Button 
+          onClick={onCreatePayment}
+          disabled={isPaying || isPaid}
+          className="w-full bg-white text-[#00236f] hover:text-[#00236f] border border-[#00236f]/20 p-4 h-auto rounded font-bold flex items-center justify-center gap-3 hover:bg-[#faf8ff] transition-all scale-100 active:scale-95"
+        >
+          {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : <LinkIcon className="w-5 h-5" strokeWidth={2.5} />}
+          PAYMENT LINK
+        </Button>
 
-          <Button 
-            onClick={onCreateInvoice}
-            disabled={isGeneratingInvoice || !isAccepted}
-            className="w-full h-14 bg-[#072161] hover:bg-[#051745] text-white shadow-sm border-none rounded-sm font-black text-[11px] leading-tight uppercase tracking-wide flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
-          >
-            {isGeneratingInvoice ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <FileText className="w-[20px] h-[20px] fill-white" />}
-            <span className="text-center pr-2">CONVERT TO<br/>INVOICE</span>
-          </Button>
-        </div>
+        <Button 
+          onClick={onCreateInvoice}
+          disabled={isGeneratingInvoice || !isAccepted}
+          className="w-full bg-[#00236f] text-white hover:text-white p-4 h-auto rounded font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 border-none"
+        >
+          {isGeneratingInvoice ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5 fill-current" />}
+          <span className="text-center">CONVERT TO INVOICE</span>
+        </Button>
 
         {/* Action icons bar */}
-        <div className="flex items-center justify-between gap-2 border-t border-[#e2e4e9] mt-5 pt-5">
+        <div className="pt-4 mt-4 border-t border-[#c5c5d3]/30 flex justify-between gap-2">
           <Button 
-            variant="ghost" 
             onClick={onDownloadPdf}
             disabled={isGeneratingPdf}
-            className="flex-1 h-12 bg-[#e8e9ee] hover:bg-[#d9dbe2] rounded-sm text-[#072161] transition-colors shadow-sm"
+            className="flex-1 bg-[#e3e1e9] p-3 h-auto rounded text-[#00236f] hover:bg-[#00236f] hover:text-white transition-all shadow-none border-none"
           >
-            {isGeneratingPdf ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <Download className="w-[18px] h-[18px]" strokeWidth={2.5} />}
+            {isGeneratingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" strokeWidth={2.5} />}
           </Button>
           
           <Button 
-            variant="ghost" 
             onClick={onDownloadExcel}
             disabled={isGeneratingExcel}
-            className="flex-1 h-12 bg-[#e8e9ee] hover:bg-[#d9dbe2] rounded-sm text-[#072161] transition-colors shadow-sm"
+            className="flex-1 bg-[#e3e1e9] p-3 h-auto rounded text-[#00236f] hover:bg-[#00236f] hover:text-white transition-all shadow-none border-none"
           >
-            {isGeneratingExcel ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <TableIcon className="w-[18px] h-[18px]" strokeWidth={2.5} />}
+            {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <TableIcon className="w-5 h-5" strokeWidth={2.5} />}
           </Button>
 
           <Button 
-            variant="ghost" 
-            className="flex-1 h-12 bg-[#e8e9ee] hover:bg-red-100 rounded-sm text-[#c81920] hover:text-red-700 transition-colors shadow-sm"
+            className="flex-1 bg-[#e3e1e9] p-3 h-auto rounded text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-none border-none"
           >
-            <Trash2 className="w-[18px] h-[18px] fill-[#c81920]" strokeWidth={2.5} />
+            <Trash2 className="w-5 h-5" strokeWidth={2.5} />
           </Button>
         </div>
       </div>
 
       {/* STATUS BANNER */}
       {isPending && (
-        <div className="bg-[#593d05] text-[#ecaf05] rounded-md px-5 py-4 flex items-center justify-start gap-4">
-          <div className="bg-[#ecaf05] text-[#593d05] rounded-full p-0.5 shrink-0 flex items-center justify-center">
-            <Info className="w-5 h-5 fill-[#ecaf05] text-[#593d05]" strokeWidth={2.5} />
-          </div>
-          <span className="font-extrabold text-[12px] tracking-[0.05em] uppercase leading-tight">
-            PENDING CLIENT<br/>APPROVAL
-          </span>
+        <div className="bg-[#5c3800]/10 text-[#ef9900] h-14 rounded-xl flex items-center px-6 gap-4 border border-[#ef9900]/20">
+          <Info className="w-5 h-5 fill-[#ef9900] text-white" strokeWidth={2.5} />
+          <span className="font-bold text-sm tracking-wide uppercase">PENDING CLIENT APPROVAL</span>
         </div>
       )}
 
