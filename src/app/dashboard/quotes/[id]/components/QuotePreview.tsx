@@ -3,7 +3,7 @@
 import React from 'react'
 import { Card } from '@/components/ui/Card'
 import { Quote } from '@/types/dashboard'
-import { PenLine, Architecture, Building2, Landmark, Check } from 'lucide-react'
+import { PenLine, Building2, Landmark, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface QuotePreviewProps {
