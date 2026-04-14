@@ -14,7 +14,7 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 35, // Reduced padding to fit more on 1 page
     fontFamily: 'Helvetica',
     fontSize: 10,
     color: '#1e293b',
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    marginBottom: 20,
     marginTop: 10,
   },
   brandContainer: {
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
   docTitleSection: {
     borderBottomWidth: 3,
     borderBottomColor: '#00236f',
-    paddingBottom: 15,
-    marginBottom: 30,
+    paddingBottom: 10,
+    marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
   },
   docTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#00236f',
     textTransform: 'uppercase',
@@ -85,10 +85,9 @@ const styles = StyleSheet.create({
   },
   clientBox: {
     backgroundColor: '#f8fafc',
-    padding: 20,
-    borderRadius: 16,
-    width: '50%',
-    marginBottom: 30,
+    padding: 15,
+    borderRadius: 12,
+    width: '45%',
   },
   clientRefTitle: {
     fontSize: 8,
@@ -99,7 +98,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   clientName: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 5,
   },
@@ -108,17 +107,42 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontStyle: 'italic',
   },
+  infoBox: {
+    width: '45%',
+    gap: 6,
+  },
+  infoRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    paddingBottom: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  infoLabel: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  infoValue: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#0f172a',
+  },
   table: {
-    width: 'auto',
-    marginTop: 20,
-    flex: 1,
+    width: '100%',
+    marginTop: 15,
+    flex: 1, // Will push footer down, maximizing space on page
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     alignItems: 'center',
-    minHeight: 35,
+    paddingVertical: 8,
+    minHeight: 30,
   },
   tableHeader: {
     backgroundColor: '#00236f',
@@ -129,27 +153,28 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     borderBottomWidth: 0,
     borderRadius: 4,
+    paddingVertical: 6,
   },
-  col1: { width: '50%', paddingLeft: 10 },
+  col1: { width: '45%', paddingLeft: 10 },
   col2: { width: '10%', textAlign: 'center' },
-  col3: { width: '10%', textAlign: 'center' },
+  col3: { width: '15%', textAlign: 'center' },
   col4: { width: '15%', textAlign: 'right' },
   col5: { width: '15%', textAlign: 'right', paddingRight: 10 },
   
-  itemDesc: { fontWeight: 'bold', fontSize: 11 },
+  itemDesc: { fontWeight: 'bold', fontSize: 10, marginBottom: 2 },
   itemSub: { fontSize: 8, color: '#94a3b8', fontStyle: 'italic' },
   
   totalsContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: 20,
+    marginTop: 15,
   },
   totalsBox: {
-    width: 200,
+    width: 220,
     backgroundColor: '#f8fafc',
-    padding: 15,
-    borderRadius: 12,
-    gap: 8,
+    padding: 12,
+    borderRadius: 8,
+    gap: 6,
   },
   totalLine: {
     flexDirection: 'row',
@@ -160,25 +185,25 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   grandTotalLine: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 6,
+    paddingTop: 6,
     borderTopWidth: 2,
     borderTopColor: '#00236f',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  grandTotalLabel: { fontSize: 11, fontWeight: 'bold', color: '#00236f' },
-  grandTotalAmount: { fontSize: 18, fontWeight: 'bold', color: '#00236f' },
+  grandTotalLabel: { fontSize: 11, fontWeight: 'bold', color: '#00236f', textTransform: 'uppercase' },
+  grandTotalAmount: { fontSize: 16, fontWeight: 'bold', color: '#00236f' },
 
   signatureSection: {
     flexDirection: 'row',
-    gap: 40,
-    marginTop: 40,
+    gap: 30,
+    marginTop: 20,
     borderTopWidth: 1,
     borderTopStyle: 'dashed',
     borderTopColor: '#e2e8f0',
-    paddingTop: 30,
+    paddingTop: 15,
   },
   signatureBox: {
     flex: 1,
@@ -188,22 +213,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#00236f',
     textTransform: 'uppercase',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   signaturePlaceholder: {
-    height: 100,
+    height: 70,
     backgroundColor: '#f8fafc',
-    borderRadius: 12,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   signatureImage: {
-    maxHeight: 80,
+    maxHeight: 60,
     objectFit: 'contain',
   },
   footer: {
-    marginTop: 40,
-    paddingTop: 15,
+    marginTop: 20,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
     flexDirection: 'row',
@@ -211,7 +238,7 @@ const styles = StyleSheet.create({
   },
   footerCol: { width: '45%' },
   footerTitle: { fontSize: 8, fontWeight: 'bold', color: '#00236f', marginBottom: 4 },
-  footerText: { fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 },
+  footerText: { fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
 });
 
 export function QuotePdfDocument({ quote }: { quote: Quote }) {
@@ -243,25 +270,34 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
           <Text style={styles.docTitle}>
             Devis <Text style={styles.docNumber}>/ #{quote.number}</Text>
           </Text>
-          <Text style={{ fontSize: 9, color: '#94a3b8', fontWeight: 'bold' }}>PROJET-{quote.id.substring(0,4).toUpperCase()}</Text>
+          <Text style={{ fontSize: 9, color: '#94a3b8', fontWeight: 'bold' }}>RÉFÉRENCE : PROJET-{quote.id.substring(0,4).toUpperCase()}</Text>
         </View>
 
         {/* Client & Dates */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 0 }}>
           <View style={styles.clientBox}>
-            <Text style={styles.clientRefTitle}>Destinataire</Text>
+            <Text style={styles.clientRefTitle}>Destinataire du document</Text>
             <Text style={styles.clientName}>{client?.name || 'Nom Client'}</Text>
             <Text style={styles.clientDetails}>{client?.address || ''}</Text>
             <Text style={styles.clientDetails}>{client?.postal_code} {client?.city}</Text>
           </View>
-          <View style={{ width: '40%', gap: 8, padding: 10 }}>
-            <View style={{ borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={styles.footerText}>DATE :</Text>
-              <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{new Date(quote.created_at).toLocaleDateString('fr-FR')}</Text>
+          <View style={styles.infoBox}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Date d'émission</Text>
+              <Text style={styles.infoValue}>{new Date(quote.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
             </View>
-            <View style={{ borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={styles.footerText}>VALIDITÉ :</Text>
-              <Text style={{ fontSize: 9, fontWeight: 'bold' }}>30 JOURS</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Date de validité</Text>
+              <Text style={styles.infoValue}>
+                {quote.valid_until 
+                  ? new Date(quote.valid_until).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : '30 JOURS'
+                }
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Paiement</Text>
+              <Text style={[styles.infoValue, { color: '#00236f' }]}>VIREMENT BANCAIRE</Text>
             </View>
           </View>
         </View>
@@ -269,7 +305,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
         {/* Table */}
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={styles.col1}>Désignation</Text>
+            <Text style={styles.col1}>Désignation des prestations</Text>
             <Text style={styles.col2}>Qté</Text>
             <Text style={styles.col3}>Unité</Text>
             <Text style={styles.col4}>Unit. HT</Text>
@@ -279,7 +315,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
             <View key={idx} style={styles.tableRow}>
               <View style={styles.col1}>
                 <Text style={styles.itemDesc}>{item.description}</Text>
-                <Text style={styles.itemSub}>Prestation certifiée ArtisanFlow</Text>
+                <Text style={styles.itemSub}>Prestation de service certifiée ArtisanFlow.</Text>
               </View>
               <Text style={styles.col2}>{(item.quantity || 0).toFixed(2)}</Text>
               <Text style={styles.col3}>Pce</Text>
@@ -293,7 +329,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
         <View style={styles.totalsContainer}>
           <View style={styles.totalsBox}>
             <View style={styles.totalLine}>
-              <Text>Sous-Total HT</Text>
+              <Text>Total HT</Text>
               <Text>{(quote.total_ht || 0).toLocaleString('fr-FR')} €</Text>
             </View>
             <View style={styles.totalLine}>
@@ -312,13 +348,21 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
           <View style={styles.signatureBox}>
             <Text style={styles.signatureTitle}>Validation Artisan</Text>
             <View style={styles.signaturePlaceholder}>
-              {quote.artisan_signature_url && <Image src={quote.artisan_signature_url} style={styles.signatureImage} />}
+              {quote.artisan_signature_url ? (
+                <Image src={quote.artisan_signature_url} style={styles.signatureImage} />
+              ) : (
+                <Text style={{ fontSize: 8, color: '#94a3b8', fontStyle: 'italic' }}>Signature de l'Artisan</Text>
+              )}
             </View>
           </View>
           <View style={styles.signatureBox}>
             <Text style={[styles.signatureTitle, { textAlign: 'right' }]}>Bon pour accord client</Text>
             <View style={styles.signaturePlaceholder}>
-              {quote.client_signature_url && <Image src={quote.client_signature_url} style={styles.signatureImage} />}
+              {quote.client_signature_url ? (
+                <Image src={quote.client_signature_url} style={styles.signatureImage} />
+              ) : (
+                <Text style={{ fontSize: 8, color: '#94a3b8', fontStyle: 'italic' }}>Signature du Client</Text>
+              )}
             </View>
           </View>
         </View>
@@ -328,7 +372,12 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
           <View style={styles.footerCol}>
             <Text style={styles.footerTitle}>Informations Légales</Text>
             <Text style={styles.footerText}>Assurance Décennale AXA n°1029384756</Text>
-            <Text style={styles.footerText}>TVA : {profile?.tva_intra || 'FR842153967'}</Text>
+            <Text style={styles.footerText}>
+              {quote.tax_rate === 0 
+                ? "TVA non applicable, art. 293 B du CGI" 
+                : `TVA : ${profile?.tva_intra || 'FR842153967'}`
+              }
+            </Text>
           </View>
           <View style={[styles.footerCol, { textAlign: 'right' }]}>
             <Text style={styles.footerTitle}>Coordonnées Bancaires</Text>
