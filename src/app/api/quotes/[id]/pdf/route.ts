@@ -32,7 +32,7 @@ export async function GET(
 
     // 2. Generate PDF Buffer
     const buffer = await renderToBuffer(
-      React.createElement(QuotePdfDocument, { quote: quote as any })
+      React.createElement(QuotePdfDocument, { quote: quote as any }) as any
     );
 
     // 3. Return PDF Response
