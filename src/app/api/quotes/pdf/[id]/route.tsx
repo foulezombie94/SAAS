@@ -4,6 +4,13 @@ import { renderToBuffer } from '@react-pdf/renderer';
 import { QuotePdfDocument } from '@/lib/pdf/templates/QuotePdf';
 import React from 'react';
 
+/**
+ * 📄 PDF Generation Route (Pro Architecture)
+ * Path: /api/quotes/pdf/[id]
+ * 
+ * This route is whitelisted in middleware to ensure stable downloads
+ * while maintaining internal security via Supabase getUser().
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -13,6 +20,7 @@ export async function GET(
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Internal Security Check
     if (!user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
@@ -22,7 +30,7 @@ export async function GET(
       .from('quotes')
       .select('*, profiles(*), clients(*), quote_items(*)')
       .eq('id', quoteId)
-      .eq('user_id', user.id) // Security check
+      .eq('user_id', user.id)
       .single();
 
     if (error || !quote) {
@@ -30,20 +38,24 @@ export async function GET(
       return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 });
     }
 
-    // 2. Generate PDF Buffer
+    // 2. Generate PDF Buffer using React-PDF
     const buffer = await renderToBuffer(
-      React.createElement(QuotePdfDocument, { quote: quote as any }) as any
+      <QuotePdfDocument quote={quote as any} /> as any
     );
 
-    // 3. Return PDF Response
+    // 3. Return PDF Response as Uint8Array for Web API compatibility
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="Devis_${quote.number}.pdf"`,
+        'Cache-Control': 'no-store, max-age=0',
       },
     });
   } catch (err: any) {
     console.error('PDF Generation API Error:', err);
-    return NextResponse.json({ error: 'Erreur lors de la génération du PDF' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Erreur lors de la génération du PDF' }, 
+      { status: 500 }
+    );
   }
 }

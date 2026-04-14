@@ -57,7 +57,7 @@ export class QuoteService {
    * Triggers a server-side PDF generation and download.
    */
   static async downloadPdf(quoteId: string, quoteNumber: string) {
-    const response = await fetch(`/api/quotes/${quoteId}/pdf`);
+    const response = await fetch(`/api/quotes/pdf/${quoteId}`);
     
     if (!response.ok) {
       throw new Error(`Erreur lors de la génération du PDF (${response.status})`);
