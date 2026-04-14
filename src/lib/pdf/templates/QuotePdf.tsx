@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   brandIconBox: {
-    width: 38, // Slightly bigger matching UI
+    width: 38,
     height: 38,
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 8,
@@ -114,22 +114,26 @@ const styles = StyleSheet.create({
   // TITLE & STATUS
   docTitleSection: {
     width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end', // Aligne badge avec REFERENCE
+    flexDirection: 'column',
     borderBottomWidth: 3,
     borderBottomColor: PRIMARY_COLOR,
     paddingBottom: 15,
     marginBottom: 20,
   },
-  docTitleBlock: {
+  docTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 8, // Space between Devis number and Reference
+  },
+  docTitleCol: {
     flexDirection: 'column',
-    justifyContent: 'flex-end',
   },
   docTitleMain: {
-    fontSize: 34,
+    fontSize: 44, // Super huge text to match exactly Image 1
     fontStyle: 'italic',
-    marginBottom: 6, // Distance entre Devis et Référence
+    lineHeight: 1,
+    letterSpacing: -1, // tight tracking
   },
   docTitleWord: {
     fontWeight: 'bold',
@@ -144,7 +148,7 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
   },
   docRef: {
-    fontSize: 10, // Match UI text-sm (slightly smaller proportionally but thick)
+    fontSize: 10,
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
@@ -152,12 +156,12 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     paddingHorizontal: 16, 
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderLeftWidth: 3, // Match UI better
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderLeftWidth: 3,
   },
   statusText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold', 
     textTransform: 'uppercase',
     letterSpacing: 1.5
@@ -173,7 +177,7 @@ const styles = StyleSheet.create({
   clientBox: {
     backgroundColor: SLATE_50,
     padding: 18, 
-    borderRadius: 16, // Match rounded-[2.5rem] loosely
+    borderRadius: 16, 
     width: '48%', 
     borderWidth: 1,
     borderColor: SLATE_100,
@@ -187,12 +191,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   clientName: {
-    fontSize: 18, // Match text-2xl
+    fontSize: 20, // Huge name 
     fontWeight: 'bold',
     marginBottom: 6,
   },
   clientDetails: {
-    fontSize: 10, // Match text-sm
+    fontSize: 10,
     color: SLATE_500,
     fontStyle: 'italic',
     marginBottom: 3,
@@ -206,7 +210,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     borderBottomWidth: 1,
     borderBottomColor: SLATE_100,
     paddingBottom: 5,
@@ -219,7 +223,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   infoValue: {
-    fontSize: 10,
+    fontSize: 11, // Emphasized
     fontWeight: 'bold',
     color: SLATE_900,
   },
@@ -258,12 +262,12 @@ const styles = StyleSheet.create({
   
   itemDesc: { 
     fontWeight: 'bold', 
-    fontSize: 11, // Match text-base
+    fontSize: 12,
     color: SLATE_900,
     marginBottom: 3 
   },
   itemSub: { 
-    fontSize: 8, // Match text-xs
+    fontSize: 8, 
     color: SLATE_400, 
     fontStyle: 'italic' 
   },
@@ -273,7 +277,7 @@ const styles = StyleSheet.create({
     color: SLATE_500,
   },
   itemTotal: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: SLATE_900,
@@ -287,7 +291,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   totalsBox: {
-    width: 280, // Match w-80
+    width: 280, 
     backgroundColor: SLATE_50,
     padding: 16,
     borderRadius: 16,
@@ -328,7 +332,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   grandTotalAmount: { 
-    fontSize: 20, // Match text-3xl
+    fontSize: 20, 
     fontWeight: 'bold', 
     fontStyle: 'italic',
     color: PRIMARY_COLOR 
@@ -386,7 +390,7 @@ const styles = StyleSheet.create({
   },
   signaturePlaceholder: {
     width: '100%',
-    height: 52, // Compressed to fit 1 page comfortably
+    height: 52, 
     backgroundColor: SLATE_50,
     borderRadius: 8,
     justifyContent: 'center',
@@ -483,25 +487,30 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
           </View>
         </View>
 
-        {/* TITLE SECTION */}
+        {/* EXACT ALIGNED TITLE SECTION (IMAGE 1 PARITY) */}
         <View style={styles.docTitleSection}>
-          <View style={styles.docTitleBlock}>
-            <Text style={styles.docTitleMain}>
-              <Text style={styles.docTitleWord}>DEVIS </Text>
-              <Text style={styles.docTitleSlash}>/ </Text>
-              <Text style={styles.docTitleNumber}>#{quote.number}</Text>
-            </Text>
-            <Text style={styles.docRef}>RÉFÉRENCE : PROJET-{quote.id.substring(0,4).toUpperCase()}</Text>
+          <View style={styles.docTitleRow}>
+            <View style={styles.docTitleCol}>
+              <Text style={styles.docTitleMain}>
+                <Text style={styles.docTitleWord}>DEVIS </Text>
+                <Text style={styles.docTitleSlash}>/</Text>
+              </Text>
+              <Text style={styles.docTitleMain}>
+                <Text style={styles.docTitleNumber}>#{quote.number}</Text>
+              </Text>
+            </View>
+            
+            <View style={[styles.statusBadge, { 
+              backgroundColor: statusInfo.bg, 
+              borderLeftColor: statusInfo.border 
+            }]}>
+              <Text style={[styles.statusText, { color: statusInfo.color }]}>
+                STATUT : {statusInfo.label}
+              </Text>
+            </View>
           </View>
           
-          <View style={[styles.statusBadge, { 
-            backgroundColor: statusInfo.bg, 
-            borderLeftColor: statusInfo.border 
-          }]}>
-            <Text style={[styles.statusText, { color: statusInfo.color }]}>
-              STATUT : {statusInfo.label}
-            </Text>
-          </View>
+          <Text style={styles.docRef}>RÉFÉRENCE : PROJET-{quote.id.substring(0,4).toUpperCase()}</Text>
         </View>
 
         {/* TOP GRID (CLIENT & DATES) */}
