@@ -5,7 +5,6 @@ import {
   Link as LinkIcon,
   FileText,
   Download,
-  Trash2,
   Info,
   Calendar,
   Wallet,
@@ -131,11 +130,6 @@ export function QuoteActionsPanel({
             {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <TableIcon className="w-5 h-5" strokeWidth={2.5} />}
           </button>
 
-          <button 
-            className="flex-1 flex justify-center items-center bg-white p-3 h-[3.25rem] rounded-lg text-[#ba1a1a] hover:bg-red-50 transition-all shadow-sm border border-red-100"
-          >
-            <Trash2 className="w-5 h-5" strokeWidth={2.5} />
-          </button>
         </div>
       </div>
 

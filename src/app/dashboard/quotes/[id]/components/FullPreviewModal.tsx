@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download, Printer, Landmark, FileText } from 'lucide-react'
+import { X, Download, Landmark, FileText } from 'lucide-react'
 import { QuotePreview } from './QuotePreview'
 import { Quote } from '@/types/dashboard'
 import { Button } from '@/components/ui/Button'
@@ -66,10 +66,10 @@ export function FullPreviewModal({ isOpen, onClose, quote, onDownloadPdf }: Full
           
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => window.print()}
+              onClick={onDownloadPdf}
               className="hidden md:flex h-11 px-5 rounded-2xl bg-white/5 hover:bg-white/10 text-white items-center gap-2 transition-all border border-white/5 hover:border-white/10 font-bold text-xs uppercase tracking-widest"
             >
-              <Printer size={16} /> Imprimer
+              <Download size={16} /> PDF
             </button>
             <button 
               onClick={onClose}
