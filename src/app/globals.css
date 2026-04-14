@@ -89,13 +89,13 @@
     box-shadow: 0px 24px 48px rgba(0, 35, 111, 0.06);
   }
 
-  /* Premium Buttons */
+  /* Premium Buttons (Refined blocky design) */
   .btn {
-    @apply inline-flex items-center justify-center font-black tracking-tight transition-all duration-200 cursor-pointer select-none active:scale-95 disabled:opacity-50 disabled:pointer-events-none rounded-full px-6 py-3 min-h-[48px];
+    @apply inline-flex items-center justify-center font-black uppercase tracking-[0.15em] text-[11px] transition-all duration-200 cursor-pointer select-none active:scale-95 disabled:opacity-50 disabled:pointer-events-none rounded-md px-8 py-3 min-h-[48px] shadow-sm;
   }
 
   .btn-primary {
-    @apply bg-primary text-on-primary hover:bg-primary-container hover:shadow-lg active:bg-primary;
+    @apply bg-primary text-on-primary hover:bg-primary/95 hover:shadow-md active:bg-primary;
   }
 
   .btn-tertiary {
@@ -103,7 +103,7 @@
   }
 
   .btn-outline {
-    @apply bg-white border border-slate-100 text-primary hover:bg-slate-50 hover:border-slate-200 active:bg-slate-100;
+    @apply bg-white border border-slate-200 text-primary hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100;
   }
 
   /* Notification Animation */

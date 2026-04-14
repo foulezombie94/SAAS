@@ -154,7 +154,7 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
             />
           </div>
           <Link href="/dashboard/quotes/new" className="w-full md:w-auto">
-            <Button className="w-full h-14 px-8 bg-primary hover:bg-primary-container text-on-primary font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl active:scale-95 transition-all rounded-3xl">
+            <Button className="w-full h-14 px-8 bg-primary hover:bg-primary-container text-on-primary gap-3 shadow-xl">
               <Plus size={20} /> Nouveau Devis
             </Button>
           </Link>

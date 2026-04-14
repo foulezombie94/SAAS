@@ -13,7 +13,7 @@ function SubmitButton() {
   return (
     <Button 
       type="submit" 
-      className="w-full py-4 text-lg font-black mt-6 shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99]" 
+      className="w-full h-14 mt-6 shadow-xl shadow-primary/20" 
       isLoading={pending}
       disabled={pending}
     >

@@ -27,8 +27,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           'btn',
           variants[variant],
-          size === 'sm' && 'px-4 py-2 min-h-[36px] text-sm',
-          size === 'lg' && 'px-10 py-5 min-h-[60px] text-lg',
+          size === 'sm' && 'px-4 py-2 min-h-[36px] text-[10px]',
+          size === 'lg' && 'px-10 py-5 min-h-[64px] text-[13px]',
           size === 'icon' && 'p-2 min-h-[44px] w-[44px]',
           className
         )}

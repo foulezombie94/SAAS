@@ -109,7 +109,7 @@ export function InvoicesClient({ initialInvoices, userId }: InvoicesClientProps)
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="h-16 px-8 font-black uppercase tracking-widest text-[10px] gap-3 border-slate-100 rounded-2xl hover:bg-slate-50">
+          <Button variant="outline" className="h-16 px-8 gap-3 border-slate-100 hover:bg-slate-50">
             <Filter size={18} /> Filtre
           </Button>
         </div>

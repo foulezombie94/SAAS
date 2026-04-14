@@ -140,24 +140,24 @@ export default async function DashboardPage({
         <div className="space-y-4">
           <h4 className="text-lg font-black text-primary uppercase tracking-tighter">Actions Rapides</h4>
           <Link href="/dashboard/quotes/new" className="block">
-            <button className="w-full h-16 bg-tertiary-fixed-dim hover:bg-tertiary-fixed transition-all flex items-center justify-between px-6 rounded-xl group shadow-sm active:scale-95">
+            <button className="btn w-full h-16 bg-tertiary-fixed-dim hover:bg-tertiary-fixed transition-all flex items-center justify-between px-6 rounded-md shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="w-9 h-9 bg-on-tertiary-fixed/10 rounded-full flex items-center justify-center">
                   <Plus className="text-on-tertiary-fixed" size={20} />
                 </div>
-                <span className="font-black text-base text-on-tertiary-fixed uppercase tracking-tighter">Créer un Devis</span>
+                <span className="font-black text-xs text-on-tertiary-fixed uppercase tracking-[0.15em]">Créer un Devis</span>
               </div>
               <ChevronRight className="group-hover:translate-x-1 transition-transform" size={20} />
             </button>
           </Link>
           
           <Link href="/dashboard/clients" className="block">
-            <button className="w-full h-16 bg-surface-container-high hover:bg-surface-container-highest transition-all flex items-center justify-between px-6 rounded-xl group shadow-sm active:scale-95">
+            <button className="btn w-full h-16 bg-surface-container-high hover:bg-surface-container-highest transition-all flex items-center justify-between px-6 rounded-md shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center">
                   <UserPlus className="text-primary" size={20} />
                 </div>
-                <span className="font-black text-base text-primary uppercase tracking-tighter">Nouveau Client</span>
+                <span className="font-black text-xs text-primary uppercase tracking-[0.15em]">Nouveau Client</span>
               </div>
               <ChevronRight className="group-hover:translate-x-1 transition-transform" size={20} />
             </button>

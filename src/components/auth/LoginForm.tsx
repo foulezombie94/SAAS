@@ -12,7 +12,7 @@ function SubmitButton() {
   return (
     <Button 
       type="submit" 
-      className="w-full py-4 text-lg font-black mt-2" 
+      className="w-full h-14 mt-2" 
       isLoading={pending}
       disabled={pending}
     >

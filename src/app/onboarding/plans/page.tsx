@@ -146,7 +146,8 @@ export default function PlansPage() {
             <Button 
                 onClick={handleSelectFree}
                 isLoading={isLoading && selectedPlan === 'free'}
-                className="w-full py-5 text-sm font-bold uppercase tracking-widest text-primary border-2 border-primary rounded-lg bg-transparent hover:bg-primary hover:text-white transition-all duration-300 active:scale-[0.98]"
+                variant="outline"
+                className="w-full h-12 border-primary text-primary"
             >
               Rester Gratuit
             </Button>
@@ -210,7 +211,7 @@ export default function PlansPage() {
               <Button 
                 onClick={handleSelectPro}
                 isLoading={isLoading && selectedPlan === 'pro'}
-                className="w-full py-6 text-base font-black uppercase tracking-[0.25em] bg-gradient-to-br from-tertiary-fixed-dim to-on-tertiary-container text-tertiary rounded-lg shadow-xl hover:brightness-110 transition-all duration-300 active:scale-[0.98]"
+                className="w-full h-14 bg-gradient-to-br from-tertiary-fixed-dim to-on-tertiary-container text-tertiary shadow-xl hover:brightness-110"
               >
                 Passer Pro
               </Button>
