@@ -62,6 +62,21 @@ export async function updateSession(request: NextRequest) {
 
   // 🛡️ CAS 2 : Utilisateur CONNECTÉ
   if (user) {
+    // 🛑 INSTANT BAN CHECK (Redis) - 1 lookup per request
+    const { redis } = await import('@/lib/rate-limit')
+    if (redis) {
+      const isBanned = await redis.get(`artisan-flow:ban:${user.id}`)
+      if (isBanned) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        url.searchParams.set('error', 'banned')
+        const response = NextResponse.redirect(url)
+        // Clear all cookies on ban
+        response.cookies.delete('sb-hnruthegzshajfreocpp-auth-token')
+        return response
+      }
+    }
+
     // 🚀 SENIOR OPTIMIZATION (GRADE 3): Prioritize JWT metadata (Zero-DB hit)
     // We only query the database if the metadata is not yet synchronized.
     let plan = user.app_metadata?.plan

@@ -36,7 +36,7 @@ const localStores = new Map<string, RateLimitStore>();
 const MAX_LOCAL_STORES = 5000;
 
 // Initialize Redis only if environment variables are available
-const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+export const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
   ? new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
