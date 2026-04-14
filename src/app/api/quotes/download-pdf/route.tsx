@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 
     if (error || !quote) {
       console.error('PDF Fetch Error:', error);
-      return NextResponse.json({ error: 'Devis introuvable', details: error }, { status: 404 });
+      return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 });
     }
 
     // 1.5 Fetch the profile independently and attach it
