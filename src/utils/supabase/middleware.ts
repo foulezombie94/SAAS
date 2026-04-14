@@ -95,6 +95,32 @@ export async function updateSession(request: NextRequest) {
       supabaseResponse.cookies.getAll().forEach(c => redirectResponse.cookies.set(c.name, c.value, c))
       return redirectResponse
     }
+    // C. 🛡️ HARDENED ACTIVITY TRACKING (10m Throttle)
+    if (isDashboardPath) {
+      const lastSeenSync = request.cookies.get('af_last_seen_sync')
+      
+      if (!lastSeenSync) {
+        // We use dynamic imports for the admin client to keep the middleware light
+        const { createAdminClient } = await import('../../lib/supabase/admin')
+        const supabaseAdmin = createAdminClient()
+        
+        // Update tamper-proof app_metadata
+        await supabaseAdmin.auth.admin.updateUserById(user.id, {
+          app_metadata: { 
+            last_seen_at: new Date().toISOString() 
+          }
+        })
+
+        // Set the throttle cookie (10 minutes)
+        supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
+          maxAge: 600, // 10 minutes
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        })
+      }
+    }
   }
 
   return supabaseResponse

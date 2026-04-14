@@ -36,14 +36,16 @@ export async function login(prevState: any, formData: FormData) {
     return { error: errorMessage }
   }
 
-  // 🚀 SECURITY ENHANCEMENT: Record fingerprint in metadata
+  // 🚀 HARDENED SECURITY: Record fingerprint in app_metadata (Tamper-proof)
   const { headers } = await import('next/headers')
+  const { createAdminClient } = await import('@/utils/supabase/admin')
   const headerStore = await headers()
   const ip = headerStore.get('x-forwarded-for') || 'unknown'
   const ua = headerStore.get('user-agent') || 'unknown'
 
-  await supabase.auth.updateUser({
-    data: { 
+  const supabaseAdmin = createAdminClient()
+  await supabaseAdmin.auth.admin.updateUserById(user.id, {
+    app_metadata: { 
       last_login_ip: ip,
       last_login_ua: ua,
       last_login_at: new Date().toISOString()
