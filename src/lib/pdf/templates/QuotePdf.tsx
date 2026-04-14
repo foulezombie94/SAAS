@@ -31,7 +31,11 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, bor
 
 const styles = StyleSheet.create({
   page: {
-    padding: 28, // Better breathability
+    paddingContent: 24, // Internal standard variable pour moi-même
+    paddingTop: 24,
+    paddingBottom: 24,
+    paddingLeft: 24,
+    paddingRight: 24,
     fontFamily: 'Helvetica',
     fontSize: 10,
     color: SLATE_900,
@@ -51,17 +55,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 10,
-    marginBottom: 35, // Breathing room
+    marginTop: 8,
+    marginBottom: 20, // Compression for 1 page
   },
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   brandIconBox: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 8,
     justifyContent: 'center',
@@ -72,14 +76,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandName: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: PRIMARY_COLOR,
     letterSpacing: -0.5,
   },
   brandTagline: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     color: SLATE_500,
     letterSpacing: 2,
@@ -91,13 +95,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   companyName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     marginBottom: 3,
   },
   companyDetails: {
-    fontSize: 10,
+    fontSize: 9,
     color: SLATE_500,
     fontWeight: 'bold',
     textTransform: 'uppercase',
@@ -105,7 +109,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   companyPhone: {
-    fontSize: 11,
+    fontSize: 10,
     color: PRIMARY_COLOR,
     fontWeight: 'bold',
     marginTop: 2,
@@ -113,21 +117,23 @@ const styles = StyleSheet.create({
 
   // TITLE & STATUS
   docTitleSection: {
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'flex-end', // Aligne les deux blocs vers le BAS
     borderBottomWidth: 3,
     borderBottomColor: PRIMARY_COLOR,
-    paddingBottom: 25, // Plently of space to push border down perfectly
-    marginBottom: 25, // Breathing room for the grid
+    paddingBottom: 15, // Écarte la ligne par rapport aux textes
+    marginBottom: 20, // Réduit pour 1 page
   },
   docTitleBlock: {
     flexDirection: 'column',
+    justifyContent: 'flex-end', // Assure la poussée vers le bas
   },
   docTitleMain: {
-    fontSize: 38, // Slightly smaller than 42 to prevent aggressive wrapping
+    fontSize: 34, // Compression fine
     fontStyle: 'italic',
-    marginBottom: 10, // Explicit separation between DEVIS and REFERENCE
+    marginBottom: 8, // Écarte la ref du titre
   },
   docTitleWord: {
     fontWeight: 'bold',
@@ -142,24 +148,20 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
   },
   docRef: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
-  statusViewWrapper: {
-    // We add paddingBottom here to ensure it doesn't touch the border
-    paddingBottom: 5,
-  },
   statusBadge: {
-    paddingHorizontal: 16, 
-    paddingVertical: 10, // Bigger pill
-    borderRadius: 16,
+    paddingHorizontal: 14, 
+    paddingVertical: 8,
+    borderRadius: 12,
     borderLeftWidth: 4,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold', 
     textTransform: 'uppercase',
     letterSpacing: 1.5
@@ -170,13 +172,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 25, // Generous spacing
+    marginBottom: 20, // Reduced for 1 page
   },
   clientBox: {
     backgroundColor: SLATE_50,
-    padding: 20, // Bigger padding
-    borderRadius: 16,
-    width: '48%', // A little wider
+    padding: 18, 
+    borderRadius: 14,
+    width: '48%', 
     borderWidth: 1,
     borderColor: SLATE_100,
   },
@@ -186,10 +188,10 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   clientName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 6,
   },
@@ -201,9 +203,9 @@ const styles = StyleSheet.create({
   },
   infoLinesBox: {
     width: '45%',
-    paddingLeft: 10, // Indent inside
+    paddingLeft: 10,
     justifyContent: 'center',
-    gap: 8, // Space between lines
+    gap: 8, 
   },
   infoRow: {
     flexDirection: 'row',
@@ -211,7 +213,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     borderBottomWidth: 1,
     borderBottomColor: SLATE_100,
-    paddingBottom: 6,
+    paddingBottom: 5,
   },
   infoLabel: {
     fontSize: 9,
@@ -237,7 +239,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
-    paddingVertical: 10, // Thicker header
+    paddingVertical: 8,
   },
   tableHeaderCell: {
     fontSize: 9,
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: SLATE_100,
-    paddingVertical: 12, // Taller rows
+    paddingVertical: 10,
     alignItems: 'center',
   },
   col1: { width: '45%', paddingLeft: 16 },
@@ -260,12 +262,12 @@ const styles = StyleSheet.create({
   
   itemDesc: { 
     fontWeight: 'bold', 
-    fontSize: 13,
+    fontSize: 12,
     color: SLATE_900,
     marginBottom: 4 
   },
   itemSub: { 
-    fontSize: 10,
+    fontSize: 9,
     color: SLATE_400, 
     fontStyle: 'italic' 
   },
@@ -275,7 +277,7 @@ const styles = StyleSheet.create({
     color: SLATE_500,
   },
   itemTotal: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: SLATE_900,
@@ -285,21 +287,21 @@ const styles = StyleSheet.create({
   totalsContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 15,
+    marginBottom: 15,
   },
   totalsBox: {
     width: 250,
     backgroundColor: SLATE_50,
-    padding: 16,
-    borderRadius: 16,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: SLATE_100,
   },
   totalLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   totalLabel: {
     fontSize: 10,
@@ -315,7 +317,7 @@ const styles = StyleSheet.create({
   },
   grandTotalLine: {
     marginTop: 6,
-    paddingTop: 12,
+    paddingTop: 10,
     borderTopWidth: 2,
     borderTopColor: PRIMARY_COLOR,
     flexDirection: 'row',
@@ -323,14 +325,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   grandTotalLabel: { 
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold', 
     color: PRIMARY_COLOR, 
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   grandTotalAmount: { 
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold', 
     fontStyle: 'italic',
     color: PRIMARY_COLOR 
@@ -341,12 +343,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopStyle: 'dashed',
     borderTopColor: SLATE_300,
-    marginVertical: 15,
+    marginVertical: 12,
   },
   signatureSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   signatureBoxLeft: { width: '47%' },
   signatureBoxRight: { width: '47%', alignItems: 'flex-end' },
@@ -357,16 +359,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sigIconBox: {
-    width: 16,
-    height: 16,
+    width: 14,
+    height: 14,
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 3,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sigIconBoxGrey: {
-    width: 16,
-    height: 16,
+    width: 14,
+    height: 14,
     backgroundColor: SLATE_100,
     borderRadius: 3,
     justifyContent: 'center',
@@ -388,9 +390,9 @@ const styles = StyleSheet.create({
   },
   signaturePlaceholder: {
     width: '100%',
-    height: 65,
+    height: 55, // Compress to fit 1 page
     backgroundColor: SLATE_50,
-    borderRadius: 12,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -398,7 +400,7 @@ const styles = StyleSheet.create({
     borderColor: SLATE_300,
   },
   signatureImage: {
-    maxHeight: 55,
+    maxHeight: 45,
     maxWidth: '80%',
     objectFit: 'contain',
   },
@@ -407,21 +409,21 @@ const styles = StyleSheet.create({
   footer: {
     borderTopWidth: 1,
     borderTopColor: SLATE_100,
-    paddingTop: 15,
+    paddingTop: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   footerCol: { width: '48%' },
   footerTitle: { 
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold', 
     color: PRIMARY_COLOR, 
-    marginBottom: 6,
+    marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   footerText: { 
-    fontSize: 9,
+    fontSize: 8,
     color: SLATE_400, 
     textTransform: 'uppercase', 
     letterSpacing: 1, 
@@ -431,7 +433,7 @@ const styles = StyleSheet.create({
 
 // SVG Icons
 const LandmarkIcon = () => (
-  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M3 22h18" />
     <Path d="M6 18v-7" />
     <Path d="M10 18v-7" />
@@ -442,13 +444,13 @@ const LandmarkIcon = () => (
 );
 
 const CheckIcon = () => (
-  <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <Svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M20 6 9 17l-5-5" />
   </Svg>
 );
 
 const UserIcon = () => (
-  <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={SLATE_400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <Svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={SLATE_400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
     <Circle cx="12" cy="7" r="4" />
   </Svg>
@@ -496,15 +498,13 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
             <Text style={styles.docRef}>RÉFÉRENCE : PROJET-{quote.id.substring(0,4).toUpperCase()}</Text>
           </View>
           
-          <View style={styles.statusViewWrapper}>
-            <View style={[styles.statusBadge, { 
-              backgroundColor: statusInfo.bg, 
-              borderLeftColor: statusInfo.border 
-            }]}>
-              <Text style={[styles.statusText, { color: statusInfo.color }]}>
-                STATUT : {statusInfo.label}
-              </Text>
-            </View>
+          <View style={[styles.statusBadge, { 
+            backgroundColor: statusInfo.bg, 
+            borderLeftColor: statusInfo.border 
+          }]}>
+            <Text style={[styles.statusText, { color: statusInfo.color }]}>
+              STATUT : {statusInfo.label}
+            </Text>
           </View>
         </View>
 
@@ -540,7 +540,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
         {/* TABLE */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.col1, styles.tableHeaderCell]}>Désignation des prestations</Text>
+            <Text style={[styles.col1, styles.tableHeaderCell]}>Désignation</Text>
             <Text style={[styles.col2, styles.tableHeaderCell]}>Qté</Text>
             <Text style={[styles.col3, styles.tableHeaderCell]}>Unité</Text>
             <Text style={[styles.col4, styles.tableHeaderCell]}>Unit. HT</Text>
@@ -597,14 +597,14 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
           </View>
           <View style={styles.signatureBoxRight}>
             <View style={[styles.sigTopRow, { justifyContent: 'flex-end' }]}>
-              <Text style={styles.sigTitleGrey}>Bon pour accord : Signé par le client</Text>
+              <Text style={styles.sigTitleGrey}>Bon pour accord : Client</Text>
               <View style={styles.sigIconBoxGrey}><UserIcon /></View>
             </View>
             <View style={[styles.signaturePlaceholder, { backgroundColor: 'rgba(248, 250, 252, 0.3)', borderStyle: 'solid' }]}>
               {quote.client_signature_url ? (
                 <Image src={quote.client_signature_url} style={styles.signatureImage} />
               ) : (
-                <Text style={{ fontSize: 9, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Attente Signature client</Text>
+                <Text style={{ fontSize: 9, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Attente Signature</Text>
               )}
             </View>
           </View>
