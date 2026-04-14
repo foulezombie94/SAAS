@@ -60,25 +60,40 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
         logging: false,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
-          // 🛡️ ULTIMATE SAFETY: Injected styles to force compatibility
+          // 🛡️ ISOLATED PDF FIX: Force standard colors to HEX to avoid oklch crash
           const style = clonedDoc.createElement('style');
           style.innerHTML = `
-            #pdf-template { font-family: Arial, sans-serif !important; }
-            #pdf-template * { border-color: #e2e8f0 !important; }
-            /* Force all background-colors and colors to avoid oklch dynamically */
-            @media print {
-              * { -webkit-print-color-adjust: exact; }
+            #pdf-template { 
+              font-family: Arial, sans-serif !important; 
+              --color-slate-50: #f8fafc !important;
+              --color-slate-100: #f1f5f9 !important;
+              --color-slate-200: #e2e8f0 !important;
+              --color-slate-300: #cbd5e1 !important;
+              --color-slate-400: #94a3b8 !important;
+              --color-slate-500: #64748b !important;
+              --color-slate-600: #475569 !important;
+              --color-slate-900: #0f172a !important;
+              --color-emerald-50: #ecfdf5 !important;
+              --color-emerald-700: #047857 !important;
+              --color-orange-50: #fff7ed !important;
+              --color-orange-700: #c2410c !important;
+              --color-indigo-50: #eef2ff !important;
+              --color-indigo-700: #4338ca !important;
+              --color-rose-50: #fff1f2 !important;
+              --color-rose-700: #be123c !important;
+              --color-primary: #00236f !important;
+            }
+            #pdf-template * { 
+              border-color: #e2e8f0 !important; 
             }
           `;
           clonedDoc.head.appendChild(style);
 
-          // 1. Sanitize all style tags and link tags if accessible
+          // 1. Double-Safe Sanitization of all style tags
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const s = styleTags[i];
             if (s.innerHTML) {
-              // Replace all modern color functions with a safe dark fallback or standard RGB
-              // We use a safe neutral color (#1e293b) for any oklch/oklab found in CSS variables
               s.innerHTML = s.innerHTML
                 .replace(/oklab\([^)]*\)/g, '#1e293b')
                 .replace(/oklch\([^)]*\)/g, '#1e293b')
@@ -88,11 +103,10 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
             }
           }
 
-          // 2. Scan for specific elements that might have oklch in inline styles
+          // 2. Inline Style Cleanup
           const allElements = clonedDoc.getElementsByTagName('*');
           for (let i = 0; i < allElements.length; i++) {
             const el = allElements[i] as HTMLElement;
-            // Check inline styles primarily as they override everything
             if (el.style) {
               const bg = el.style.backgroundColor;
               const clr = el.style.color;
