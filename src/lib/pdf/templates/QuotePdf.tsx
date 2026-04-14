@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image, Font, Svg, Path, Circle, Rect } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Font, Svg, Path, Circle } from '@react-pdf/renderer';
 import { Quote } from '@/types/dashboard';
 
 // Enregistrement précis des fontes pour correspondre à "font-black" et "italic"
@@ -31,7 +31,7 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, bor
 
 const styles = StyleSheet.create({
   page: {
-    padding: 30, // Reduced padding to ensure 1 page
+    padding: 24, // VERY dense padding to maximize space
     fontFamily: 'Helvetica',
     fontSize: 10,
     color: SLATE_900,
@@ -51,8 +51,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 10,
-    marginBottom: 25,
+    marginTop: 5,
+    marginBottom: 15, // Compressed
   },
   brandContainer: {
     flexDirection: 'row',
@@ -60,8 +60,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   brandIconBox: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 8,
     justifyContent: 'center',
@@ -72,14 +72,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandName: {
-    fontSize: 22,
+    fontSize: 26, // +4
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: PRIMARY_COLOR,
     letterSpacing: -0.5,
   },
   brandTagline: {
-    fontSize: 7,
+    fontSize: 9, // +2
     fontWeight: 'bold',
     color: SLATE_500,
     letterSpacing: 2,
@@ -91,13 +91,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   companyName: {
-    fontSize: 12,
+    fontSize: 14, // +2
     fontWeight: 'bold',
     textTransform: 'uppercase',
     marginBottom: 3,
   },
   companyDetails: {
-    fontSize: 8,
+    fontSize: 10, // +2
     color: SLATE_500,
     fontWeight: 'bold',
     textTransform: 'uppercase',
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   companyPhone: {
-    fontSize: 9,
+    fontSize: 11, // +2
     color: PRIMARY_COLOR,
     fontWeight: 'bold',
     marginTop: 2,
@@ -118,8 +118,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     borderBottomWidth: 3,
     borderBottomColor: PRIMARY_COLOR,
-    paddingBottom: 15,
-    marginBottom: 25,
+    paddingBottom: 10, // Compressed
+    marginBottom: 15, // Compressed
   },
   docTitleBlock: {
     flexDirection: 'column',
@@ -129,28 +129,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   docTitleWord: {
-    fontSize: 34,
+    fontSize: 42, // +8
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: PRIMARY_COLOR,
     letterSpacing: -1,
   },
   docTitleSlash: {
-    fontSize: 34,
+    fontSize: 42, // +8
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: SLATE_100,
     marginHorizontal: 4,
   },
   docTitleNumber: {
-    fontSize: 34,
+    fontSize: 42, // +8
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: PRIMARY_COLOR,
     letterSpacing: -1,
   },
   docRef: {
-    fontSize: 9,
+    fontSize: 11, // +2
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12, // Compressed
   },
   clientBox: {
     backgroundColor: SLATE_50,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderColor: SLATE_100,
   },
   clientRefTitle: {
-    fontSize: 7,
+    fontSize: 9, // +2
     fontWeight: 'bold',
     color: PRIMARY_COLOR,
     textTransform: 'uppercase',
@@ -182,12 +182,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   clientName: {
-    fontSize: 16,
+    fontSize: 20, // +4
     fontWeight: 'bold',
     marginBottom: 4,
   },
   clientDetails: {
-    fontSize: 9,
+    fontSize: 11, // +2
     color: SLATE_500,
     fontStyle: 'italic',
     marginBottom: 2,
@@ -206,14 +206,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   infoLabel: {
-    fontSize: 7,
+    fontSize: 9, // +2
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
   infoValue: {
-    fontSize: 9,
+    fontSize: 11, // +2
     fontWeight: 'bold',
     color: SLATE_900,
   },
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   tableHeaderCell: {
-    fontSize: 7,
+    fontSize: 9, // +2
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: SLATE_100,
-    paddingVertical: 10,
+    paddingVertical: 8, // Compressed
     alignItems: 'center',
   },
   col1: { width: '45%', paddingLeft: 12 },
@@ -252,22 +252,22 @@ const styles = StyleSheet.create({
   
   itemDesc: { 
     fontWeight: 'bold', 
-    fontSize: 11, 
+    fontSize: 13, // +2
     color: SLATE_900,
     marginBottom: 3 
   },
   itemSub: { 
-    fontSize: 8, 
+    fontSize: 10, // +2
     color: SLATE_400, 
     fontStyle: 'italic' 
   },
   itemVal: {
-    fontSize: 9,
+    fontSize: 11, // +2
     fontWeight: 'bold',
     color: SLATE_500,
   },
   itemTotal: {
-    fontSize: 11,
+    fontSize: 13, // +2
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: SLATE_900,
@@ -277,8 +277,8 @@ const styles = StyleSheet.create({
   totalsContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: 15,
-    marginBottom: 20,
+    marginTop: 8, // Compressed
+    marginBottom: 12, // Compressed
   },
   totalsBox: {
     width: 250,
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   totalLabel: {
-    fontSize: 8,
+    fontSize: 10, // +2
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     color: SLATE_400,
   },
   totalVal: {
-    fontSize: 10,
+    fontSize: 12, // +2
     fontWeight: 'bold',
     color: SLATE_900,
   },
@@ -315,14 +315,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   grandTotalLabel: { 
-    fontSize: 10, 
+    fontSize: 12, // +2
     fontWeight: 'bold', 
     color: PRIMARY_COLOR, 
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   grandTotalAmount: { 
-    fontSize: 18, 
+    fontSize: 24, // +6
     fontWeight: 'bold', 
     fontStyle: 'italic',
     color: PRIMARY_COLOR 
@@ -333,12 +333,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopStyle: 'dashed',
     borderTopColor: SLATE_300,
-    marginVertical: 15,
+    marginVertical: 10, // Compressed
   },
   signatureSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 10, // Compressed
   },
   signatureBoxLeft: { width: '45%' },
   signatureBoxRight: { width: '45%', alignItems: 'flex-end' },
@@ -349,30 +349,30 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sigIconBox: {
-    width: 14,
-    height: 14,
+    width: 16, // +2
+    height: 16, // +2
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 3,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sigIconBoxGrey: {
-    width: 14,
-    height: 14,
+    width: 16, // +2
+    height: 16, // +2
     backgroundColor: SLATE_100,
     borderRadius: 3,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sigTitle: {
-    fontSize: 7,
+    fontSize: 9, // +2
     fontWeight: 'bold',
     color: PRIMARY_COLOR,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   sigTitleGrey: {
-    fontSize: 7,
+    fontSize: 9, // +2
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   },
   signaturePlaceholder: {
     width: '100%',
-    height: 70,
+    height: 60, // Compressed
     backgroundColor: SLATE_50,
     borderRadius: 12,
     justifyContent: 'center',
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     borderColor: SLATE_300,
   },
   signatureImage: {
-    maxHeight: 60,
+    maxHeight: 50,
     maxWidth: '80%',
     objectFit: 'contain',
   },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
   footerCol: { width: '45%' },
   footerTitle: { 
-    fontSize: 7, 
+    fontSize: 9, // +2
     fontWeight: 'bold', 
     color: PRIMARY_COLOR, 
     marginBottom: 4,
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   footerText: { 
-    fontSize: 7, 
+    fontSize: 9, // +2
     color: SLATE_400, 
     textTransform: 'uppercase', 
     letterSpacing: 1, 
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
 
 // SVG Icons
 const LandmarkIcon = () => (
-  <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M3 22h18" />
     <Path d="M6 18v-7" />
     <Path d="M10 18v-7" />
@@ -434,13 +434,13 @@ const LandmarkIcon = () => (
 );
 
 const CheckIcon = () => (
-  <Svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M20 6 9 17l-5-5" />
   </Svg>
 );
 
 const UserIcon = () => (
-  <Svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={SLATE_400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={SLATE_400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
     <Circle cx="12" cy="7" r="4" />
   </Svg>
@@ -497,7 +497,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
             borderLeftColor: statusInfo.border
           }}>
             <Text style={{ 
-              fontSize: 7, 
+              fontSize: 9, // +2
               fontWeight: 'bold', 
               color: statusInfo.color,
               textTransform: 'uppercase',
@@ -591,7 +591,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
               {quote.artisan_signature_url ? (
                 <Image src={quote.artisan_signature_url} style={styles.signatureImage} />
               ) : (
-                <Text style={{ fontSize: 7, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Cliquer pour signer</Text>
+                <Text style={{ fontSize: 9, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Cliquer pour signer</Text>
               )}
             </View>
           </View>
@@ -604,7 +604,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
               {quote.client_signature_url ? (
                 <Image src={quote.client_signature_url} style={styles.signatureImage} />
               ) : (
-                <Text style={{ fontSize: 7, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Attente Signature client</Text>
+                <Text style={{ fontSize: 9, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Attente Signature client</Text>
               )}
             </View>
           </View>
