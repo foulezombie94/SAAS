@@ -21,6 +21,8 @@ export async function createClient() {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
+        setAll: (cookiesToSet) => {
+          try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, {
                 ...options,
@@ -38,7 +40,6 @@ export async function createClient() {
             }
           }
         },
-      },
     }
   )
 }
