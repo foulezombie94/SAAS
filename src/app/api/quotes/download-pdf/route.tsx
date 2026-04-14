@@ -28,17 +28,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    // 1. Fetch Quote with all necessary relations
+    // 1. Fetch Quote with all necessary relations (excluding profiles to avoid FK errors)
     const { data: quote, error } = await supabase
       .from('quotes')
-      .select('*, profiles(*), clients(*), quote_items(*)')
+      .select('*, clients(*), quote_items(*)')
       .eq('id', quoteId)
       .eq('user_id', user.id)
       .single();
 
     if (error || !quote) {
       console.error('PDF Fetch Error:', error);
-      return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 });
+      return NextResponse.json({ error: 'Devis introuvable', details: error }, { status: 404 });
+    }
+
+    // 1.5 Fetch the profile independently and attach it
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', quote.user_id)
+      .single();
+
+    if (profile) {
+      (quote as any).profiles = profile;
     }
 
     // 2. Generate PDF Buffer using React-PDF
