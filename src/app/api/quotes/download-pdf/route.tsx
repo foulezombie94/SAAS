@@ -5,18 +5,21 @@ import { QuotePdfDocument } from '@/lib/pdf/templates/QuotePdf';
 import React from 'react';
 
 /**
- * 📄 PDF Generation Route (Pro Architecture)
- * Path: /api/quotes/pdf/[id]
+ * 📄 PDF Generation Static Route (Ultra-Robust)
+ * Path: /api/quotes/download-pdf?id=xxx
  * 
- * This route is whitelisted in middleware to ensure stable downloads
- * while maintaining internal security via Supabase getUser().
+ * We use a static path + query param for the highest reliability 
+ * across Vercel deployment and middleware matching.
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: NextRequest) {
   try {
-    const { id: quoteId } = await params;
+    const { searchParams } = new URL(req.url);
+    const quoteId = searchParams.get('id');
+
+    if (!quoteId) {
+      return NextResponse.json({ error: 'ID manquant' }, { status: 400 });
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

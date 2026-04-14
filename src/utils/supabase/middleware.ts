@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
      !request.nextUrl.pathname.startsWith('/api/quotes/view') &&
      !request.nextUrl.pathname.startsWith('/api/quotes/accept') &&
      !request.nextUrl.pathname.startsWith('/api/quotes/public') &&
-     !request.nextUrl.pathname.startsWith('/api/quotes/pdf') &&
+     !request.nextUrl.pathname.startsWith('/api/quotes/download-pdf') &&
      !request.nextUrl.pathname.startsWith('/api/payments/create-session'))
 
   // 🛡️ CAS 1 : Utilisateur NON connecté sur une route protégée
