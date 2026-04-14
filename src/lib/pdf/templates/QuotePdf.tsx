@@ -13,7 +13,7 @@ Font.register({
   ],
 });
 
-const PRIMARY_COLOR = '#001e5f'; // Deep blue matching the screenshot
+const PRIMARY_COLOR = '#001e5f';
 const SLATE_900 = '#0f172a';
 const SLATE_500 = '#64748b';
 const SLATE_400 = '#94a3b8';
@@ -31,11 +31,7 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, bor
 
 const styles = StyleSheet.create({
   page: {
-    paddingContent: 24, // Internal standard variable pour moi-même
-    paddingTop: 24,
-    paddingBottom: 24,
-    paddingLeft: 24,
-    paddingRight: 24,
+    padding: 24,
     fontFamily: 'Helvetica',
     fontSize: 10,
     color: SLATE_900,
@@ -56,16 +52,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginTop: 8,
-    marginBottom: 20, // Compression for 1 page
+    marginBottom: 20,
   },
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   brandIconBox: {
-    width: 34,
-    height: 34,
+    width: 38, // Slightly bigger matching UI
+    height: 38,
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 8,
     justifyContent: 'center',
@@ -76,7 +72,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: PRIMARY_COLOR,
@@ -120,20 +116,20 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end', // Aligne les deux blocs vers le BAS
+    alignItems: 'flex-end', // Aligne badge avec REFERENCE
     borderBottomWidth: 3,
     borderBottomColor: PRIMARY_COLOR,
-    paddingBottom: 15, // Écarte la ligne par rapport aux textes
-    marginBottom: 20, // Réduit pour 1 page
+    paddingBottom: 15,
+    marginBottom: 20,
   },
   docTitleBlock: {
     flexDirection: 'column',
-    justifyContent: 'flex-end', // Assure la poussée vers le bas
+    justifyContent: 'flex-end',
   },
   docTitleMain: {
-    fontSize: 34, // Compression fine
+    fontSize: 34,
     fontStyle: 'italic',
-    marginBottom: 8, // Écarte la ref du titre
+    marginBottom: 6, // Distance entre Devis et Référence
   },
   docTitleWord: {
     fontWeight: 'bold',
@@ -148,17 +144,17 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
   },
   docRef: {
-    fontSize: 11,
+    fontSize: 10, // Match UI text-sm (slightly smaller proportionally but thick)
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
   statusBadge: {
-    paddingHorizontal: 14, 
+    paddingHorizontal: 16, 
     paddingVertical: 8,
     borderRadius: 12,
-    borderLeftWidth: 4,
+    borderLeftWidth: 3, // Match UI better
   },
   statusText: {
     fontSize: 9,
@@ -172,18 +168,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 20, // Reduced for 1 page
+    marginBottom: 20,
   },
   clientBox: {
     backgroundColor: SLATE_50,
     padding: 18, 
-    borderRadius: 14,
+    borderRadius: 16, // Match rounded-[2.5rem] loosely
     width: '48%', 
     borderWidth: 1,
     borderColor: SLATE_100,
   },
   clientRefTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     color: PRIMARY_COLOR,
     textTransform: 'uppercase',
@@ -191,12 +187,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   clientName: {
-    fontSize: 18,
+    fontSize: 18, // Match text-2xl
     fontWeight: 'bold',
     marginBottom: 6,
   },
   clientDetails: {
-    fontSize: 11,
+    fontSize: 10, // Match text-sm
     color: SLATE_500,
     fontStyle: 'italic',
     marginBottom: 3,
@@ -210,20 +206,20 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: SLATE_100,
     paddingBottom: 5,
   },
   infoLabel: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
   infoValue: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: SLATE_900,
   },
@@ -239,10 +235,10 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   tableHeaderCell: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
@@ -251,7 +247,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: SLATE_100,
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
   },
   col1: { width: '45%', paddingLeft: 16 },
@@ -262,22 +258,22 @@ const styles = StyleSheet.create({
   
   itemDesc: { 
     fontWeight: 'bold', 
-    fontSize: 12,
+    fontSize: 11, // Match text-base
     color: SLATE_900,
-    marginBottom: 4 
+    marginBottom: 3 
   },
   itemSub: { 
-    fontSize: 9,
+    fontSize: 8, // Match text-xs
     color: SLATE_400, 
     fontStyle: 'italic' 
   },
   itemVal: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: SLATE_500,
   },
   itemTotal: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     fontStyle: 'italic',
     color: SLATE_900,
@@ -291,10 +287,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   totalsBox: {
-    width: 250,
+    width: 280, // Match w-80
     backgroundColor: SLATE_50,
-    padding: 14,
-    borderRadius: 14,
+    padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: SLATE_100,
   },
@@ -304,14 +300,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   totalLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     color: SLATE_400,
   },
   totalVal: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     color: SLATE_900,
   },
@@ -325,14 +321,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   grandTotalLabel: { 
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold', 
     color: PRIMARY_COLOR, 
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   grandTotalAmount: { 
-    fontSize: 22,
+    fontSize: 20, // Match text-3xl
     fontWeight: 'bold', 
     fontStyle: 'italic',
     color: PRIMARY_COLOR 
@@ -348,7 +344,7 @@ const styles = StyleSheet.create({
   signatureSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   signatureBoxLeft: { width: '47%' },
   signatureBoxRight: { width: '47%', alignItems: 'flex-end' },
@@ -375,14 +371,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sigTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     color: PRIMARY_COLOR,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   sigTitleGrey: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     color: SLATE_400,
     textTransform: 'uppercase',
@@ -390,9 +386,9 @@ const styles = StyleSheet.create({
   },
   signaturePlaceholder: {
     width: '100%',
-    height: 55, // Compress to fit 1 page
+    height: 52, // Compressed to fit 1 page comfortably
     backgroundColor: SLATE_50,
-    borderRadius: 10,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -409,7 +405,7 @@ const styles = StyleSheet.create({
   footer: {
     borderTopWidth: 1,
     borderTopColor: SLATE_100,
-    paddingTop: 12,
+    paddingTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -427,13 +423,13 @@ const styles = StyleSheet.create({
     color: SLATE_400, 
     textTransform: 'uppercase', 
     letterSpacing: 1, 
-    marginBottom: 3 
+    marginBottom: 2 
   },
 });
 
 // SVG Icons
 const LandmarkIcon = () => (
-  <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M3 22h18" />
     <Path d="M6 18v-7" />
     <Path d="M10 18v-7" />
@@ -540,7 +536,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
         {/* TABLE */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.col1, styles.tableHeaderCell]}>Désignation</Text>
+            <Text style={[styles.col1, styles.tableHeaderCell]}>Désignation des prestations</Text>
             <Text style={[styles.col2, styles.tableHeaderCell]}>Qté</Text>
             <Text style={[styles.col3, styles.tableHeaderCell]}>Unité</Text>
             <Text style={[styles.col4, styles.tableHeaderCell]}>Unit. HT</Text>
@@ -553,7 +549,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
                 <Text style={styles.itemSub}>Prestation de service certifiée ArtisanFlow.</Text>
               </View>
               <Text style={[styles.col2, styles.itemVal]}>{(item.quantity || 0).toFixed(2)}</Text>
-              <Text style={[styles.col3, styles.itemSub, { fontWeight: 'bold', textTransform: 'uppercase' }]}>Pce</Text>
+              <Text style={[styles.col3, styles.itemSub, { fontWeight: 'bold', textTransform: 'uppercase' }]}>PCE</Text>
               <Text style={[styles.col4, styles.itemVal]}>{(item.unit_price || 0).toLocaleString('fr-FR')} €</Text>
               <Text style={[styles.col5, styles.itemTotal]}>{(item.total_price || 0).toLocaleString('fr-FR')} €</Text>
             </View>
@@ -585,7 +581,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
           <View style={styles.signatureBoxLeft}>
             <View style={styles.sigTopRow}>
               <View style={styles.sigIconBox}><CheckIcon /></View>
-              <Text style={styles.sigTitle}>Validation de l'artisan</Text>
+              <Text style={styles.sigTitle}>Validation de l'Artisan</Text>
             </View>
             <View style={styles.signaturePlaceholder}>
               {quote.artisan_signature_url ? (
@@ -597,14 +593,14 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
           </View>
           <View style={styles.signatureBoxRight}>
             <View style={[styles.sigTopRow, { justifyContent: 'flex-end' }]}>
-              <Text style={styles.sigTitleGrey}>Bon pour accord : Client</Text>
+              <Text style={styles.sigTitleGrey}>Bon pour accord : Signé par le client</Text>
               <View style={styles.sigIconBoxGrey}><UserIcon /></View>
             </View>
             <View style={[styles.signaturePlaceholder, { backgroundColor: 'rgba(248, 250, 252, 0.3)', borderStyle: 'solid' }]}>
               {quote.client_signature_url ? (
                 <Image src={quote.client_signature_url} style={styles.signatureImage} />
               ) : (
-                <Text style={{ fontSize: 9, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Attente Signature</Text>
+                <Text style={{ fontSize: 9, color: SLATE_300, fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Attente Signature Client</Text>
               )}
             </View>
           </View>
@@ -618,7 +614,7 @@ export function QuotePdfDocument({ quote }: { quote: Quote }) {
             <Text style={styles.footerText}>
               {quote.tax_rate === 0 
                 ? "TVA non applicable, art. 293 B du CGI" 
-                : `N° TVA Intracommunautaire : FR 87 ${profile?.siret ? profile.siret.substring(0, 9) : '123456789'}`
+                : `N° TVA Intracommunautaire : ${profile?.tva_intra || 'FR842153967'}`
               }
             </Text>
           </View>
