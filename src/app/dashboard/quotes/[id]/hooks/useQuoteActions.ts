@@ -45,10 +45,12 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       const allStyles = Array.from(document.querySelectorAll('style'));
       const originalContents = allStyles.map(s => s.innerHTML);
       allStyles.forEach(s => {
-        if (s.innerHTML.includes('lab(') || s.innerHTML.includes('oklch(')) {
+        if (s.innerHTML.includes('lab(') || s.innerHTML.includes('oklch(') || s.innerHTML.includes('oklab(') || s.innerHTML.includes('lch(')) {
           s.innerHTML = s.innerHTML
+            .replace(/oklab\([^)]*\)/g, '#1e293b')
+            .replace(/oklch\([^)]*\)/g, '#1e293b')
             .replace(/lab\([^)]*\)/g, '#1e293b')
-            .replace(/oklch\([^)]*\)/g, '#1e293b');
+            .replace(/lch\([^)]*\)/g, '#1e293b');
         }
       });
 
@@ -72,8 +74,10 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
             const s = styleTags[i];
             if (s.innerHTML) {
               s.innerHTML = s.innerHTML
-                .replace(/lab\([^)]*\)/g, '#1e293b')
+                .replace(/oklab\([^)]*\)/g, '#1e293b')
                 .replace(/oklch\([^)]*\)/g, '#1e293b')
+                .replace(/lab\([^)]*\)/g, '#1e293b')
+                .replace(/lch\([^)]*\)/g, '#1e293b')
                 .replace(/color-mix\([^)]*\)/g, '#1e293b');
             }
           }
