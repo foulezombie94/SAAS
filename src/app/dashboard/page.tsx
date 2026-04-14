@@ -165,10 +165,10 @@ export default async function DashboardPage() {
                           {Number(quote.total_ttc).toLocaleString('fr-FR')}€
                         </span>
                         <div className="text-right">
-                            <span className={`inline-flex items-center px-4 py-1.5 rounded font-label font-bold text-[10px] uppercase tracking-widest border ${
+                            <span className={`inline-flex items-center px-6 py-2.5 rounded-lg font-label font-black text-[11px] uppercase tracking-[0.15em] border shadow-sm transition-transform active:scale-95 ${
                               quote.status === 'accepted' ? 'bg-green-100/50 text-green-700 border-green-200' :
                               quote.status === 'sent' ? 'bg-tertiary-container/10 text-on-tertiary-container border-tertiary-fixed-dim/20' :
-                              quote.status === 'draft' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                              quote.status === 'draft' ? 'bg-slate-100/50 text-slate-600 border-slate-200' :
                               'bg-slate-100 text-slate-500 border-slate-200'
                             }`}>
                               {quote.status === 'accepted' ? 'Accepté' : 
