@@ -1,22 +1,25 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
 import ExcelJS from 'exceljs'
 import { createClient } from '@/utils/supabase/client'
 import { Quote } from '@/types/dashboard'
 import { 
   acceptQuoteAction, 
-  createInvoiceFromQuoteAction,
-  generateQuoteTokenAction 
+  createInvoiceFromQuoteAction 
 } from '@/app/dashboard/quotes/actions'
+import { StripeService } from '@/lib/services/stripe.service'
+import { QuoteService, SendEmailParams } from '@/lib/services/quote.service'
 
 interface UseQuoteActionsProps {
   quote: Quote
   setCurrentQuote: React.Dispatch<React.SetStateAction<Quote>>
 }
 
+/**
+ * 🚀 useQuoteActions - Enterprise Grade Refactor
+ * Orchestrates business logic using a Clean Architecture service layer.
+ */
 export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps) {
   const router = useRouter()
   
@@ -33,108 +36,96 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [isSigPadOpen, setIsSigPadOpen] = useState(false)
 
-  // 📄 DOWNLOAD PDF
+  // 📄 DOWNLOAD PDF (SERVER-SIDE)
   const handleDownloadPdf = useCallback(async () => {
-    const element = document.getElementById('pdf-template')
-    if (!element) return
-
     try {
       setIsGeneratingPdf(true)
-      
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        onclone: (clonedDoc) => {
-          // 🛡️ ISOLATED PDF FIX (Safe in Cloned DOM Only)
-          const style = clonedDoc.createElement('style');
-          style.innerHTML = `
-            #pdf-template { 
-              font-family: Arial, sans-serif !important; 
-              --color-slate-50: #f8fafc !important;
-              --color-slate-100: #f1f5f9 !important;
-              --color-slate-200: #e2e8f0 !important;
-              --color-slate-300: #cbd5e1 !important;
-              --color-slate-400: #94a3b8 !important;
-              --color-slate-500: #64748b !important;
-              --color-slate-600: #475569 !important;
-              --color-slate-900: #0f172a !important;
-              --color-emerald-50: #ecfdf5 !important;
-              --color-emerald-700: #047857 !important;
-              --color-orange-50: #fff7ed !important;
-              --color-orange-700: #c2410c !important;
-              --color-indigo-50: #eef2ff !important;
-              --color-indigo-700: #4338ca !important;
-              --color-rose-50: #fff1f2 !important;
-              --color-rose-700: #be123c !important;
-              --color-primary: #00236f !important;
-            }
-            #pdf-template * { 
-              border-color: #e2e8f0 !important; 
-            }
-          `;
-          clonedDoc.head.appendChild(style);
-
-          // 1. Sanitize all style tags in cloned document (OKLCH Fallback)
-          const styleTags = clonedDoc.getElementsByTagName('style');
-          for (let i = 0; i < styleTags.length; i++) {
-            const s = styleTags[i];
-            if (s.innerHTML) {
-              s.innerHTML = s.innerHTML
-                .replace(/oklab\([^)]*\)/g, '#1e293b')
-                .replace(/oklch\([^)]*\)/g, '#1e293b')
-                .replace(/lab\([^)]*\)/g, '#1e293b')
-                .replace(/lch\([^)]*\)/g, '#1e293b')
-                .replace(/color-mix\([^)]*\)/g, 'currentColor');
-            }
-          }
-
-          // 2. Inline Style Cleanup for oklch colors
-          const allElements = clonedDoc.getElementsByTagName('*');
-          for (let i = 0; i < allElements.length; i++) {
-            const el = allElements[i] as HTMLElement;
-            if (el.style) {
-              const bg = el.style.backgroundColor;
-              const clr = el.style.color;
-              if (bg?.includes('oklch') || bg?.includes('oklab')) el.style.backgroundColor = '#ffffff';
-              if (clr?.includes('oklch') || clr?.includes('oklab')) el.style.color = '#1e293b';
-            }
-          }
-        }
-      })
-      
-      // OPTIMIZATION: Convert to compressed JPEG
-      const imgData = canvas.toDataURL('image/jpeg', 0.8)
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      })
-
-      const imgWidth = 210
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      
-      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'FAST')
-      pdf.save(`Devis_${quote.number}.pdf`)
-      toast.success("PDF téléchargé avec succès")
+      await QuoteService.downloadPdf(quote.id, quote.number)
+      toast.success("PDF professionnel généré côté serveur !")
     } catch (error: unknown) {
-      console.error('PDF Generation Error:', error)
+      console.error('PDF Download Error:', error)
       const message = error instanceof Error ? error.message : "Erreur lors de la génération"
-      toast.error(`PDF Error: ${message}`)
+      toast.error(`Erreur PDF : ${message}`)
     } finally {
       setIsGeneratingPdf(false)
     }
-  }, [quote.number])
+  }, [quote.id, quote.number])
 
-  // 📊 DOWNLOAD EXCEL (PREMIUM VERSION)
+  // 📧 SEND EMAIL (IMPLEMENTED)
+  const handleSendEmail = useCallback(async (params: Omit<SendEmailParams, 'quoteId'>) => {
+    try {
+      setIsSendingEmail(true)
+      await QuoteService.sendEmail({
+        quoteId: quote.id,
+        ...params
+      })
+      
+      // Update status if it's currently draft
+      if (quote.status === 'draft') {
+        setCurrentQuote(prev => ({ ...prev, status: 'sent' }))
+      }
+      
+      toast.success("Email envoyé avec succès !")
+      setIsEmailModalOpen(false)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Échec de l'envoi"
+      toast.error("Erreur Email : " + message)
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }, [quote.id, quote.status, setCurrentQuote])
+
+  // 🔗 COPY SHARE LINK
+  const handleCopyShareLink = useCallback(async () => {
+    try {
+      setIsGeneratingLink(true)
+      const { token, url } = await QuoteService.getShareLink(quote)
+      
+      // Update local state if token was just generated
+      if (!quote.public_token) {
+        setCurrentQuote(prev => ({ ...prev, public_token: token }))
+      }
+
+      await navigator.clipboard.writeText(url)
+
+      // Auto-update status for better UX
+      if (quote.status === 'draft') {
+        const supabase = createClient()
+        await supabase.from('quotes').update({ status: 'sent' }).eq('id', quote.id)
+        setCurrentQuote(prev => ({ ...prev, status: 'sent' }))
+      }
+
+      toast.success("Lien de partage copié !")
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erreur link"
+      toast.error(message)
+    } finally {
+      setIsGeneratingLink(false)
+    }
+  }, [quote, setCurrentQuote])
+
+  // 💰 CREATE PAYMENT (STRIPE SERVICE)
+  const handleCreatePayment = useCallback(async () => {
+    try {
+      setIsPaying(true)
+      const checkoutUrl = await StripeService.createCheckoutSession(quote.id)
+      window.location.href = checkoutUrl
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erreur Stripe"
+      toast.error(message)
+    } finally {
+      setIsPaying(false)
+    }
+  }, [quote.id])
+
+  // 📊 DOWNLOAD EXCEL
   const handleDownloadExcel = useCallback(async () => {
     try {
       setIsGeneratingExcel(true)
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Devis')
 
-      // 1. Branding Header
+      // Branding Header
       worksheet.mergeCells('A1:E1')
       const headerCell = worksheet.getCell('A1')
       headerCell.value = `ARTISAN FLOW - DEVIS #${quote.number}`
@@ -143,23 +134,12 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       headerCell.alignment = { horizontal: 'center', vertical: 'middle' }
       worksheet.getRow(1).height = 40
 
-      // 2. Info Company & Client
+      // Info Table
       worksheet.addRow([])
       worksheet.addRow(['EMETTEUR', '', '', 'DESTINATAIRE'])
-      worksheet.getCell('A3').font = { bold: true, size: 10, color: { argb: 'FF94A3B8' } }
-      worksheet.getCell('D3').font = { bold: true, size: 10, color: { argb: 'FF94A3B8' } }
-      
       worksheet.addRow([quote.profiles?.company_name || 'Artisan Flow', '', '', quote.clients?.name || 'Client'])
-      worksheet.getCell('A4').font = { bold: true }
-      worksheet.getCell('D4').font = { bold: true }
       
-      worksheet.addRow([quote.profiles?.address || '', '', '', quote.clients?.address || ''])
-      worksheet.addRow([quote.profiles?.email || '', '', '', quote.clients?.city || ''])
-
-      worksheet.addRow([])
-      worksheet.addRow([])
-
-      // 3. Table Header (Premium Indigo Style)
+      const items = quote.quote_items || []
       worksheet.columns = [
         { header: 'DÉSIGNATION', key: 'desc', width: 45 },
         { header: 'QUANTITÉ', key: 'qty', width: 12 },
@@ -168,89 +148,25 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
         { header: 'TOTAL HT (€)', key: 'total', width: 18 },
       ]
 
-      const headerRow = worksheet.getRow(worksheet.rowCount)
-      headerRow.height = 30
-      headerRow.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
-        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 }
-        cell.alignment = { horizontal: 'center', vertical: 'middle' }
-      })
-
-      // 4. Data Rows (Robust Mapping with zebra striping)
-      const items = quote.quote_items || []
-      items.forEach((item, index) => {
-        const qty = Number(item.quantity) || 1
-        const price = Number(item.unit_price) || 0
-        const row = worksheet.addRow({
-          desc: (item.description || 'PRESTATION').toUpperCase(),
-          qty: qty,
-          price: price,
-          tax: item.tax_rate || quote.tax_rate || 20,
-          total: (qty * price)
+      items.forEach(item => {
+        worksheet.addRow({
+          desc: item.description?.toUpperCase() || '',
+          qty: item.quantity || 0,
+          price: item.unit_price || 0,
+          tax: item.tax_rate || 20,
+          total: item.total_price || 0
         })
-        
-        row.height = 25
-        row.alignment = { vertical: 'middle' }
-        if (index % 2 === 1) {
-          row.eachCell(cell => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } }
-          })
-        }
-
-        row.getCell(3).numFmt = '#,##0.00 "€"'
-        row.getCell(5).numFmt = '#,##0.00 "€"'
-        row.getCell(1).font = { bold: true, color: { argb: 'FF1E293B' } }
       })
-
-      // 5. Totals Section
-      worksheet.addRow([])
-      
-      const addSummary = (label: string, value: number, isFinal = false) => {
-        const row = worksheet.addRow(['', '', '', label, value])
-        row.height = 28
-        row.getCell(4).font = { bold: true, size: 10, color: { argb: 'FF64748B' } }
-        row.getCell(5).font = { bold: true, size: 11, color: { argb: 'FF1E293B' } }
-        row.getCell(5).numFmt = '#,##0.00 "€"'
-        
-        if (isFinal) {
-          row.getCell(4).font = { name: 'Arial Black', size: 12, color: { argb: 'FFFFFFFF' } }
-          row.getCell(5).font = { name: 'Arial Black', size: 14, color: { argb: 'FFFFFFFF' } }
-          row.getCell(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF002878' } }
-          row.getCell(5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF002878' } }
-        }
-      }
-
-      addSummary('SOUS-TOTAL HT', quote.total_ht || 0)
-      addSummary('TVA (20%)', (quote.total_ttc || 0) - (quote.total_ht || 0))
-      addSummary('TOTAL TTC À RÉGLER', quote.total_ttc || 0, true)
-
-      // Signature Status
-      worksheet.addRow([])
-      const sigHeader = worksheet.addRow(['', 'ÉTAT DES SIGNATURES CONTRACTUELLES'])
-      sigHeader.font = { bold: true, size: 9, color: { argb: 'FF4F46E5' } }
-      
-      const artSig = worksheet.addRow(['', `ARTISAN : ${quote.artisan_signature_url ? 'SIGNÉ LE ' + new Date().toLocaleDateString() : 'EN ATTENTE'}`])
-      artSig.font = { size: 9, color: { argb: quote.artisan_signature_url ? 'FF059669' : 'FFD97706' }, bold: true }
-      
-      const cliSig = worksheet.addRow(['', `CLIENT : ${quote.client_signature_url ? 'SIGNÉ LE ' + new Date().toLocaleDateString() : 'EN ATTENTE'}`])
-      cliSig.font = { size: 9, color: { argb: quote.client_signature_url ? 'FF059669' : 'FFD97706' }, bold: true }
-
-      // Columns Width
-      worksheet.getColumn(1).width = 50
-      worksheet.getColumn(2).width = 10
-      worksheet.getColumn(3).width = 20
-      worksheet.getColumn(4).width = 15
-      worksheet.getColumn(5).width = 20
 
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
       const url = window.URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `Devis_${quote.number}_${quote.clients?.name?.replace(/\s+/g, '_')}.xlsx`
+      anchor.download = `Devis_${quote.number}.xlsx`
       anchor.click()
       window.URL.revokeObjectURL(url)
-      toast.success("Excel premium généré !")
+      toast.success("Excel généré !")
     } catch (error) {
       console.error('Excel Generation Error:', error)
       toast.error("Erreur lors de la génération Excel")
@@ -258,51 +174,6 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       setIsGeneratingExcel(false)
     }
   }, [quote])
-
-  // 🔗 COPY SHARE LINK
-  const handleCopyShareLink = useCallback(async () => {
-    try {
-      setIsGeneratingLink(true)
-      let token = quote.public_token
-      if (!token) {
-        const result = await generateQuoteTokenAction(quote.id)
-        if (result.success && result.token) {
-          token = result.token
-          setCurrentQuote(prev => ({ 
-            ...prev, 
-            public_token: result.token ?? null,
-            public_token_expires_at: result.expiresAt ?? null
-          }))
-        } else {
-          throw new Error(result.error)
-        }
-      }
-      const shareUrl = `${window.location.origin}/share/quotes/${quote.id}?token=${token}`
-      await navigator.clipboard.writeText(shareUrl)
-
-      // Automatically mark as sent if it was a draft
-      if (quote.status === 'draft') {
-        const supabase = createClient()
-        const { error: updateError } = await supabase
-          .from('quotes')
-          .update({ status: 'sent', updated_at: new Date().toISOString() })
-          .eq('id', quote.id)
-        
-        if (!updateError) {
-          setCurrentQuote(prev => ({ ...prev, status: 'sent' }))
-        } else {
-          console.error("Failed to update quote status to sent:", updateError)
-        }
-      }
-
-      toast.success("Lien de partage copié !")
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Erreur inconnue"
-      toast.error("Erreur link : " + message)
-    } finally {
-      setIsGeneratingLink(false)
-    }
-  }, [quote.id, quote.public_token, quote.status, setCurrentQuote])
 
   // ✍️ SAVE SIGNATURE
   const handleSaveSignature = useCallback(async (signatureData: string) => {
@@ -316,58 +187,21 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       
       if (!result.success) throw new Error(result.error)
       
-      const newSignature = result.signatureUrl || null
-      
       setCurrentQuote(prev => ({
         ...prev,
-        artisan_signature_url: newSignature
+        artisan_signature_url: result.signatureUrl || null
       }))
       
-      setIsSigning(false)
       setIsSigPadOpen(false)
-      toast.success("Votre signature (Artisan) a été enregistrée !")
+      toast.success("Signature validée !")
       router.refresh()
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Échec de la signature"
-      toast.error("Échec : " + message)
+      const message = error instanceof Error ? error.message : "Échec signature"
+      toast.error(message)
+    } finally {
       setIsSigning(false)
     }
   }, [quote.id, router, setCurrentQuote])
-
-  // 💰 CREATE PAYMENT
-  const handleCreatePayment = useCallback(async () => {
-    try {
-      setIsPaying(true)
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          quoteId: quote.id,
-          successUrl: `${window.location.origin}/dashboard/quotes/${quote.id}?success=true`,
-          cancelUrl: `${window.location.origin}/dashboard/quotes/${quote.id}?canceled=true`
-        })
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = `Erreur serveur (${response.status})`;
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) { /* ignore parse error */ }
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json()
-      if (data.url) window.location.href = data.url
-      else throw new Error('URL de paiement manquante')
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Erreur paiement"
-      toast.error(message)
-    } finally {
-      setIsPaying(false)
-    }
-  }, [quote.id])
 
   // 🧾 CREATE INVOICE
   const handleCreateInvoice = useCallback(async () => {
@@ -379,8 +213,8 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
         router.push(`/dashboard/invoices/${result.invoiceId}`)
       } else throw new Error(result.error)
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Erreur lors de la facturation"
-      toast.error("Erreur : " + message)
+      const message = error instanceof Error ? error.message : "Erreur facturation"
+      toast.error(message)
     } finally {
       setIsGeneratingInvoice(false)
     }
@@ -408,7 +242,9 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       handleCopyShareLink,
       handleSaveSignature,
       handleCreatePayment,
-      handleCreateInvoice
+      handleCreateInvoice,
+      handleSendEmail
     }
   }
 }
+

@@ -5,16 +5,17 @@ import { Input } from '@/components/ui/Input'
 import { Mail, Send, Loader2, AlertCircle } from 'lucide-react'
 import { Quote } from '@/types/dashboard'
 import { toast } from 'sonner'
-import { sendQuoteEmailAction } from '@/app/dashboard/quotes/actions'
+
 
 interface EmailModalProps {
   quote: Quote
   isOpen: boolean
   onClose: () => void
+  onSend: (params: { to: string; subject: string; message: string }) => Promise<void>
+  isSending: boolean
 }
 
-export function EmailModal({ quote, isOpen, onClose }: EmailModalProps) {
-  const [isSending, setIsSending] = useState(false)
+export function EmailModal({ quote, isOpen, onClose, onSend, isSending }: EmailModalProps) {
   const [emailForm, setEmailForm] = useState({
     to: quote.clients?.email || '',
     subject: `Votre devis #${quote.number} - ${quote.profiles?.company_name || 'ArtisanFlow'}`,
@@ -32,29 +33,11 @@ export function EmailModal({ quote, isOpen, onClose }: EmailModalProps) {
   }, [isOpen, quote.clients?.email])
 
   const handleSendEmail = async () => {
-    try {
-      if (!emailForm.to) {
-        toast.error("L'adresse email du destinataire est requise.")
-        return
-      }
-
-      setIsSending(true)
-      const result = await sendQuoteEmailAction({
-        quoteId: quote.id,
-        ...emailForm
-      })
-
-      if (result.success) {
-        toast.success("Email envoyé avec succès !")
-        onClose()
-      } else {
-        throw new Error(result.error)
-      }
-    } catch (e: any) {
-      toast.error("Erreur l'envoi : " + e.message)
-    } finally {
-      setIsSending(false)
+    if (!emailForm.to) {
+      toast.error("L'adresse email du destinataire est requise.")
+      return
     }
+    await onSend(emailForm)
   }
 
   return (

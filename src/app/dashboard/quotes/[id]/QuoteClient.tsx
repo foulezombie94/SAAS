@@ -11,7 +11,6 @@ import { QuoteSnapshot } from './components/QuoteSnapshot'
 import { QuoteActionsPanel } from './components/QuoteActionsPanel'
 import { FullPreviewModal } from './components/FullPreviewModal'
 import { EmailModal } from './components/EmailModal'
-import { PdfTemplate } from './components/PdfTemplate'
 import { SignaturePad } from '@/components/SignaturePad'
 
 // 🎣 Specialized Hooks
@@ -114,14 +113,12 @@ export function QuoteClient({ quote }: QuoteClientProps) {
           isOpen={modals.isEmailModalOpen}
           onClose={() => modals.setIsEmailModalOpen(false)}
           quote={currentQuote}
+          onSend={handlers.handleSendEmail}
+          isSending={loading.isSendingEmail}
         />
 
-        {/* HIDDEN PDF TEMPLATE */}
-        <div className="fixed -left-[9999px] top-0">
-          <PdfTemplate 
-            quote={currentQuote} 
-          />
-        </div>
+        {/* SERVER-SIDE PDF NOTICE */}
+        {/* PDF generation now happens on the server, ensuring 100% precision. */}
 
         <style jsx global>{`
           @media print {
