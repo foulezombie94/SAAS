@@ -40,6 +40,7 @@ export async function createClient() {
             }
           }
         },
+      },
     }
   )
 }
