@@ -88,27 +88,27 @@ export function QuoteActionsPanel({
 
         <button 
           onClick={onOpenEmailModal}
-          className="w-full bg-[#ef9900] text-[#2a1700] hover:text-[#2a1700] p-4 h-auto rounded font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 shadow-lg border-none"
+          className="w-full bg-[#ef9900] text-[#2a1700] hover:text-[#2a1700] p-3.5 h-auto rounded font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 shadow-lg border-none text-[13px] tracking-tight uppercase"
         >
-          <Send className="w-5 h-5 fill-current" strokeWidth={2.5} />
+          <Send className="w-4 h-4 fill-current" strokeWidth={2.5} />
           ENVOYER AU CLIENT
         </button>
 
         <button 
           onClick={onCopyShareLink}
           disabled={isGeneratingLink}
-          className="w-full bg-white text-[#00236f] hover:text-[#00236f] border border-[#00236f]/20 p-4 h-auto rounded font-bold flex items-center justify-center gap-3 hover:bg-[#faf8ff] transition-all scale-100 active:scale-95 disabled:opacity-50"
+          className="w-full bg-white text-[#00236f] hover:text-[#00236f] border border-[#00236f]/20 p-3.5 h-auto rounded font-bold flex items-center justify-center gap-3 hover:bg-[#faf8ff] transition-all scale-100 active:scale-95 disabled:opacity-50 text-[13px] tracking-tight uppercase"
         >
-          {isGeneratingLink ? <Loader2 className="w-5 h-5 animate-spin" /> : <LinkIcon className="w-5 h-5" strokeWidth={2.5} />}
+          {isGeneratingLink ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" strokeWidth={2.5} />}
           GÉNÉRER LE LIEN
         </button>
 
         <button 
           onClick={onCreateInvoice}
           disabled={isGeneratingInvoice || !isAccepted}
-          className="w-full bg-[#00236f] text-white hover:text-white p-4 h-auto rounded font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 border-none disabled:opacity-50"
+          className="w-full bg-[#00236f] text-white hover:text-white p-3.5 h-auto rounded font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-all scale-100 active:scale-95 border-none disabled:opacity-50 text-[13px] tracking-tight uppercase"
         >
-          {isGeneratingInvoice ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5 fill-current" />}
+          {isGeneratingInvoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4 fill-current" />}
           <span className="text-center">CONVERTIR EN FACTURE</span>
         </button>
 
@@ -117,17 +117,17 @@ export function QuoteActionsPanel({
           <button 
             onClick={onDownloadPdf}
             disabled={isGeneratingPdf}
-            className="flex-1 flex justify-center items-center bg-white p-3 h-[3.25rem] rounded-lg text-[#00236f] hover:bg-slate-50 transition-all shadow-sm border border-slate-200 disabled:opacity-50"
+            className="flex-1 flex justify-center items-center bg-white p-2.5 h-[2.75rem] rounded-lg text-[#00236f] hover:bg-slate-50 transition-all shadow-sm border border-slate-200 disabled:opacity-50"
           >
-            {isGeneratingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" strokeWidth={2.5} />}
+            {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" strokeWidth={2.5} />}
           </button>
           
           <button 
             onClick={onDownloadExcel}
             disabled={isGeneratingExcel}
-            className="flex-1 flex justify-center items-center bg-white p-3 h-[3.25rem] rounded-lg text-[#00236f] hover:bg-slate-50 transition-all shadow-sm border border-slate-200 disabled:opacity-50"
+            className="flex-1 flex justify-center items-center bg-white p-2.5 h-[2.75rem] rounded-lg text-[#00236f] hover:bg-slate-50 transition-all shadow-sm border border-slate-200 disabled:opacity-50"
           >
-            {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <TableIcon className="w-5 h-5" strokeWidth={2.5} />}
+            {isGeneratingExcel ? <Loader2 className="w-4 h-4 animate-spin" /> : <TableIcon className="w-4 h-4" strokeWidth={2.5} />}
           </button>
 
         </div>
