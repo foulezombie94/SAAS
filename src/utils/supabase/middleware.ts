@@ -61,14 +61,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 🛡️ CAS 2 : Utilisateur CONNECTÉ
-  if (user) {
+  if (user && isProtectedPath) {
     // 🛑 INSTANT BAN CHECK (Redis) - Forced for testing
     const { redis } = await import('@/lib/rate-limit')
     if (redis) {
       const isBanned = await redis.get(`artisan-flow:ban:${user.id}`)
       if (isBanned) {
         const url = request.nextUrl.clone()
-        url.pathname = '/login'
+        url.pathname = '/'
         url.searchParams.set('error', 'banned')
         const response = NextResponse.redirect(url)
         response.cookies.delete('sb-hnruthegzshajfreocpp-auth-token')
