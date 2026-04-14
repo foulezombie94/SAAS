@@ -145,7 +145,7 @@ export default async function DashboardPage() {
                   <span>Client</span>
                   <span>Référence</span>
                   <span>Montant</span>
-                  <span className="text-right">Statut</span>
+                  <span className="text-right pr-2">Statut</span>
               </div>
               
               <div className="divide-y divide-outline-variant/10">
