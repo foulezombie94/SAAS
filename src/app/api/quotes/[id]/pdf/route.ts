@@ -6,10 +6,10 @@ import React from 'react';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const quoteId = params.id;
+    const { id: quoteId } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
