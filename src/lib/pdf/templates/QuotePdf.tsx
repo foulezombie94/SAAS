@@ -130,10 +130,10 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   docTitleMain: {
-    fontSize: 44, // Super huge text to match exactly Image 1
+    fontSize: 36, 
     fontStyle: 'italic',
     lineHeight: 1,
-    letterSpacing: -1, // tight tracking
+    letterSpacing: -1, 
   },
   docTitleWord: {
     fontWeight: 'bold',
