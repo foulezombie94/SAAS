@@ -1,6 +1,6 @@
 import "server-only"
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { Database } from '@/types/supabase'
 
 /**
@@ -14,11 +14,18 @@ import { Database } from '@/types/supabase'
  */
 export async function createClient() {
   const cookieStore = await cookies()
+  const headerStore = await headers()
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        headers: {
+          'user-agent': headerStore.get('user-agent') || 'unknown',
+          'x-forwarded-for': headerStore.get('x-forwarded-for') || '',
+        },
+      },
       cookies: {
         getAll: () => cookieStore.getAll(),
         setAll: (cookiesToSet) => {

@@ -36,6 +36,20 @@ export async function login(prevState: any, formData: FormData) {
     return { error: errorMessage }
   }
 
+  // 🚀 SECURITY ENHANCEMENT: Record fingerprint in metadata
+  const { headers } = await import('next/headers')
+  const headerStore = await headers()
+  const ip = headerStore.get('x-forwarded-for') || 'unknown'
+  const ua = headerStore.get('user-agent') || 'unknown'
+
+  await supabase.auth.updateUser({
+    data: { 
+      last_login_ip: ip,
+      last_login_ua: ua,
+      last_login_at: new Date().toISOString()
+    }
+  })
+
   // Check if onboarding is completed
   const { data: profile } = await supabase
     .from('profiles')
