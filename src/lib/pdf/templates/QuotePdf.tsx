@@ -4,12 +4,12 @@ import { Quote } from '@/types/dashboard';
 
 // Enregistrement précis des fontes pour correspondre à "font-black" et "italic"
 Font.register({
-  family: 'Helvetica',
+  family: 'Inter',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica.ttf', fontWeight: 'normal' },
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-Bold.ttf', fontWeight: 'bold' },
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-Oblique.ttf', fontStyle: 'italic' },
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-BoldOblique.ttf', fontWeight: 'bold', fontStyle: 'italic' },
+    { src: 'https://raw.githubusercontent.com/foulezombie94/SAAS/main/public/fonts/inter-ttf/Inter-Regular.ttf', fontWeight: 'normal' },
+    { src: 'https://raw.githubusercontent.com/foulezombie94/SAAS/main/public/fonts/inter-ttf/Inter-Bold.ttf', fontWeight: 'bold' },
+    { src: 'https://raw.githubusercontent.com/foulezombie94/SAAS/main/public/fonts/inter-ttf/Inter-Italic.ttf', fontStyle: 'italic' },
+    { src: 'https://raw.githubusercontent.com/foulezombie94/SAAS/main/public/fonts/inter-ttf/Inter-BlackItalic.ttf', fontWeight: 'bold', fontStyle: 'italic' },
   ],
 });
 
@@ -32,7 +32,7 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, bor
 const styles = StyleSheet.create({
   page: {
     padding: 24,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Inter',
     fontSize: 10,
     color: SLATE_900,
     backgroundColor: '#ffffff',
