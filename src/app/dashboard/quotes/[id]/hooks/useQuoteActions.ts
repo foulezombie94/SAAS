@@ -65,41 +65,39 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
           style.innerHTML = `
             #pdf-template { font-family: Arial, sans-serif !important; }
             #pdf-template * { border-color: #e2e8f0 !important; }
+            /* Force all background-colors and colors to avoid oklch dynamically */
+            @media print {
+              * { -webkit-print-color-adjust: exact; }
+            }
           `;
           clonedDoc.head.appendChild(style);
 
-          // 1. Sanitize all style tags
+          // 1. Sanitize all style tags and link tags if accessible
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const s = styleTags[i];
             if (s.innerHTML) {
+              // Replace all modern color functions with a safe dark fallback or standard RGB
+              // We use a safe neutral color (#1e293b) for any oklch/oklab found in CSS variables
               s.innerHTML = s.innerHTML
                 .replace(/oklab\([^)]*\)/g, '#1e293b')
                 .replace(/oklch\([^)]*\)/g, '#1e293b')
                 .replace(/lab\([^)]*\)/g, '#1e293b')
                 .replace(/lch\([^)]*\)/g, '#1e293b')
-                .replace(/color-mix\([^)]*\)/g, '#1e293b');
+                .replace(/color-mix\([^)]*\)/g, 'currentColor');
             }
           }
 
-          // 2. Comprehensive Computed Style Scan (Safest Method)
+          // 2. Scan for specific elements that might have oklch in inline styles
           const allElements = clonedDoc.getElementsByTagName('*');
           for (let i = 0; i < allElements.length; i++) {
             const el = allElements[i] as HTMLElement;
-            try {
-              const comp = window.getComputedStyle(el);
-              // If any modern color is detected in computed style, force an inline HEX fallback
-              if (comp.color?.includes('lab') || comp.color?.includes('oklch')) {
-                el.style.color = '#1e293b';
-              }
-              if (comp.backgroundColor?.includes('lab') || comp.backgroundColor?.includes('oklch')) {
-                el.style.backgroundColor = el.tagName === 'DIV' ? '#ffffff' : 'transparent';
-              }
-              if (comp.borderColor?.includes('lab') || comp.borderColor?.includes('oklch')) {
-                el.style.borderColor = '#e2e8f0';
-              }
-            } catch (e) {
-              // Ignore elements where getComputedStyle might fail
+            // Check inline styles primarily as they override everything
+            if (el.style) {
+              const bg = el.style.backgroundColor;
+              const clr = el.style.color;
+              if (bg?.includes('oklch') || bg?.includes('oklab')) el.style.backgroundColor = '#ffffff';
+              if (clr?.includes('oklch') || clr?.includes('oklab')) el.style.color = '#1e293b';
             }
           }
         }
