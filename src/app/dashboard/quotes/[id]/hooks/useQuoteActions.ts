@@ -41,26 +41,13 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
     try {
       setIsGeneratingPdf(true)
       
-      // 🛡️ REFINED CLEANUP: Temporarily sanitize styles without breaking layout
-      const allStyles = Array.from(document.querySelectorAll('style'));
-      const originalContents = allStyles.map(s => s.innerHTML);
-      allStyles.forEach(s => {
-        if (s.innerHTML.includes('lab(') || s.innerHTML.includes('oklch(') || s.innerHTML.includes('oklab(') || s.innerHTML.includes('lch(')) {
-          s.innerHTML = s.innerHTML
-            .replace(/oklab\([^)]*\)/g, '#1e293b')
-            .replace(/oklch\([^)]*\)/g, '#1e293b')
-            .replace(/lab\([^)]*\)/g, '#1e293b')
-            .replace(/lch\([^)]*\)/g, '#1e293b');
-        }
-      });
-
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         onclone: (clonedDoc) => {
-          // 🛡️ ISOLATED PDF FIX: Force standard colors to HEX to avoid oklch crash
+          // 🛡️ ISOLATED PDF FIX (Safe in Cloned DOM Only)
           const style = clonedDoc.createElement('style');
           style.innerHTML = `
             #pdf-template { 
@@ -89,7 +76,7 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
           `;
           clonedDoc.head.appendChild(style);
 
-          // 1. Double-Safe Sanitization of all style tags
+          // 1. Sanitize all style tags in cloned document (OKLCH Fallback)
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             const s = styleTags[i];
@@ -103,7 +90,7 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
             }
           }
 
-          // 2. Inline Style Cleanup
+          // 2. Inline Style Cleanup for oklch colors
           const allElements = clonedDoc.getElementsByTagName('*');
           for (let i = 0; i < allElements.length; i++) {
             const el = allElements[i] as HTMLElement;
@@ -117,10 +104,7 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
         }
       })
       
-      // 🔄 RESTORE original styles in the real DOM
-      allStyles.forEach((s, i) => { s.innerHTML = originalContents[i]; });
-      
-      // OPTIMIZATION: Convert to compressed JPEG to drastically reduce PDF weight (under 50KB logo equivalent)
+      // OPTIMIZATION: Convert to compressed JPEG
       const imgData = canvas.toDataURL('image/jpeg', 0.8)
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -134,9 +118,10 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'FAST')
       pdf.save(`Devis_${quote.number}.pdf`)
       toast.success("PDF téléchargé avec succès")
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('PDF Generation Error:', error)
-      toast.error("Erreur lors de la génération du PDF")
+      const message = error instanceof Error ? error.message : "Erreur lors de la génération"
+      toast.error(`PDF Error: ${message}`)
     } finally {
       setIsGeneratingPdf(false)
     }
@@ -311,8 +296,9 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       }
 
       toast.success("Lien de partage copié !")
-    } catch (error: any) {
-      toast.error("Erreur link : " + error.message)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erreur inconnue"
+      toast.error("Erreur link : " + message)
     } finally {
       setIsGeneratingLink(false)
     }
@@ -341,8 +327,9 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       setIsSigPadOpen(false)
       toast.success("Votre signature (Artisan) a été enregistrée !")
       router.refresh()
-    } catch (e: any) {
-      toast.error("Échec : " + e.message)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Échec de la signature"
+      toast.error("Échec : " + message)
       setIsSigning(false)
     }
   }, [quote.id, router, setCurrentQuote])
@@ -360,11 +347,23 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
           cancelUrl: `${window.location.origin}/dashboard/quotes/${quote.id}?canceled=true`
         })
       })
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = `Erreur serveur (${response.status})`;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) { /* ignore parse error */ }
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json()
       if (data.url) window.location.href = data.url
-      else throw new Error(data.error || 'Erreur Stripe')
-    } catch (error) {
-      toast.error("Erreur paiement")
+      else throw new Error('URL de paiement manquante')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erreur paiement"
+      toast.error(message)
     } finally {
       setIsPaying(false)
     }
@@ -379,8 +378,9 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
         toast.success("Facture générée !")
         router.push(`/dashboard/invoices/${result.invoiceId}`)
       } else throw new Error(result.error)
-    } catch (e: any) {
-      toast.error("Erreur : " + e.message)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erreur lors de la facturation"
+      toast.error("Erreur : " + message)
     } finally {
       setIsGeneratingInvoice(false)
     }
