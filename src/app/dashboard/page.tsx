@@ -97,7 +97,7 @@ export default async function DashboardPage() {
                     7 DERNIERS JOURS
                   </div>
               </div>
-              <div className="h-64">
+              <div className="h-72">
                 <ActivityChart initialData={initialActivity} />
               </div>
           </div>
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
               </div>
               
               <div className="divide-y divide-outline-variant/10">
-                  {(quotes as Quote[] || []).slice(0, 5).map((quote) => (
+                  {(quotes as Quote[] || []).slice(0, 8).map((quote) => (
                     <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`} 
                       className="grid grid-cols-4 px-8 py-6 items-center hover:bg-surface-container/50 transition-colors cursor-pointer group">
                         <div className="flex items-center gap-3">

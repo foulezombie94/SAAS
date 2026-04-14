@@ -20,21 +20,10 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
   const maxRevenue = Math.max(...(data || []).map(d => d.revenue), 1000)
 
   return (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-      {/* Premium Background Accent */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+    <div className="relative h-full w-full group">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 relative z-10">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-             <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-             <h4 className="text-xl font-black text-primary tracking-tighter uppercase">{t('dashboard.activity_title')}</h4>
-          </div>
-          <p className="text-xs font-bold text-slate-400 tracking-wide uppercase">7 {t('dashboard.range_30').split(' ').slice(1).join(' ')}</p>
-        </div>
-      </div>
-
-      <div className="relative h-64 flex items-end justify-between gap-1 md:gap-2 px-1">
+      <div className="relative h-[calc(100%-40px)] flex items-end justify-between gap-1 md:gap-2 px-1">
         {/* Y-Axis Lines */}
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50">
           {[0, 1, 2, 3].map((_, i) => (
@@ -96,7 +85,7 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
 
       {/* X-Axis Labels */}
       {data.length > 0 && (
-        <div className="flex justify-between mt-6 px-1">
+        <div className="flex justify-between mt-4 px-1">
           {data.map((item, idx) => (
             <span key={idx} className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300">
               {item.label}
@@ -104,22 +93,6 @@ export function ActivityChart({ initialData }: { initialData: ActivityData[] }) 
           ))}
         </div>
       )}
-
-      {/* Chart Footer Info */}
-      <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100" />
-            ))}
-          </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">+ {data.filter(d => d.revenue > 0).length} périodes actives</p>
-        </div>
-        <div className="flex items-center gap-1.5 text-green-500 bg-green-50 px-3 py-1 rounded-full">
-           <TrendingUp size={12} />
-           <span className="text-[10px] font-black uppercase tracking-widest">Growth focus</span>
-        </div>
-      </div>
     </div>
   )
 }
