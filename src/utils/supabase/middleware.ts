@@ -62,17 +62,31 @@ export async function updateSession(request: NextRequest) {
 
   // 🛡️ CAS 2 : Utilisateur CONNECTÉ
   if (user && isProtectedPath) {
-    // 🛑 INSTANT BAN CHECK (Redis) - Forced for testing
+    // 🛑 INSTANT BAN CHECK (Redis) - Throttled by cookie to 10m
     const { redis } = await import('@/lib/rate-limit')
     if (redis) {
-      const isBanned = await redis.get(`artisan-flow:ban:${user.id}`)
-      if (isBanned) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/'
-        url.searchParams.set('error', 'banned')
-        const response = NextResponse.redirect(url)
-        response.cookies.delete('sb-hnruthegzshajfreocpp-auth-token')
-        return response
+      const banSynced = request.cookies.get('af_ban_synced')
+      
+      if (!banSynced) {
+        const isBanned = await redis.get(`artisan-flow:ban:${user.id}`)
+        if (isBanned) {
+          const url = request.nextUrl.clone()
+          url.pathname = '/'
+          url.searchParams.set('error', 'banned')
+          const response = NextResponse.redirect(url)
+          // Force session clearing
+          response.cookies.delete('sb-hnruthegzshajfreocpp-auth-token')
+          return response
+        }
+
+        // Cache the "Not Banned" status for 10 minutes
+        supabaseResponse.cookies.set('af_ban_synced', 'true', {
+          maxAge: 600, // 10 minutes
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        })
       }
     }
 
