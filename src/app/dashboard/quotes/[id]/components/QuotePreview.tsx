@@ -9,13 +9,14 @@ import { cn } from '@/lib/utils'
 interface QuotePreviewProps {
   quote: Quote
   onSignArtisan?: () => void
+  isForPdf?: boolean
 }
 
 /**
  * 📄 QuotePreview - ArtisanFlow Professional Systems Template
  * High-fidelity A4 document based on the requested professional layout.
  */
-export function QuotePreview({ quote, onSignArtisan }: QuotePreviewProps) {
+export function QuotePreview({ quote, onSignArtisan, isForPdf }: QuotePreviewProps) {
   const profile = quote.profiles
   const client = quote.clients
 
@@ -31,7 +32,10 @@ export function QuotePreview({ quote, onSignArtisan }: QuotePreviewProps) {
   const statusInfo = STATUS_MAP[quote.status || 'draft']
 
   return (
-    <Card className="border-none shadow-2xl overflow-hidden bg-white flex flex-col min-h-[297mm]">
+    <Card className={cn(
+      "border-none overflow-hidden bg-white flex flex-col min-h-[297mm]",
+      isForPdf ? "shadow-none" : "shadow-2xl"
+    )}>
       {/* 🔵 TOP ACCENT LINE */}
       <div className="absolute top-0 left-0 w-full h-2 bg-primary" />
       
@@ -216,7 +220,12 @@ export function QuotePreview({ quote, onSignArtisan }: QuotePreviewProps) {
             <div>
                <p className="text-primary font-black mb-1 leading-none">Informations Légales</p>
                <p>Assurance Décennale : AXA n°1029384756.</p>
-               <p>Auto-entrepreneur exonéré de TVA (Art. 293B du CGI).</p>
+               <p>
+                 {quote.tax_rate === 0 
+                   ? "TVA non applicable, art. 293 B du CGI" 
+                   : `N° TVA Intracommunautaire : ${profile?.tva_intra || 'FR842153967'}`
+                 }
+               </p>
             </div>
             <div className="text-right">
                <p className="text-primary font-black mb-1 leading-none">Coordonnées Bancaires</p>
