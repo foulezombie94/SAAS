@@ -61,92 +61,96 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 🛡️ CAS 2 : Utilisateur CONNECTÉ
-  if (user && isProtectedPath) {
-    // 🛑 INSTANT BAN CHECK (Redis) - Throttled by cookie to 10m
-    const { redis } = await import('@/lib/rate-limit')
-    if (redis) {
-      const banSynced = request.cookies.get('af_ban_synced')
-      
-      if (!banSynced) {
-        const isBanned = await redis.get(`artisan-flow:ban:${user.id}`)
-        if (isBanned) {
-          const url = request.nextUrl.clone()
-          url.pathname = '/'
-          url.searchParams.set('error', 'banned')
-          const response = NextResponse.redirect(url)
-          // Force session clearing
-          response.cookies.delete('sb-hnruthegzshajfreocpp-auth-token')
-          return response
-        }
-
-        // Cache the "Not Banned" status for 10 minutes
-        supabaseResponse.cookies.set('af_ban_synced', 'true', {
-          maxAge: 600, // 10 minutes
-          path: '/',
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
-        })
+  if (user) {
+    // 🚀 Redirection vers Dashboard si sur "/" ou "/login" (Auto-login persistence)
+    if (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login') {
+      let plan = user.app_metadata?.plan
+      if (!plan) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan')
+          .eq('id', user.id)
+          .single()
+        plan = profile?.plan
       }
-    }
-
-    // 🚀 SENIOR OPTIMIZATION (GRADE 3): Prioritize JWT metadata (Zero-DB hit)
-    // We only query the database if the metadata is not yet synchronized.
-    let plan = user.app_metadata?.plan
-
-    if (!plan) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('plan')
-        .eq('id', user.id)
-        .single()
-      plan = profile?.plan
-    }
-
-    const isOnboardingPath = request.nextUrl.pathname.startsWith('/onboarding')
-    const isDashboardPath = request.nextUrl.pathname.startsWith('/dashboard')
-
-    // A. Redirection Onboarding si pas de plan
-    if (!plan && !isOnboardingPath && isDashboardPath) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/onboarding/transition'
-      const redirectResponse = NextResponse.redirect(url)
-      supabaseResponse.cookies.getAll().forEach(c => redirectResponse.cookies.set(c.name, c.value, c))
-      return redirectResponse
-    }
-
-    // B. Redirection vers Dashboard si sur "/"
-    if (request.nextUrl.pathname === '/') {
       const url = request.nextUrl.clone()
       url.pathname = plan ? '/dashboard' : '/onboarding/transition'
       const redirectResponse = NextResponse.redirect(url)
       supabaseResponse.cookies.getAll().forEach(c => redirectResponse.cookies.set(c.name, c.value, c))
       return redirectResponse
     }
-    // C. 🛡️ HARDENED ACTIVITY TRACKING (10m Throttle)
-    if (isDashboardPath) {
-      const lastSeenSync = request.cookies.get('af_last_seen_sync')
-      
-      if (!lastSeenSync) {
-        // We use dynamic imports for the admin client to keep the middleware light
-        const { createAdminClient } = await import('../../lib/supabase/admin')
-        const supabaseAdmin = createAdminClient()
-        
-        // Update tamper-proof app_metadata
-        await supabaseAdmin.auth.admin.updateUserById(user.id, {
-          app_metadata: { 
-            last_seen_at: new Date().toISOString() 
-          }
-        })
 
-        // Set the throttle cookie (10 minutes)
-        supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
-          maxAge: 600, // 10 minutes
-          path: '/',
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
-        })
+    // 🔒 Logique pour les routes protégées (Dashboard/Onboarding)
+    if (isProtectedPath) {
+      // 🛑 INSTANT BAN CHECK (Redis) - Throttled by cookie to 10m
+      const { redis } = await import('@/lib/rate-limit')
+      if (redis) {
+        const banSynced = request.cookies.get('af_ban_synced')
+        
+        if (!banSynced) {
+          const isBanned = await redis.get(`artisan-flow:ban:${user.id}`)
+          if (isBanned) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/'
+            url.searchParams.set('error', 'banned')
+            const response = NextResponse.redirect(url)
+            response.cookies.delete('sb-hnruthegzshajfreocpp-auth-token')
+            return response
+          }
+
+          supabaseResponse.cookies.set('af_ban_synced', 'true', {
+            maxAge: 600,
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+          })
+        }
+      }
+
+      // 🏎️ Plan verification
+      let plan = user.app_metadata?.plan
+      if (!plan) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan')
+          .eq('id', user.id)
+          .single()
+        plan = profile?.plan
+      }
+
+      const isOnboardingPath = request.nextUrl.pathname.startsWith('/onboarding')
+      const isDashboardPath = request.nextUrl.pathname.startsWith('/dashboard')
+
+      // A. Redirection Onboarding si pas de plan
+      if (!plan && !isOnboardingPath && isDashboardPath) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/onboarding/transition'
+        const redirectResponse = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach(c => redirectResponse.cookies.set(c.name, c.value, c))
+        return redirectResponse
+      }
+
+      // B. 🛡️ HARDENED ACTIVITY TRACKING (10m Throttle)
+      if (isDashboardPath) {
+        const lastSeenSync = request.cookies.get('af_last_seen_sync')
+        
+        if (!lastSeenSync) {
+          const { createAdminClient } = await import('../../lib/supabase/admin')
+          const supabaseAdmin = createAdminClient()
+          
+          await supabaseAdmin.auth.admin.updateUserById(user.id, {
+            app_metadata: { last_seen_at: new Date().toISOString() }
+          })
+
+          supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
+            maxAge: 600,
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+          })
+        }
       }
     }
   }
