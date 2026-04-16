@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { ProjectHistoryList } from '@/components/dashboard/ProjectHistoryList'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -153,54 +154,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
               </span>
             </div>
             
-            <div className="space-y-4">
-              {quotes?.map((quote) => (
-                <Link key={quote.id} href={`/dashboard/quotes/${quote.id}`}>
-                  <div className="flex items-center justify-between p-5 bg-surface-container-low hover:bg-surface-container-high transition-all rounded-xl group cursor-pointer border border-transparent hover:border-primary/10 hover:shadow-lg">
-                    <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 rounded-xl bg-white text-primary flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined">description</span>
-                      </div>
-                      <div>
-                        <div className="font-black text-primary font-body group-hover:text-primary transition-colors text-lg italic tracking-tighter uppercase">{quote.number}</div>
-                        <div className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">{quote.created_at ? new Date(quote.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-8">
-                      <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${
-                        quote.status === 'accepted' || quote.status === 'paid' || quote.status === 'invoiced'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                          : quote.status === 'rejected'
-                          ? 'bg-red-50 text-red-700 border-red-100'
-                          : 'bg-slate-100 text-slate-500 border-slate-200'
-                      }`}>
-                        {quote.status === 'accepted' ? 'Accepté' : 
-                         quote.status === 'paid' ? 'Payé' :
-                         quote.status === 'invoiced' ? 'Facturé' :
-                         quote.status === 'sent' ? 'Envoyé' : 
-                         quote.status === 'draft' ? 'Brouillon' : quote.status}
-                      </span>
-                      
-                      <div className="font-headline font-black text-primary w-28 text-right text-xl tracking-tighter italic">
-                        {Number(quote.total_ttc).toLocaleString('fr-FR')} €
-                      </div>
-                      
-                      <span className="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">chevron_right</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-
-              {(!quotes || quotes.length === 0) && (
-                <div className="flex flex-col items-center justify-center p-16 bg-slate-50/50 border-2 border-dashed border-slate-100 text-center rounded-2xl">
-                  <span className="material-symbols-outlined text-slate-200 mb-4 scale-[2]">folder_open</span>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest max-w-[200px]">
-                    Aucune archive pour ce client. Commencez par créer un devis.
-                  </p>
-                </div>
-              )}
-            </div>
+            <ProjectHistoryList quotes={quotes || []} />
           </div>
         </div>
       </div>
