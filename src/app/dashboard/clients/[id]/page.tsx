@@ -47,7 +47,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
         <div>
           <h1 className="font-headline text-[1.75rem] font-bold tracking-tight text-on-surface mb-1 uppercase">{client.name}</h1>
           <p className="text-on-surface-variant font-body text-xs font-bold uppercase tracking-widest opacity-60">
-            Client ID: #{client.id.substring(0, 5).toUpperCase()} • Membre depuis {new Date(client.created_at).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+            Client ID: #{client.id.substring(0, 5).toUpperCase()} • Membre depuis {client.created_at ? new Date(client.created_at).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : 'N/A'}
           </p>
         </div>
         <Link href={`/dashboard/quotes/new?clientId=${client.id}`}>
@@ -163,7 +163,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
                       </div>
                       <div>
                         <div className="font-black text-primary font-body group-hover:text-primary transition-colors text-lg italic tracking-tighter uppercase">{quote.number}</div>
-                        <div className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">{new Date(quote.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                        <div className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest">{quote.created_at ? new Date(quote.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                       </div>
                     </div>
                     
