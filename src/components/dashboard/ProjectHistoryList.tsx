@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 interface Quote {
   id: string
   number: string
-  created_at: string
-  status: string
+  created_at: string | null
+  status: string | null
   total_ttc: string | number
 }
 
