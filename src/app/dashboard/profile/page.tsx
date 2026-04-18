@@ -181,27 +181,27 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto w-full px-6 py-12 flex flex-col gap-12 relative">
+    <main className="max-w-6xl mx-auto w-full px-6 py-6 flex flex-col gap-6 relative">
       {/* Header Section */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-2">
-        <div className="flex items-center gap-4 mb-2">
-           <div className="w-12 h-12 bg-blue-50 text-[#00236f] rounded-2xl flex items-center justify-center shadow-sm">
-              <User size={24} />
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-1">
+        <div className="flex items-center gap-3 mb-1">
+           <div className="w-10 h-10 bg-blue-50 text-[#00236f] rounded-xl flex items-center justify-center shadow-sm">
+              <User size={20} />
            </div>
            <div>
-              <h1 className="text-4xl font-black text-[#00236f] tracking-tighter font-headline leading-none">Profil & Préférences</h1>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Votre identité et centre de contrôle</p>
+              <h1 className="text-3xl font-black text-[#00236f] tracking-tighter font-headline leading-none">Profil & Préférences</h1>
+              <p className="text-slate-400 font-bold text-[9px] uppercase tracking-[0.2em] mt-1.5">Votre identité et centre de contrôle</p>
            </div>
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Profile Card Section */}
         <motion.section 
-          initial={{ opacity: 0, x: -20 }} 
+          initial={{ opacity: 0, x: -10 }} 
           animate={{ opacity: 1, x: 0 }} 
           transition={{ delay: 0.1 }}
-          className="lg:col-span-12 bg-white p-10 rounded-[2.5rem] shadow-[0_32px_80px_rgba(0,35,111,0.04)] border border-slate-100 flex flex-col md:flex-row gap-10 items-center justify-between group overflow-hidden relative"
+          className="lg:col-span-12 bg-white p-6 md:p-8 rounded-[2rem] shadow-[0_20px_60px_rgba(0,35,111,0.03)] border border-slate-100 flex flex-col md:flex-row gap-8 items-center justify-between group overflow-hidden relative"
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full translate-x-32 -translate-y-32 group-hover:scale-110 transition-transform duration-700" />
           
@@ -241,21 +241,21 @@ export default function ProfilePage() {
           initial={{ opacity: 0, scale: 0.95 }} 
           animate={{ opacity: 1, scale: 1 }} 
           transition={{ delay: 0.2 }}
-          className="lg:col-span-5 bg-slate-50 p-10 rounded-[2.5rem] flex flex-col gap-8 border border-slate-100/50 shadow-sm"
+          className="lg:col-span-5 bg-slate-50 p-6 md:p-8 rounded-[2rem] flex flex-col gap-4 border border-slate-100/50 shadow-sm"
         >
           <div className="flex flex-col gap-1">
              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100">
-                   <Bell size={24} className="text-[#00236f]" />
+                <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100">
+                   <Bell size={20} className="text-[#00236f]" />
                 </div>
-                <h3 className="text-2xl font-black text-[#00236f] tracking-tight leading-none">Centre d&apos;Alertes</h3>
+                <h3 className="text-xl font-black text-[#00236f] tracking-tight leading-none">Centre d&apos;Alertes</h3>
              </div>
-             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-3 bg-white/50 py-2 px-3 rounded-lg border border-slate-100 shadow-sm">
-                💡 <span className="text-blue-600">Note :</span> Cliquez sur une icône pour <span className="text-rose-500">enlever</span> ou activer l&apos;alerte.
+             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2 bg-white/50 py-1.5 px-3 rounded-lg border border-slate-100 shadow-sm">
+                💡 <span className="text-blue-600">Note :</span> Cliquez pour <span className="text-rose-500">enlever</span>/activer.
              </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 aspect-square">
+          <div className="grid grid-cols-2 gap-3 aspect-square">
             {[
               { id: 'quotes_viewed', label: 'Surveillance Devis', icon: <Eye size={24} />, color: 'blue' },
               { id: 'quotes_accepted', label: 'Signatures Reçues', icon: <BadgeCheck size={24} />, color: 'emerald' },
@@ -288,30 +288,30 @@ export default function ProfilePage() {
 
         {/* Pro Plan Status Section */}
         <motion.section 
-          initial={{ opacity: 0, x: 20 }} 
+          initial={{ opacity: 0, x: 10 }} 
           animate={{ opacity: 1, x: 0 }} 
           transition={{ delay: 0.3 }}
-          className="lg:col-span-7 bg-[#00236f] flex flex-col justify-between p-12 rounded-[2.5rem] overflow-hidden relative shadow-2xl shadow-blue-900/10"
+          className="lg:col-span-7 bg-[#00236f] flex flex-col justify-between p-8 md:p-10 rounded-[2rem] overflow-hidden relative shadow-2xl shadow-blue-900/10"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-[#00236f] to-[#011a5e]" />
           <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-white/5 rounded-full blur-[100px] pointer-events-none" />
           
-          <div className="relative z-10 flex flex-col gap-12 h-full justify-between">
-            <div className="space-y-6">
-              <div className="inline-flex px-4 py-2 bg-white/10 backdrop-blur-xl text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl border border-white/10 shadow-inner">
+          <div className="relative z-10 flex flex-col gap-6 h-full justify-between">
+            <div className="space-y-4">
+              <div className="inline-flex px-3 py-1.5 bg-white/10 backdrop-blur-xl text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-xl border border-white/10 shadow-inner">
                 Intelligence d&apos;Abonnement
               </div>
-              <h3 className="text-5xl font-black text-white font-headline leading-tight tracking-tighter">
+              <h3 className="text-4xl font-black text-white font-headline leading-tight tracking-tighter">
                 {profile.is_pro ? 'Contrôle Pro Activé' : 'Accès Standard'}
               </h3>
-              <p className="text-blue-200 text-lg font-medium leading-relaxed max-w-xl">
+              <p className="text-blue-200 text-sm font-medium leading-relaxed max-w-xl">
                 {profile.is_pro 
-                  ? "Votre puissance artisanale est à 100%. Vous disposez d'un envoi illimité de devis et factures."
+                  ? "Votre puissance artisanale est à 100%. Profitez de l'envoi illimité."
                   : "Débloquez tout le potentiel d'ArtisanFlow pour automatiser votre croissance."}
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-5 items-stretch sm:items-center">
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
               {profile.is_pro ? (
                 <>
                   <div className="flex-1 flex flex-col gap-4">
