@@ -15,7 +15,8 @@ import {
   ExternalLink,
   ChevronRight,
   RefreshCw,
-  ArrowLeft
+  ArrowLeft,
+  Play
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -279,6 +280,37 @@ export default function EmailSettingsPage() {
           </div>
         </motion.div>
       </div>
+      {/* Video Tutorial Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white p-10 rounded-[2.5rem] shadow-[0_32px_80px_rgba(0,35,111,0.04)] border border-slate-100 flex flex-col gap-8"
+      >
+        <div className="flex items-center gap-4 border-b border-slate-50 pb-8">
+           <div className="p-3 bg-amber-50 rounded-2xl">
+              <Play size={20} className="text-amber-600" />
+           </div>
+           <div>
+              <h2 className="text-xl font-black text-[#00236f] tracking-tight uppercase italic">Tutoriel Vidéo</h2>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Comment générer votre mot de passe d&apos;application Google</p>
+           </div>
+        </div>
+
+        <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200 aspect-video group bg-slate-100">
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            controls
+            className="w-full h-full object-cover"
+          >
+            <source src="/videos/EXPLICATION MDP GOOGLE.MP4.mp4" type="video/mp4" />
+            Votre navigateur ne supporte pas la lecture de vidéos.
+          </video>
+        </div>
+      </motion.div>
     </main>
   )
 }
