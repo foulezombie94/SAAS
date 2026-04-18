@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 export async function POST(req: Request) {
   try {
@@ -28,14 +28,16 @@ export async function POST(req: Request) {
       .update({ last_viewed_at: new Date().toISOString() })
       .eq('id', quoteId)
       .eq('public_token', publicToken || '')
-      .select('id')
+      .select('id, user_id')
       .single()
 
     if (error || !data) {
       return NextResponse.json({ error: 'Accès refusé ou lien expiré' }, { status: 403 })
     }
 
-    // 🚀 Invalidation Cache Global pour le Dashboard
+    // 🚀 Invalidation Cache (Tags Statiques suite limitation unstable_cache)
+    revalidateTag('all-quotes')
+    revalidateTag('dashboard-stats')
     revalidatePath('/dashboard', 'layout')
 
     return NextResponse.json({ success: true })

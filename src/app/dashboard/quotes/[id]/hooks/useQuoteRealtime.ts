@@ -17,26 +17,23 @@ export function useQuoteRealtime(initialQuote: Quote) {
   // 🔄 Sync state with props only if ID or version changes (prevent regressions)
   useEffect(() => {
     setCurrentQuote(prev => {
-      // Si l'ID a changé, on réinitialise tout
+      if (!prev) return initialQuote;
       if (prev.id !== initialQuote.id) return initialQuote;
       
-      // 🚦 RACE CONDITION GUARD: If we just got a realtime event within the last 5s,
-      // don't let the server SSR prop override our live state.
       const timeSinceRealtime = Date.now() - lastRealtimeUpdateRef.current;
       if (timeSinceRealtime < 5000) {
-        console.log("⚡ [Realtime] Sync depuis serveur ignorée (événement temps réel récent < 5s)");
         return prev;
       }
       
-      // Sinon, on ne met à jour que si les données serveur semblent "plus fraîches"
-      const isServerNewer = new Date(initialQuote.updated_at || 0) > new Date(prev.updated_at || 0);
-      if (isServerNewer) {
-        console.log("♻️ [Realtime] Mise à jour depuis le serveur detectée");
+      const prevDate = prev.updated_at ? new Date(prev.updated_at).getTime() : 0;
+      const nextDate = initialQuote.updated_at ? new Date(initialQuote.updated_at).getTime() : 0;
+
+      if (nextDate > prevDate) {
         return { ...prev, ...initialQuote };
       }
       return prev;
     });
-  }, [initialQuote.id, initialQuote.updated_at]);
+  }, [initialQuote]) // 🎯 Correct dependencies
 
   // ⚡ Real-time synchronization
   useEffect(() => {
@@ -44,8 +41,6 @@ export function useQuoteRealtime(initialQuote: Quote) {
     const quoteId = initialQuote.id
     const channelName = `quote-realtime-${quoteId}`
     
-    console.log(`📡 [Realtime] Initialisation du canal : ${channelName}`)
-
     const channel = supabase
       .channel(channelName)
       .on(
@@ -54,14 +49,15 @@ export function useQuoteRealtime(initialQuote: Quote) {
           event: 'UPDATE', 
           schema: 'public', 
           table: 'quotes', 
-          // 🎯 Filter explicitly on the quote ID
           filter: `id=eq.${quoteId}` 
         },
         (payload: RealtimePostgresUpdatePayload<Quote>) => {
           const updated = payload.new as Quote
-          console.log("⚡ [Realtime] Événement UPDATE reçu pour :", updated.id)
           
           setCurrentQuote(prev => {
+             // 🏎️ PERFORMANCE: Early return if no timestamp change
+             if (updated.updated_at === prev.updated_at) return prev;
+
              // 1. Vérifie si un changement réel a eu lieu sur les champs suivis
              const hasChanged = 
                 prev.status !== updated.status || 
@@ -69,62 +65,49 @@ export function useQuoteRealtime(initialQuote: Quote) {
                 prev.client_signature_url !== updated.client_signature_url ||
                 prev.artisan_signature_url !== updated.artisan_signature_url;
 
-             if (!hasChanged) {
-                console.log("⏸️ [Realtime] Aucune différence détectée, ignoré.");
-                return prev;
-             }
+             if (!hasChanged) return prev;
 
-             // 🕒 Capture le timestamp pour bloquer l'écrasement par SSR (Race condition)
              lastRealtimeUpdateRef.current = Date.now();
 
-             // 2. Notifications intelligentes (Toasts)
+             // 2. Notifications intelligentes avec Debounce 10s
              const showToast = (type: string, title: string, desc: string) => {
+               if (typeof window === 'undefined') return;
                const key = `AF_EVT_${updated.id}_${type}`
-               if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
-                 localStorage.setItem(key, Date.now().toString())
-                 toast.success(title, { description: desc })
-               }
+               const existing = localStorage.getItem(key)
+               
+               if (existing && Date.now() - Number(existing) < 10000) return;
+               
+               localStorage.setItem(key, Date.now().toString())
+               toast.success(title, { description: desc })
              }
 
-             const statusChanged = prev.status !== updated.status;
-             if (statusChanged) {
+             if (prev.status !== updated.status) {
                if (updated.status === 'accepted') {
-                 showToast('signature', "✍️ Devis signé !", `Le client et l'artisan ont signé le devis #${updated.number}.`)
+                 showToast('signature', "✍️ Devis signé !", `Le devis #${updated.number} a été signé par les deux parties.`)
                } else if (updated.status === 'paid') {
-                 showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant payé.`)
+                 showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant réglé.`)
                }
              }
              
              if (updated.last_viewed_at && !prev.last_viewed_at) {
-               showToast('viewed', "👀 Devis consulté !", `Le client consulte actuellement votre devis.`)
+               showToast('viewed', "👀 Devis consulté !", `Votre client consulte actuellement le devis #${updated.number}.`)
              }
 
-             // 3. Fusion sécurisée (on ne garde que les champs définis pour ne pas perdre les relations)
+             // 3. Fusion sécurisée (On garde les 'null' pour permettre les suppressions en DB)
              const safeUpdate = Object.fromEntries(
-                Object.entries(updated).filter(([_, v]) => v !== undefined && v !== null)
+                Object.entries(updated).filter(([_, v]) => v !== undefined)
              );
 
              return { ...prev, ...safeUpdate };
           })
         }
       )
-      .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`✅ [Realtime] Connecté avec succès au devis ${quoteId}`)
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error(`❌ [Realtime] Erreur de canal (${status}) :`, err)
-          // Diagnostic silencieux pour l'utilisateur, mais logué pour nous
-        }
-      })
+      .subscribe()
 
     return () => {
-      console.log(`📴 [Realtime] Désactivation du canal : ${channelName}`)
       supabase.removeChannel(channel)
     }
   }, [initialQuote.id])
 
-  return {
-    currentQuote,
-    setCurrentQuote
-  }
+  return { currentQuote, setCurrentQuote }
 }

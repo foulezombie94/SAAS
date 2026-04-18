@@ -35,6 +35,7 @@ export function useSyncCache<T>(
   isSyncing: boolean
   lastUpdated: number | null
   revalidate: () => Promise<void>
+  mutate: (data: T | ((prev: T) => T)) => void
 } {
   const { 
     ttl = DEFAULT_TTL, 
@@ -185,5 +186,5 @@ export function useSyncCache<T>(
     }
   }, [revalidate, refreshInterval, enabled])
 
-  return { data: state, isSyncing, lastUpdated, revalidate }
+  return { data: state, isSyncing, lastUpdated, revalidate, mutate: setState }
 }

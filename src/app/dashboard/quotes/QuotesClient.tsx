@@ -44,7 +44,7 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
     return await getQuotesServer()
   }, [])
 
-  const { data: quotes, isSyncing, revalidate } = useSyncCache<Quote[]>(
+  const { data: quotes, isSyncing, revalidate, mutate } = useSyncCache<Quote[]>(
     `quotes-${userId}`, 
     initialQuotes, 
     fetcher,
@@ -66,13 +66,27 @@ export function QuotesClient({ initialQuotes, userId }: QuotesClientProps) {
           table: 'quotes', 
           filter: `user_id=eq.${userId}` 
         },
-        () => {
+        (payload) => {
           console.log("🔄 [Realtime] Mise à jour de la liste détectée")
+          
+          // 🚀 OPTIMISTIC UPDATE (Instant UI feedback)
+          if (payload.new) {
+            const updated = payload.new as Quote;
+            mutate(prev => {
+              if (!Array.isArray(prev)) return prev;
+              const exists = prev.some(q => q.id === updated.id);
+              if (exists) {
+                return prev.map(q => q.id === updated.id ? { ...q, ...updated } : q);
+              }
+              return [updated, ...prev];
+            });
+          }
+
           revalidate()
           router.refresh()
         }
       )
-      .subscribe()
+    .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
