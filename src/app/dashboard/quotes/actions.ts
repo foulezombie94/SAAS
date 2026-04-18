@@ -96,20 +96,31 @@ export async function acceptQuoteAction(rawData: unknown) {
   if (!limit.success) return { success: false, error: limit.message };
 
   try {
+    // 🔒 SECURITY VALIDATION: Format & Size
+    if (!signatureDataUrl.startsWith('data:image/')) {
+      throw new Error('Format de signature invalide (image attendue)');
+    }
+
+    const base64Data = signatureDataUrl.split(',')[1];
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // 🔒 SECURITY VALIDATION: Max 5MB
+    if (buffer.length > 5 * 1024 * 1024) {
+      throw new Error('La signature est trop volumineuse (max 5 Mo)');
+    }
+
     const adminSupabase = createAdminClient();
     
-    // Extract MIME type
+    // Extract Extension
     const mimeMatch = signatureDataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,/)
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/png'
     const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png'
-    
-    const base64Data = signatureDataUrl.split(',')[1];
-    const buffer = Buffer.from(base64Data, 'base64');
     const fileName = `sig_${signerType}_${quoteId}_${Date.now()}.${ext}`;
 
+    // 🛡️ SECURITY FIX: upsert set to FALSE to prevent silent overwrites (unique names by Date.now())
     const { error: uploadError } = await adminSupabase.storage
       .from('signatures')
-      .upload(fileName, buffer, { contentType: mimeType, upsert: true });
+      .upload(fileName, buffer, { contentType: mimeType, upsert: false });
 
     if (uploadError) throw uploadError;
 
@@ -119,7 +130,7 @@ export async function acceptQuoteAction(rawData: unknown) {
 
     const { data: resultData, error: rpcError } = await supabase.rpc('accept_quote_v4', {
       p_quote_id: quoteId,
-      p_public_token: '', // Use empty string instead of null
+      p_public_token: null as any, // 🛡️ FIX: Use NULL instead of '' for better SQL consistency
       p_signature_url: publicUrl,
       p_signer_type: signerType
     });
@@ -165,22 +176,18 @@ export async function sendQuoteEmailAction(rawData: unknown) {
   if (!limit.success) return { success: false, error: limit.message };
 
   try {
-    // 🕵️‍♂️ On réutilise la logique de l'API mais de manière sécurisée en Server Action
-    const cookieStore = await cookies()
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/quotes/send-email`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Cookie': cookieStore.toString() // Forward auth cookies
-      },
-      body: JSON.stringify({ quoteId, subject, message, to })
-    });
-
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error);
+    // 🚀 ARCHITECTURAL FIX: Call internal service directly instead of looping via fetch
+    const { sendQuoteEmailInternal } = await import('@/lib/services/server/email.service')
+    const result = await sendQuoteEmailInternal({
+      quoteId,
+      to: to || '', // Fallback to empty string, service handles resolving from DB
+      subject,
+      message,
+      userId: user.id
+    })
 
     revalidatePath(`/dashboard/quotes/${quoteId}`);
-    return { success: true };
+    return result;
   } catch (err: any) {
     return { success: false, error: err.message };
   }
