@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation' // still used by handleCreateInvoice
 import { toast } from 'sonner'
 import ExcelJS from 'exceljs'
 import { createClient } from '@/utils/supabase/client'
@@ -186,22 +186,38 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       })
       
       if (!result.success) throw new Error(result.error)
-      
-      setCurrentQuote(prev => ({
-        ...prev,
-        artisan_signature_url: result.signatureUrl || null
-      }))
+
+      // 🔄 Fetch fresh data from DB to get updated status + signature URL instantly
+      const supabase = createClient()
+      const { data: freshQuote } = await supabase
+        .from('quotes')
+        .select('*, clients(*), profiles(*), quote_items(*)')
+        .eq('id', quote.id)
+        .single()
+
+      if (freshQuote) {
+        setCurrentQuote(prev => ({ ...prev, ...(freshQuote as unknown as Quote) }))
+      } else {
+        // Fallback: at minimum update known fields
+        setCurrentQuote(prev => ({
+          ...prev,
+          artisan_signature_url: result.signatureUrl || null,
+          // If both signatures are done, the RPC sets status to 'accepted'
+          status: prev.client_signature_url ? 'accepted' : prev.status
+        }))
+      }
       
       setIsSigPadOpen(false)
       toast.success("Signature validée !")
-      router.refresh()
+      // No router.refresh() here — state is already up to date.
+      // The realtime subscription will handle the broadcast to other windows.
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Échec signature"
       toast.error(message)
     } finally {
       setIsSigning(false)
     }
-  }, [quote.id, router, setCurrentQuote])
+  }, [quote.id, quote.client_signature_url, setCurrentQuote])
 
   // 🧾 CREATE INVOICE
   const handleCreateInvoice = useCallback(async () => {

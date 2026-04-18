@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Quote } from '@/types/dashboard'
 import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
@@ -10,6 +10,9 @@ import { toast } from 'sonner'
  */
 export function useQuoteRealtime(initialQuote: Quote) {
   const [currentQuote, setCurrentQuote] = useState<Quote>(initialQuote)
+  
+  // 🛡️ Track when we last received a REALTIME event to prevent server prop race conditions.
+  const lastRealtimeUpdateRef = useRef<number>(0)
 
   // 🔄 Sync state with props only if ID or version changes (prevent regressions)
   useEffect(() => {
@@ -17,8 +20,15 @@ export function useQuoteRealtime(initialQuote: Quote) {
       // Si l'ID a changé, on réinitialise tout
       if (prev.id !== initialQuote.id) return initialQuote;
       
+      // 🚦 RACE CONDITION GUARD: If we just got a realtime event within the last 5s,
+      // don't let the server SSR prop override our live state.
+      const timeSinceRealtime = Date.now() - lastRealtimeUpdateRef.current;
+      if (timeSinceRealtime < 5000) {
+        console.log("⚡ [Realtime] Sync depuis serveur ignorée (événement temps réel récent < 5s)");
+        return prev;
+      }
+      
       // Sinon, on ne met à jour que si les données serveur semblent "plus fraîches"
-      // ou si l'état local a été perdu.
       const isServerNewer = new Date(initialQuote.updated_at || 0) > new Date(prev.updated_at || 0);
       if (isServerNewer) {
         console.log("♻️ [Realtime] Mise à jour depuis le serveur detectée");
@@ -60,7 +70,10 @@ export function useQuoteRealtime(initialQuote: Quote) {
                 return prev;
              }
 
-             // 2. Gestion des Notifications (Toasts)
+             // 🕒 Mark that we just received a realtime event (prevents SSR race condition)
+             lastRealtimeUpdateRef.current = Date.now();
+
+             // 2. Gestion des Notifications (Toasts) — dedup permanent par ID devis
              const showToast = (type: string, title: string, desc: string) => {
                const key = `AF_EVT_${updated.id}_${type}`
                if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
@@ -80,7 +93,6 @@ export function useQuoteRealtime(initialQuote: Quote) {
              if (justPaid) {
                 showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant marqué comme payé.`)
              } else if (justSigned) {
-                // On utilise la clé 'signature' pour que ça bloque aussi les futures alertes 'artisan_signed'
                 showToast('signature', "✍️ Devis signé !", `Le client a validé le devis #${updated.number}.`)
              } else if (justBecameConsulted) {
                 showToast('viewed', "👀 Devis consulté !", `Le client est en train de regarder le devis #${updated.number}.`)

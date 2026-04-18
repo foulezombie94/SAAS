@@ -122,10 +122,12 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     }
 
     const eventType = isPaid ? 'paid' : isAccepted ? 'signed' : 'viewed'
+    
+    // 🛡️ DEDUP PERMANENT PAR ID DEVIS — même devis + même événement = notif unique
     const staticKey = `AF_EVT_${newQuote.id}_${eventType}`
     
     if (typeof window !== 'undefined' && localStorage.getItem(staticKey)) {
-       console.log("🛡️ [Realtime] Événement déjà traité (déduplication active)")
+       console.log("🛡️ [Realtime] Événement déjà traité (devis déjà notifié)")
        return
     }
     
@@ -133,11 +135,11 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
       localStorage.setItem(staticKey, Date.now().toString())
       
       // 🛡️ MEMORY LEAK PROTECTION : Nettoyage périodique du localStorage
-      // On ne garde que les 30 derniers événements pour éviter de saturer le stockage
+      // On ne garde que les 50 derniers événements pour éviter de saturer le stockage
       const keys = Object.keys(localStorage).filter(k => k.startsWith('AF_EVT_'))
-      if (keys.length > 30) {
+      if (keys.length > 50) {
         const sorted = keys.sort((a, b) => Number(localStorage.getItem(a)) - Number(localStorage.getItem(b)))
-        keys.slice(0, keys.length - 30).forEach(k => localStorage.removeItem(k))
+        sorted.slice(0, sorted.length - 50).forEach(k => localStorage.removeItem(k))
       }
     }
 
