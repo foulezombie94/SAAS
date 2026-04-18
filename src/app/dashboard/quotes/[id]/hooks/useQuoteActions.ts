@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation' // still used by handleCreateInvoice
 import { toast } from 'sonner'
 import ExcelJS from 'exceljs'
 import { createClient } from '@/utils/supabase/client'
-import { Quote } from '@/types/dashboard'
+import { Quote, QuoteStatus } from '@/types/dashboard'
 import { 
   acceptQuoteAction, 
   createInvoiceFromQuoteAction 
@@ -188,11 +188,9 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       if (!result.success) throw new Error(result.error)
       
       // 🚀 INSTANT STATE UPDATE (No second fetch needed)
-      // We merge the results (status, signatures) into our current state.
-      // This is perfectly synced with the DB because it's the result of the action.
       setCurrentQuote(prev => ({
         ...prev,
-        status: result.status || prev.status,
+        status: (result.status as QuoteStatus) || prev.status,
         artisan_signature_url: result.artisanSignatureUrl || prev.artisan_signature_url,
         client_signature_url: result.clientSignatureUrl || prev.client_signature_url,
       }))

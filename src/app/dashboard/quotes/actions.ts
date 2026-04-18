@@ -117,7 +117,7 @@ export async function acceptQuoteAction(rawData: unknown) {
       .from('signatures')
       .getPublicUrl(fileName);
 
-    const { error: rpcError } = await supabase.rpc('accept_quote_v4', {
+    const { data: resultData, error: rpcError } = await supabase.rpc('accept_quote_v4', {
       p_quote_id: quoteId,
       p_public_token: '', // Use empty string instead of null
       p_signature_url: publicUrl,
@@ -126,14 +126,13 @@ export async function acceptQuoteAction(rawData: unknown) {
 
     if (rpcError) throw rpcError;
 
-    // 🔄 Fetch just the updated fields to return to client (Optimization: avoids second client-side fetch)
-    const { data: updated, error: fetchError } = await supabase
-      .from('quotes')
-      .select('status, artisan_signature_url, client_signature_url')
-      .eq('id', quoteId)
-      .single();
-
-    if (fetchError) throw fetchError;
+    // 🚀 ZERO EXTRA QUERIES: The RPC now returns everything we need in one round-trip.
+    const result = resultData as { 
+      status: string; 
+      artisan_signature_url: string; 
+      client_signature_url: string; 
+      invoice_id?: string;
+    };
 
     await revalidateDocumentCache()
     revalidatePath(`/dashboard/quotes/${quoteId}`);
@@ -141,12 +140,13 @@ export async function acceptQuoteAction(rawData: unknown) {
     return { 
       success: true, 
       signatureUrl: publicUrl,
-      status: updated.status,
-      artisanSignatureUrl: updated.artisan_signature_url,
-      clientSignatureUrl: updated.client_signature_url
+      status: result.status,
+      artisanSignatureUrl: result.artisan_signature_url,
+      clientSignatureUrl: result.client_signature_url,
+      invoiceId: result.invoice_id
     };
   } catch (err: any) {
-    console.error('[acceptQuoteAction] Error:', err);
+    console.error('[acceptQuoteAction] Critical Failure:', err);
     return { success: false, error: err.message };
   }
 }
