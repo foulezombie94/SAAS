@@ -131,31 +131,26 @@ export async function updateSession(request: NextRequest) {
         return redirectResponse
       }
 
-      // B. 🛡️ ACTIVITY TRACKING (ENTRY ONLY)
-      // On ne met à jour 'last_seen_at' que lors de l'arrivée sur la racine du Dashboard
-      // pour éviter de spammer la DB lors de la navigation interne.
-      const isDashboardRoot = request.nextUrl.pathname === '/dashboard'
+      // B. 🛡️ ACTIVITY TRACKING (SITE ENTRY ONLY)
+      // Se déclenche une seule fois lors de l'ouverture initiale du site (n'importe quelle page protégée).
+      const lastSeenSync = request.cookies.get('af_last_seen_sync')
       
-      if (isDashboardRoot) {
-        const lastSeenSync = request.cookies.get('af_last_seen_sync')
+      if (!lastSeenSync) {
+        const { createAdminClient } = await import('../../lib/supabase/admin')
+        const supabaseAdmin = createAdminClient()
         
-        if (!lastSeenSync) {
-          const { createAdminClient } = await import('../../lib/supabase/admin')
-          const supabaseAdmin = createAdminClient()
-          
-          await supabaseAdmin.auth.admin.updateUserById(user.id, {
-            app_metadata: { last_seen_at: new Date().toISOString() }
-          })
+        await supabaseAdmin.auth.admin.updateUserById(user.id, {
+          app_metadata: { last_seen_at: new Date().toISOString() }
+        })
 
-          // Cookie de 24 heures pour ne pas re-déclencher durant la même journée de travail
-          supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
-            maxAge: 86400, // 24 heures
-            path: '/',
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax'
-          })
-        }
+        // Cookie de 24 heures : une seule mise à jour par jour max, peu importe la page d'entrée
+        supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
+          maxAge: 86400, // 24 heures
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        })
       }
     }
   }
