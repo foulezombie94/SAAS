@@ -35,9 +35,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Accès refusé ou lien expiré' }, { status: 403 })
     }
 
-    // 🚀 Invalidation Cache (Tags Statiques suite limitation unstable_cache)
-    revalidateTag('all-quotes')
-    revalidateTag('dashboard-stats')
+    // 🚀 Invalidation Cache (Next.js 16 nécessite désormais un profil)
+    revalidateTag('all-quotes', 'default')
+    revalidateTag('dashboard-stats', 'default')
     revalidatePath('/dashboard', 'layout')
 
     return NextResponse.json({ success: true })
