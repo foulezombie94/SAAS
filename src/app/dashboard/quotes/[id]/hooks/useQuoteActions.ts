@@ -186,31 +186,20 @@ export function useQuoteActions({ quote, setCurrentQuote }: UseQuoteActionsProps
       })
       
       if (!result.success) throw new Error(result.error)
-
-      // 🔄 Fetch fresh data from DB to get updated status + signature URL instantly
-      const supabase = createClient()
-      const { data: freshQuote } = await supabase
-        .from('quotes')
-        .select('*, clients(*), profiles(*), quote_items(*)')
-        .eq('id', quote.id)
-        .single()
-
-      if (freshQuote) {
-        setCurrentQuote(prev => ({ ...prev, ...(freshQuote as unknown as Quote) }))
-      } else {
-        // Fallback: at minimum update known fields
-        setCurrentQuote(prev => ({
-          ...prev,
-          artisan_signature_url: result.signatureUrl || null,
-          // If both signatures are done, the RPC sets status to 'accepted'
-          status: prev.client_signature_url ? 'accepted' : prev.status
-        }))
-      }
+      
+      // 🚀 INSTANT STATE UPDATE (No second fetch needed)
+      // We merge the results (status, signatures) into our current state.
+      // This is perfectly synced with the DB because it's the result of the action.
+      setCurrentQuote(prev => ({
+        ...prev,
+        status: result.status || prev.status,
+        artisan_signature_url: result.artisanSignatureUrl || prev.artisan_signature_url,
+        client_signature_url: result.clientSignatureUrl || prev.client_signature_url,
+      }))
       
       setIsSigPadOpen(false)
       toast.success("Signature validée !")
-      // No router.refresh() here — state is already up to date.
-      // The realtime subscription will handle the broadcast to other windows.
+      // The realtime subscription will also broadcast this to other clients/tabs.
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Échec signature"
       toast.error(message)

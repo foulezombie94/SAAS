@@ -41,39 +41,43 @@ export function useQuoteRealtime(initialQuote: Quote) {
   // ⚡ Real-time synchronization
   useEffect(() => {
     const supabase = createClient()
-    const channelName = `quote-dashboard-${initialQuote.id}`
+    const quoteId = initialQuote.id
+    const channelName = `quote-realtime-${quoteId}`
     
-    console.log(`📡 [Realtime] Tentative de connexion au canal : ${channelName}`)
+    console.log(`📡 [Realtime] Initialisation du canal : ${channelName}`)
 
     const channel = supabase
       .channel(channelName)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'quotes', filter: `id=eq.${initialQuote.id}` },
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'quotes', 
+          // 🎯 Filter explicitly on the quote ID
+          filter: `id=eq.${quoteId}` 
+        },
         (payload: RealtimePostgresUpdatePayload<Quote>) => {
           const updated = payload.new as Quote
-          console.log("⚡ [Realtime] UPDATE reçu :", updated.id, "=>", updated.status)
+          console.log("⚡ [Realtime] Événement UPDATE reçu pour :", updated.id)
           
           setCurrentQuote(prev => {
-             // 1. Protection relations (profiles/clients)
-             // Les payloads Realtime n'incluent que les colonnes de la table 'quotes'.
-             // On fusionne donc avec 'prev' pour conserver les objets liés.
-             
-             const isIdentical = 
-                prev.status === updated.status && 
-                prev.last_viewed_at === updated.last_viewed_at &&
-                prev.client_signature_url === updated.client_signature_url &&
-                prev.artisan_signature_url === updated.artisan_signature_url;
+             // 1. Vérifie si un changement réel a eu lieu sur les champs suivis
+             const hasChanged = 
+                prev.status !== updated.status || 
+                prev.last_viewed_at !== updated.last_viewed_at ||
+                prev.client_signature_url !== updated.client_signature_url ||
+                prev.artisan_signature_url !== updated.artisan_signature_url;
 
-             if (isIdentical) {
-                console.log("⏸️ [Realtime] Mise à jour ignorée (Identique)");
+             if (!hasChanged) {
+                console.log("⏸️ [Realtime] Aucune différence détectée, ignoré.");
                 return prev;
              }
 
-             // 🕒 Mark that we just received a realtime event (prevents SSR race condition)
+             // 🕒 Capture le timestamp pour bloquer l'écrasement par SSR (Race condition)
              lastRealtimeUpdateRef.current = Date.now();
 
-             // 2. Gestion des Notifications (Toasts) — dedup permanent par ID devis
+             // 2. Notifications intelligentes (Toasts)
              const showToast = (type: string, title: string, desc: string) => {
                const key = `AF_EVT_${updated.id}_${type}`
                if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
@@ -82,34 +86,39 @@ export function useQuoteRealtime(initialQuote: Quote) {
                }
              }
 
-             // Déclencheurs spécifiques pour éviter le spam
-             const justBecameConsulted = updated.last_viewed_at && !prev.last_viewed_at;
-             const justSigned = updated.status === 'accepted' && prev.status !== 'accepted';
-             const justPaid = updated.status === 'paid' && prev.status !== 'paid';
+             const statusChanged = prev.status !== updated.status;
+             if (statusChanged) {
+               if (updated.status === 'accepted') {
+                 showToast('signature', "✍️ Devis signé !", `Le client et l'artisan ont signé le devis #${updated.number}.`)
+               } else if (updated.status === 'paid') {
+                 showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant payé.`)
+               }
+             }
              
-             // On s'assure qu'une signature artisan n'alerte pas si le devis est déjà signé/accepté
-             const artisanJustSigned = updated.artisan_signature_url && !prev.artisan_signature_url && updated.status !== 'accepted';
-
-             if (justPaid) {
-                showToast('paid', "🎉 Paiement reçu !", `Le devis #${updated.number} est maintenant marqué comme payé.`)
-             } else if (justSigned) {
-                showToast('signature', "✍️ Devis signé !", `Le client a validé le devis #${updated.number}.`)
-             } else if (justBecameConsulted) {
-                showToast('viewed', "👀 Devis consulté !", `Le client est en train de regarder le devis #${updated.number}.`)
-             } else if (artisanJustSigned) {
-                showToast('signature', "✍️ Signature artisan ajoutée !", `Le devis #${updated.number} a été signé par l'artisan.`)
+             if (updated.last_viewed_at && !prev.last_viewed_at) {
+               showToast('viewed', "👀 Devis consulté !", `Le client consulte actuellement votre devis.`)
              }
 
-             return { ...prev, ...updated };
+             // 3. Fusion sécurisée (on ne garde que les champs définis pour ne pas perdre les relations)
+             const safeUpdate = Object.fromEntries(
+                Object.entries(updated).filter(([_, v]) => v !== undefined && v !== null)
+             );
+
+             return { ...prev, ...safeUpdate };
           })
         }
       )
-      .subscribe((status) => {
-        console.log(`🔌 [Realtime] État du canal : ${status}`)
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`✅ [Realtime] Connecté avec succès au devis ${quoteId}`)
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error(`❌ [Realtime] Erreur de canal (${status}) :`, err)
+          // Diagnostic silencieux pour l'utilisateur, mais logué pour nous
+        }
       })
 
     return () => {
-      console.log(`📴 [Realtime] Fermeture du canal : ${channelName}`)
+      console.log(`📴 [Realtime] Désactivation du canal : ${channelName}`)
       supabase.removeChannel(channel)
     }
   }, [initialQuote.id])

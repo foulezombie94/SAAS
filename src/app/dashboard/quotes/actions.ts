@@ -126,10 +126,27 @@ export async function acceptQuoteAction(rawData: unknown) {
 
     if (rpcError) throw rpcError;
 
+    // 🔄 Fetch just the updated fields to return to client (Optimization: avoids second client-side fetch)
+    const { data: updated, error: fetchError } = await supabase
+      .from('quotes')
+      .select('status, artisan_signature_url, client_signature_url')
+      .eq('id', quoteId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
     await revalidateDocumentCache()
     revalidatePath(`/dashboard/quotes/${quoteId}`);
-    return { success: true, signatureUrl: publicUrl };
+
+    return { 
+      success: true, 
+      signatureUrl: publicUrl,
+      status: updated.status,
+      artisanSignatureUrl: updated.artisan_signature_url,
+      clientSignatureUrl: updated.client_signature_url
+    };
   } catch (err: any) {
+    console.error('[acceptQuoteAction] Error:', err);
     return { success: false, error: err.message };
   }
 }
