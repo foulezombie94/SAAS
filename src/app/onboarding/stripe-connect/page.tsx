@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { createStripeAccount, createStripeOnboardingLink, getStripeAccountStatus } from '@/app/dashboard/settings/actions'
+import { createStripeAccount, createStripeOnboardingLink, getStripeAccountStatus } from '@/app/dashboard/profile/actions'
 import { toast } from 'sonner'
 import { CheckCircle2, ChevronRight, Landmark, RefreshCw } from 'lucide-react'
 

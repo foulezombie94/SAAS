@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { getStripeAccountStatus as getStatusAction } from '@/app/dashboard/settings/actions'
+import { getStripeAccountStatus as getStatusAction } from '@/app/dashboard/profile/actions'
 import { stripe } from '@/lib/stripe'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'

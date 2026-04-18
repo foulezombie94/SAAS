@@ -250,7 +250,7 @@ export async function POST(req: Request) {
             })
             .eq('id', userId)
           
-          revalidatePath('/dashboard/settings')
+          revalidatePath('/dashboard/profile')
         }
         break
       }
@@ -282,7 +282,7 @@ export async function POST(req: Request) {
               })
               .eq('id', userId)
             
-            revalidatePath('/dashboard/settings')
+            revalidatePath('/dashboard/profile')
           }
         }
         break

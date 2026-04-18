@@ -37,8 +37,8 @@ const navigation: NavItem[] = [
   { id: 'quotes', name: 'Devis', href: '/dashboard/quotes', icon: FileText },
   { id: 'agenda', name: 'Agenda', href: '/dashboard/calendar', icon: Calendar },
   { id: 'invoices', name: 'Factures', href: '/dashboard/invoices', icon: Receipt },
-  { id: 'settings', name: 'Paramètres', href: '/dashboard/settings', icon: Settings },
-  { id: 'emails', name: 'E-mails', href: '/dashboard/settings/email', icon: Mail },
+  { id: 'settings', name: 'Profil', href: '/dashboard/profile', icon: Settings },
+  { id: 'emails', name: 'E-mails', href: '/dashboard/profile/email', icon: Mail },
 ]
 
 interface SidebarProps {

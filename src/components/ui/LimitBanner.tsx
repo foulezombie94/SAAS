@@ -34,7 +34,7 @@ export function LimitBanner({ type, count, limit = 3 }: LimitBannerProps) {
         </div>
 
         <Link 
-          href="/dashboard/settings" 
+          href="/dashboard/profile" 
           className="bg-amber-600 hover:bg-amber-700 text-white px-8 h-14 rounded-2xl flex items-center gap-3 shadow-xl shadow-amber-600/20 active:scale-95 transition-all group/btn shrink-0"
         >
           <span className="font-black uppercase tracking-widest text-xs">Passer en PRO</span>

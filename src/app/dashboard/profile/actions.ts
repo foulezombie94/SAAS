@@ -86,7 +86,7 @@ export async function updateProfile(formData: ProfileInput) {
   }
 
   // ♻️ REVALIDATION SYNCHRONISÉE (Grade 3)
-  revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard/profile')
   revalidatePath('/dashboard')
   
   return { success: true }
@@ -155,7 +155,7 @@ export async function createStripeOnboardingLink(returnPath?: string) {
 
     // 2. Create an account link for onboarding
     const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const basePath = returnPath || '/dashboard/settings'
+    const basePath = returnPath || '/dashboard/profile'
     
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
@@ -196,7 +196,7 @@ export async function disconnectStripe() {
 
   if (error) throw error
 
-  revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard/profile')
   return { success: true }
 }
 
@@ -265,6 +265,6 @@ export async function updateNotificationPreferences(preferences: any) {
 
   if (error) throw error
 
-  revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard/profile')
   return { success: true }
 }
