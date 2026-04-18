@@ -131,8 +131,12 @@ export async function updateSession(request: NextRequest) {
         return redirectResponse
       }
 
-      // B. 🛡️ HARDENED ACTIVITY TRACKING (10m Throttle)
-      if (isDashboardPath) {
+      // B. 🛡️ ACTIVITY TRACKING (ENTRY ONLY)
+      // On ne met à jour 'last_seen_at' que lors de l'arrivée sur la racine du Dashboard
+      // pour éviter de spammer la DB lors de la navigation interne.
+      const isDashboardRoot = request.nextUrl.pathname === '/dashboard'
+      
+      if (isDashboardRoot) {
         const lastSeenSync = request.cookies.get('af_last_seen_sync')
         
         if (!lastSeenSync) {
@@ -143,8 +147,9 @@ export async function updateSession(request: NextRequest) {
             app_metadata: { last_seen_at: new Date().toISOString() }
           })
 
+          // Cookie de 24 heures pour ne pas re-déclencher durant la même journée de travail
           supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
-            maxAge: 600,
+            maxAge: 86400, // 24 heures
             path: '/',
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
