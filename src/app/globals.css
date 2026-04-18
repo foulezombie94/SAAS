@@ -115,6 +115,25 @@
       transform: translateY(-4px);
     }
   }
+
+  @keyframes ring {
+    0% { transform: rotate(0); }
+    10% { transform: rotate(15deg); }
+    20% { transform: rotate(-10deg); }
+    30% { transform: rotate(8deg); }
+    40% { transform: rotate(-5deg); }
+    50% { transform: rotate(0); }
+    100% { transform: rotate(0); }
+  }
+
+  .animate-ring {
+    animation: ring 2s infinite ease-in-out;
+    transform-origin: top center;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 15px rgba(0, 35, 111, 0.2);
+  }
 }
 
 

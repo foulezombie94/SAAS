@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut, Check } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
@@ -88,141 +89,177 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
         </div>
 
         <div className="flex items-center gap-3 relative" ref={dropdownRef}>
-          <button 
+          <motion.button 
             id="notifications-trigger"
-            onClick={() => {
-              setIsDropdownOpen(!isDropdownOpen)
-            }} 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
             className={cn(
-              "relative p-2.5 rounded-2xl transition-all duration-300",
+              "relative p-3 rounded-2xl transition-all duration-500 glass-card",
               isDropdownOpen 
-                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" 
+                ? "bg-primary text-white shadow-xl shadow-primary/20" 
                 : unreadCount > 0 && notifications.length > 0
-                  ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
-                  : "bg-slate-50 text-slate-400 hover:bg-slate-100"
+                  ? "bg-amber-50/80 text-amber-600 border-amber-200/50"
+                  : "bg-slate-50/50 text-slate-400 hover:bg-white hover:shadow-md hover:border-slate-200"
             )}
           >
-            <Bell size={20} className={cn(isMounted && unreadCount > 0 && notifications.length > 0 && "animate-pulse")} />
+            <Bell 
+              size={20} 
+              className={cn(
+                "transition-all",
+                isMounted && unreadCount > 0 && notifications.length > 0 && "animate-ring text-secondary"
+              )} 
+            />
             {isMounted && unreadCount > 0 && notifications.length > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-secondary ring-2 ring-white shadow-sm" />
+              <span className="absolute top-2 right-2 h-3 w-3 rounded-full bg-secondary ring-2 ring-white shadow-[0_0_10px_rgba(239,153,0,0.5)] animate-pulse" />
             )}
-          </button>
+          </motion.button>
 
           {/* Notification Dropdown */}
-          {isDropdownOpen && (
-            <div className="absolute top-full right-0 mt-4 w-[400px] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest italic">{t('navbar.notifications_recent')}</h3>
-                {notifications.length > 0 && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      markAllAsRead()
-                    }} 
-                    className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors group"
-                  >
-                    <Check size={12} className="group-hover:scale-110 transition-transform" />
-                    {t('navbar.mark_all_read')}
-                  </button>
-                )}
-              </div>
+          <AnimatePresence>
+            {isDropdownOpen && (
+              <motion.div 
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="absolute top-full right-0 mt-4 w-[400px] bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden z-50 shadow-diffused"
+              >
+                <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] italic">{t('navbar.notifications_recent')}</h3>
+                  {notifications.length > 0 && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        markAllAsRead()
+                      }} 
+                      className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors group"
+                    >
+                      <Check size={12} className="group-hover:scale-110 transition-transform" />
+                      {t('navbar.mark_all_read')}
+                    </button>
+                  )}
+                </div>
 
-              <div className="max-h-[450px] overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-16 text-center">
-                    <Bell size={40} className="mx-auto text-slate-100 mb-4" />
-                    <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest text-center">{t('navbar.no_notifications')}</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-slate-50">
-                    {notifications.map((n, i) => {
-                      const notif = n as any
-                      return (
-                      <Link 
-                        key={`${notif.id}-${i}`} 
-                        href={`/dashboard/quotes/${notif.id}`}
-                        onClick={() => setIsDropdownOpen(false)}
-                        className={cn(
-                          "flex items-start gap-4 p-5 hover:bg-slate-50 transition-colors group",
-                          notif.status === 'expired' && "bg-amber-50/30 hover:bg-amber-50/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
-                          notif.status === 'paid' ? "bg-emerald-50 text-emerald-600" :
-                          notif.status === 'expired' ? "bg-amber-50 text-amber-600" : "bg-primary/5 text-primary"
-                        )}>
-                          {notif.status === 'paid' ? <CheckCircle2 size={20} /> : <div className="p-2 border-2 border-current rounded-lg" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={cn(
-                            "text-[10px] font-black uppercase tracking-widest mb-0.5 truncate",
-                            notif.status === 'expired' ? "text-amber-600" : "text-primary"
+                <div className="max-h-[450px] overflow-y-auto custom-scrollbar">
+                  {notifications.length === 0 ? (
+                    <div className="p-16 text-center">
+                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Bell size={32} className="text-slate-200" />
+                      </div>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">{t('navbar.no_notifications')}</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-50">
+                      {notifications.map((n, i) => {
+                        const notif = n as any
+                        return (
+                        <Link 
+                          key={`${notif.id}-${i}`} 
+                          href={`/dashboard/quotes/${notif.id}`}
+                          onClick={() => setIsDropdownOpen(false)}
+                          className={cn(
+                            "flex items-start gap-4 p-5 hover:bg-primary/[0.02] transition-colors group relative overflow-hidden",
+                            notif.status === 'expired' && "bg-amber-50/10 hover:bg-amber-50/20"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-500 group-hover:shadow-lg group-hover:scale-110",
+                            notif.status === 'paid' ? "bg-emerald-50 text-emerald-600 shadow-emerald-100/50" :
+                            notif.status === 'expired' ? "bg-amber-50 text-amber-600 shadow-amber-100/50" : 
+                            "bg-slate-50 text-primary shadow-slate-100/50"
                           )}>
-                             {(() => {
-                              // 🚀 Prioritize 'Viewed' if it was triggered recently, or if status is still 'sent' but viewed
-                               if (notif.last_viewed_at && notif.status === 'sent') return t('notif.viewed')
-                               
-                               switch(notif.status) {
-                                 case 'paid': return t('notif.paid')
-                                 case 'accepted': return t('notif.accepted')
-                                 case 'sent': return t('notif.sent')
-                                 case 'expired': return t('notif.expired')
-                                 case 'invoiced': return t('notif.invoiced')
-                                 default: return t('notif.info')
-                               }
-                             })()}
-                          </p>
-                          <p className="text-[11px] font-bold text-slate-600 mb-1.5 leading-tight">
-                             {notif.status === 'paid' ? t('notif.desc_paid') : 
-                              notif.status === 'accepted' ? t('notif.desc_accepted') : 
-                              (notif.last_viewed_at && notif.status === 'sent') ? t('notif.desc_viewed') :
-                              notif.status === 'expired' ? t('notif.desc_expired') : t('notif.desc_default')} pour{' '}
-                             <span className={cn("text-secondary font-black", notif.status === 'expired' && "text-amber-500")}>
-                               {notif.number}
-                             </span>
-                          </p>
-                          <div className="flex items-center gap-2">
-                             <div className="flex items-center gap-1.5">
-                               <div className={cn("w-1 h-1 rounded-full", notif.status === 'paid' ? "bg-emerald-400" : "bg-slate-300")} />
-                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                 {notif.clients?.name || 'Client ArtisanFlow'}
-                               </span>
-                             </div>
-                             {notif.status === 'paid' && (
-                               <span className="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter">PAYÉ</span>
-                             )}
+                            {notif.status === 'paid' ? <CheckCircle2 size={20} /> : <div className="p-1.5 border-2 border-current rounded-lg opacity-40" />}
                           </div>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className={cn(
+                                "text-[9px] font-black uppercase tracking-[0.15em]",
+                                notif.status === 'expired' ? "text-amber-500" : "text-primary/40"
+                              )}>
+                                {(() => {
+                                  if (notif.last_viewed_at && notif.status === 'sent') return t('notif.viewed')
+                                  switch(notif.status) {
+                                    case 'paid': return t('notif.paid')
+                                    case 'accepted': return t('notif.accepted')
+                                    case 'sent': return t('notif.sent')
+                                    case 'expired': return t('notif.expired')
+                                    default: return t('notif.info')
+                                  }
+                                })()}
+                              </p>
+                              <span className="text-[8px] font-bold text-slate-300 uppercase">Aujourd'hui</span>
+                            </div>
+                            <p className="text-[11px] font-bold text-slate-700 leading-snug">
+                               {notif.status === 'paid' ? t('notif.desc_paid') : 
+                                notif.status === 'accepted' ? t('notif.desc_accepted') : 
+                                (notif.last_viewed_at && notif.status === 'sent') ? t('notif.desc_viewed') :
+                                notif.status === 'expired' ? t('notif.desc_expired') : t('notif.desc_default')}
+                                <span className={cn("inline-block ml-1 text-secondary font-black", notif.status === 'expired' && "text-amber-500")}>
+                                  #{notif.number}
+                                </span>
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                               <div className="flex items-center gap-1.5">
+                                 <div className={cn("w-1 h-1 rounded-full", notif.status === 'paid' ? "bg-emerald-400 animate-pulse" : "bg-slate-300")} />
+                                 <span className="text-[10px] font-bold text-slate-400 capitalize">
+                                   {notif.clients?.name || 'Client'}
+                                 </span>
+                               </div>
+                            </div>
+                          </div>
+                          <div className="absolute right-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300" />
+                        </Link>
+                      )
+                    })}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex items-center gap-4 pl-4 border-l border-slate-200/20 ml-2">
-          <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-black text-primary uppercase tracking-tighter opacity-40 mb-0.5">{t('navbar.connected_as')}</p>
-            <p className="text-[11px] font-bold text-slate-600 truncate max-w-[150px]">{userEmail}</p>
-          </div>
-          
-          <div className="p-1 text-slate-300">
-            <User size={28} className="bg-slate-50 rounded-full border border-slate-100 p-1" />
-          </div>
 
-          <button 
-            onClick={handleSignOut}
-            className="flex items-center gap-2 px-3 py-1.5 ml-2 group transition-all rounded-full bg-slate-50/50 border border-slate-100 hover:bg-red-50/50 hover:border-red-200 hover:shadow-[0_4px_12px_rgba(239,68,68,0.08)] active:scale-95"
-            title="Se déconnecter"
+        {/* 👤 PREMIUM USER SECTION */}
+        <div className="flex items-center gap-2 pl-6 border-l border-slate-100 ml-2">
+          <motion.div 
+            whileHover={{ x: -4 }}
+            className="flex items-center gap-4 bg-slate-50/50 hover:bg-white border border-slate-100/50 hover:border-slate-200 hover:shadow-sm px-4 py-2 rounded-[1.25rem] transition-all group cursor-default"
           >
-            <div className="bg-white p-1 rounded-full shadow-sm border border-slate-50 group-hover:border-red-100 group-hover:bg-red-50 transition-all">
-              <LogOut size={10} className="text-slate-400 group-hover:text-red-500 transition-colors" />
+            <div className="text-right hidden sm:block">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5 leading-none">
+                {t('navbar.connected_as')}
+              </p>
+              <p className="text-[12px] font-bold text-slate-700 truncate max-w-[140px] leading-tight">
+                {userEmail?.split('@')[0]}
+                <span className="text-slate-300 font-medium">@{userEmail?.split('@')[1]}</span>
+              </p>
             </div>
-            <span className="text-[9px] font-black text-slate-500 group-hover:text-red-600 uppercase tracking-widest leading-none pr-1">{t('navbar.logout')}</span>
-          </button>
+            
+            <div className="relative">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary-container p-[1px] shadow-sm group-hover:shadow-md transition-all">
+                <div className="w-full h-full rounded-[0.95rem] bg-white flex items-center justify-center overflow-hidden">
+                  <User size={20} className="text-primary/70 group-hover:scale-110 transition-transform" />
+                </div>
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+            </div>
+          </motion.div>
+
+          <Button 
+            onClick={handleSignOut}
+            variant="outline"
+            className="h-12 px-6 ml-2 rounded-2xl border-slate-100 bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-300 group shadow-sm flex items-center gap-2"
+          >
+            <motion.div
+              animate={{ x: 0 }}
+              whileHover={{ x: 3 }}
+              className="bg-slate-50 group-hover:bg-red-100 p-1.5 rounded-lg transition-colors"
+            >
+              <LogOut size={14} className="text-slate-400 group-hover:text-red-500" />
+            </motion.div>
+            <span className="text-[10px] font-black uppercase tracking-[0.1em]">{t('navbar.logout')}</span>
+          </Button>
         </div>
       </div>
     </header>
