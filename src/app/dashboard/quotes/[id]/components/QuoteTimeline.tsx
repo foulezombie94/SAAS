@@ -1,13 +1,11 @@
 import React from 'react'
 import { Card } from '@/components/ui/Card'
-import { Check, Send, MessageSquare, PenTool, Banknote, Receipt, LucideIcon, CheckCheck } from 'lucide-react'
+import { Check, Send, MessageSquare, PenTool, Banknote, Receipt, LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface QuoteTimelineProps {
   status: string
   lastViewedAt: string | null
-  artisanSignatureUrl?: string | null
-  clientSignatureUrl?: string | null
 }
 
 interface Step {
@@ -15,15 +13,9 @@ interface Step {
   label: string
   icon: LucideIcon
   active: boolean
-  // Highlight in a different color to distinguish artisan-signed vs fully accepted
-  highlight?: boolean
 }
 
-export function QuoteTimeline({ status, lastViewedAt, artisanSignatureUrl, clientSignatureUrl }: QuoteTimelineProps) {
-  const isFullyAccepted = ['accepted', 'paid', 'invoiced'].includes(status)
-  const artisanSigned = !!artisanSignatureUrl
-  const clientSigned = !!clientSignatureUrl
-
+export function QuoteTimeline({ status, lastViewedAt }: QuoteTimelineProps) {
   const steps: Step[] = [
     { 
       id: 'created', 
@@ -44,18 +36,10 @@ export function QuoteTimeline({ status, lastViewedAt, artisanSignatureUrl, clien
       active: !!lastViewedAt 
     },
     { 
-      id: 'signed_artisan', 
-      label: 'ARTISAN ✍️', 
-      icon: PenTool, 
-      active: artisanSigned,
-      // Orange highlight when artisan signed but client hasn't yet
-      highlight: artisanSigned && !isFullyAccepted
-    },
-    { 
       id: 'signed', 
-      label: 'VALIDÉ', 
-      icon: CheckCheck, 
-      active: isFullyAccepted 
+      label: 'SIGNÉ', 
+      icon: PenTool, 
+      active: ['accepted', 'paid', 'invoiced'].includes(status) 
     },
     { 
       id: 'paid', 
@@ -72,7 +56,7 @@ export function QuoteTimeline({ status, lastViewedAt, artisanSignatureUrl, clien
   ]
 
   return (
-    <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden mb-8 bg-white py-10 px-6 md:px-10 rounded-[32px]">
+    <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden mb-8 bg-white py-10 px-6 md:px-16 rounded-[32px]">
       <div className="flex items-center justify-between relative">
         {steps.map((step, idx) => {
           const isActive = step.active;
@@ -82,23 +66,18 @@ export function QuoteTimeline({ status, lastViewedAt, artisanSignatureUrl, clien
           return (
             <React.Fragment key={step.id}>
               {/* Node */}
-              <div className="flex flex-col items-center gap-4 relative z-10 bg-white px-1">
+              <div className="flex flex-col items-center gap-4 relative z-10 bg-white px-2">
                 <div className={cn(
-                  "w-12 h-12 rounded-[14px] flex items-center justify-center transition-all duration-500",
-                  isActive && !step.highlight
+                  "w-14 h-14 rounded-[16px] flex items-center justify-center transition-all duration-500",
+                  isActive 
                     ? "bg-[#002878] text-white shadow-[0_8px_16px_rgba(0,40,120,0.25)]" 
-                    : isActive && step.highlight
-                    // Orange = artisan signé, en attente client
-                    ? "bg-[#ef9900] text-white shadow-[0_8px_16px_rgba(239,153,0,0.3)]"
                     : "bg-white border-2 border-slate-200 text-slate-400"
                 )}>
-                  <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+                  <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
                 </div>
                 <span className={cn(
-                  "text-[9px] font-black uppercase tracking-[0.15em] transition-colors duration-300 whitespace-nowrap",
-                  isActive && !step.highlight ? "text-[#002878]" 
-                  : isActive && step.highlight ? "text-[#ef9900]"
-                  : "text-slate-400"
+                  "text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-300 whitespace-nowrap",
+                  isActive ? "text-[#002878]" : "text-slate-400"
                 )}>
                   {step.label}
                 </span>

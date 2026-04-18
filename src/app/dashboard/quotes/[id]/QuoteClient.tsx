@@ -78,9 +78,7 @@ export function QuoteClient({ quote }: QuoteClientProps) {
               {/* TIMELINE SECTION (Moved here for better vertical balance) */}
               <QuoteTimeline 
                 status={currentQuote.status} 
-                lastViewedAt={currentQuote.last_viewed_at}
-                artisanSignatureUrl={currentQuote.artisan_signature_url}
-                clientSignatureUrl={currentQuote.client_signature_url}
+                lastViewedAt={currentQuote.last_viewed_at} 
               />
 
               <QuoteActionsPanel 
