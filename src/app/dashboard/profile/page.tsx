@@ -39,7 +39,11 @@ import {
   BadgeCheck,
   CreditCard,
   LogOut,
-  AlertCircle
+  AlertCircle,
+  Briefcase,
+  TrendingUp,
+  Users2,
+  Globe
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/components/providers/LanguageProvider'
@@ -83,7 +87,7 @@ export default function ProfilePage() {
   }
 
   const handleOpenModal = () => {
-    setEditData(profile)
+    setEditData({ ...profile })
     setIsModalOpen(true)
   }
 
@@ -92,7 +96,7 @@ export default function ProfilePage() {
     try {
       const result = await updateProfile(editData as any)
       if (result.success) {
-        setProfile(editData)
+        setProfile({ ...editData })
         toast.success('Profil mis à jour avec succès')
         setIsModalOpen(false)
       } else {
@@ -239,13 +243,16 @@ export default function ProfilePage() {
           transition={{ delay: 0.2 }}
           className="lg:col-span-5 bg-slate-50 p-10 rounded-[2.5rem] flex flex-col gap-8 border border-slate-100/50 shadow-sm"
         >
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-1">
              <div className="flex items-center gap-3">
                 <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100">
                    <Bell size={24} className="text-[#00236f]" />
                 </div>
-                <h3 className="text-2xl font-black text-[#00236f] tracking-tight leading-none">Centre d'Alertes <br/><span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Préférences en direct</span></h3>
+                <h3 className="text-2xl font-black text-[#00236f] tracking-tight leading-none">Centre d&apos;Alertes</h3>
              </div>
+             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-3 bg-white/50 py-2 px-3 rounded-lg border border-slate-100 shadow-sm">
+                💡 <span className="text-blue-600">Note :</span> Cliquez sur une icône pour <span className="text-rose-500">enlever</span> ou activer l&apos;alerte.
+             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 aspect-square">
@@ -292,7 +299,7 @@ export default function ProfilePage() {
           <div className="relative z-10 flex flex-col gap-12 h-full justify-between">
             <div className="space-y-6">
               <div className="inline-flex px-4 py-2 bg-white/10 backdrop-blur-xl text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl border border-white/10 shadow-inner">
-                Intelligence d'Abonnement
+                Intelligence d&apos;Abonnement
               </div>
               <h3 className="text-5xl font-black text-white font-headline leading-tight tracking-tighter">
                 {profile.is_pro ? 'Contrôle Pro Activé' : 'Accès Standard'}
@@ -336,7 +343,7 @@ export default function ProfilePage() {
                 <Link href="/onboarding/plans" className="w-full">
                   <button className="w-full bg-amber-400 hover:bg-amber-300 text-[#00236f] font-black uppercase tracking-widest text-[12px] py-6 px-12 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-4 shadow-2xl shadow-amber-500/30">
                     <Rocket className="w-6 h-6" />
-                    ACTIVER L'ACCÈS PRO
+                    ACTIVER L&apos;ACCÈS PRO
                   </button>
                 </Link>
               )}
@@ -385,7 +392,27 @@ export default function ProfilePage() {
 
               <div className="flex-1 overflow-y-auto p-12 bg-white scrollbar-hide">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
-                  {/* Company Name */}
+                  {/* Personal Info Group */}
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Prénom du Gérant</label>
+                    <input 
+                      className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] px-6 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f]" 
+                      type="text" 
+                      value={editData.first_name || ''}
+                      onChange={(e) => setEditData({...editData, first_name: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Nom du Gérant</label>
+                    <input 
+                      className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] px-6 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f]" 
+                      type="text" 
+                      value={editData.last_name || ''}
+                      onChange={(e) => setEditData({...editData, last_name: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Company Info Group */}
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Enseigne Commerciale</label>
                     <div className="relative group">
@@ -415,28 +442,43 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Personal Name */}
+                  {/* Forme Juridique */}
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Prénom du Gérant</label>
-                    <input 
-                      className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] px-6 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f]" 
-                      type="text" 
-                      value={editData.first_name || ''}
-                      onChange={(e) => setEditData({...editData, first_name: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Nom du Gérant</label>
-                    <input 
-                      className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] px-6 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f]" 
-                      type="text" 
-                      value={editData.last_name || ''}
-                      onChange={(e) => setEditData({...editData, last_name: e.target.value})}
-                    />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Forme Juridique</label>
+                    <div className="relative group">
+                       <Briefcase className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#00236f] transition-colors" size={20} />
+                       <select 
+                         className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] pl-14 pr-10 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f] appearance-none cursor-pointer"
+                         value={editData.legal_form || ''}
+                         onChange={(e) => setEditData({...editData, legal_form: e.target.value})}
+                       >
+                         <option value="">Sélectionner...</option>
+                         <option value="Auto-entreprise">Auto-entreprise / EI</option>
+                         <option value="SAS / SASU">SAS / SASU</option>
+                         <option value="SARL / EURL">SARL / EURL</option>
+                         <option value="SA">SA</option>
+                         <option value="Autre">Autre</option>
+                       </select>
+                    </div>
                   </div>
 
-                  {/* Professional Phone */}
-                  <div className="space-y-3 md:col-span-1">
+                  {/* TVA Intra */}
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">N° TVA Intracommunautaire</label>
+                    <div className="relative group">
+                       <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#00236f] transition-colors" size={20} />
+                       <input 
+                         className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] focus:ring-0 pl-14 pr-6 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f] placeholder:text-slate-300" 
+                         type="text" 
+                         placeholder="FR..."
+                         value={editData.tva_intra || ''}
+                         onChange={(e) => setEditData({...editData, tva_intra: e.target.value})}
+                       />
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="space-y-3">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Contact Téléphonique</label>
                     <div className="relative group">
                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#00236f] transition-colors" size={20} />
@@ -449,29 +491,26 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Language Selection */}
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Langue des Documents</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email de Contact</label>
                     <div className="relative group">
-                       <Languages className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#00236f] transition-colors" size={20} />
-                       <select 
-                         className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] pl-14 pr-10 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f] appearance-none cursor-pointer"
-                         value={editData.preferred_language || 'fr'}
-                         onChange={(e) => setEditData({...editData, preferred_language: (e.target.value as 'fr' | 'en' | 'es')})}
-                       >
-                         <option value="fr">Français (France)</option>
-                         <option value="en">English (International)</option>
-                         <option value="es">Español</option>
-                       </select>
+                       <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors" size={20} />
+                       <input 
+                         className="w-full bg-slate-100 border-2 border-transparent px-6 py-4 pl-14 rounded-2xl font-bold text-sm text-slate-500 cursor-not-allowed" 
+                         type="email" 
+                         value={profile.email || ''}
+                         readOnly
+                       />
                     </div>
                   </div>
 
-                  {/* Detailed Address */}
+                  {/* Address */}
                   <div className="space-y-3 md:col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Siège Social / Adresse Postale</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Adresse de l&apos;Entreprise</label>
                     <textarea 
                       className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] px-6 py-5 rounded-2xl transition-all font-bold text-sm text-[#00236f] resize-none" 
                       rows={2}
+                      placeholder="Adresse complète"
                       value={editData.address || ''}
                       onChange={(e) => setEditData({...editData, address: e.target.value})}
                     />
@@ -479,14 +518,68 @@ export default function ProfilePage() {
 
                   {/* Business Description */}
                   <div className="space-y-3 md:col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Description des Activités</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Description des Services</label>
                     <textarea 
                       className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] px-6 py-5 rounded-2xl transition-all font-bold text-sm text-[#00236f] resize-none" 
                       rows={3}
-                      placeholder="Ex: Travaux de rénovation énergétique..."
+                      placeholder="Description de vos activités..."
                       value={editData.business_description || ''}
                       onChange={(e) => setEditData({...editData, business_description: e.target.value})}
                     />
+                  </div>
+
+                  {/* Statistics & Revenue */}
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Nombre de Contacts</label>
+                    <div className="relative group">
+                       <Users2 className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#00236f] transition-colors" size={20} />
+                       <select 
+                         className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] pl-14 pr-10 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f] appearance-none cursor-pointer"
+                         value={editData.num_contacts || ''}
+                         onChange={(e) => setEditData({...editData, num_contacts: e.target.value})}
+                       >
+                         <option value="">Sélectionner...</option>
+                         <option value="1-10">1 - 10</option>
+                         <option value="11-50">11 - 50</option>
+                         <option value="51-200">51 - 200</option>
+                         <option value="200+">200+</option>
+                       </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">CA Annuel Estimé</label>
+                    <div className="relative group">
+                       <TrendingUp className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#00236f] transition-colors" size={20} />
+                       <select 
+                         className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] pl-14 pr-10 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f] appearance-none cursor-pointer"
+                         value={editData.annual_revenue || ''}
+                         onChange={(e) => setEditData({...editData, annual_revenue: e.target.value})}
+                       >
+                         <option value="">Sélectionner...</option>
+                         <option value="0-50k">0 - 50k €</option>
+                         <option value="50k-150k">50k - 150k €</option>
+                         <option value="150k-500k">150k - 500k €</option>
+                         <option value="500k+">500k € +</option>
+                       </select>
+                    </div>
+                  </div>
+
+                  {/* Language Selection */}
+                  <div className="space-y-3 md:col-span-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Langue Préférée</label>
+                    <div className="relative group">
+                       <Globe className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#00236f] transition-colors" size={20} />
+                       <select 
+                         className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-[#00236f] pl-14 pr-10 py-4 rounded-2xl transition-all font-bold text-sm text-[#00236f] appearance-none cursor-pointer"
+                         value={editData.preferred_language || 'fr'}
+                         onChange={(e) => setEditData({...editData, preferred_language: (e.target.value as 'fr' | 'en' | 'es')})}
+                       >
+                         <option value="fr">Français</option>
+                         <option value="en">English (International)</option>
+                         <option value="es">Español</option>
+                       </select>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -496,7 +589,7 @@ export default function ProfilePage() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 py-5 px-10 border-2 border-slate-200 text-slate-500 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-slate-200 hover:text-slate-700 transition-all active:scale-95"
                 >
-                  Annuler l'Édition
+                  Annuler l&apos;Édition
                 </button>
                 <button 
                   onClick={handleSaveProfile}
