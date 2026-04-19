@@ -1,4 +1,5 @@
 import { LoginForm } from '@/components/auth/LoginForm'
+import { CookieConsent } from '@/components/auth/CookieConsent'
 import Link from 'next/link'
 
 export default function LoginPage({
@@ -8,6 +9,9 @@ export default function LoginPage({
 }) {
   return (
     <div className="flex items-center justify-center min-h-screen bg-surface p-6 sm:p-12">
+      {/* Cookie Consent Popup */}
+      <CookieConsent />
+
       {/* Decorative Background Elements (Subtle Blueprint feeling) */}
       <div 
         className="absolute inset-0 opacity-[0.03] pointer-events-none" 
