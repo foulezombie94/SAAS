@@ -27,6 +27,10 @@ export default async function DashboardLayout({
   const profile = await getUserProfile(user.id)
   const isPro = profile?.is_pro ?? false
 
+  // 🟡 COOKIE FONCTIONNEL : Détermine la marge du contenu principal dès le serveur
+  const cookieStore = await import('next/headers').then(h => h.cookies())
+  const isCollapsed = (await cookieStore).get('af_sidebar_collapsed')?.value === 'true'
+
   return (
     <NotificationProvider userId={user.id}>
       <LanguageProvider initialLanguage={profile?.preferred_language}>
@@ -35,8 +39,8 @@ export default async function DashboardLayout({
         {/* Sidebar - Desktop */}
         <Sidebar isPro={isPro} />
 
-        {/* Main Content Area */}
-        <div className="flex-1 md:ml-60 flex flex-col min-h-screen relative">
+        {/* Main Content Area - Marge dynamique 60 (240px) ou 20 (80px) */}
+        <div className={`flex-1 ${isCollapsed ? 'md:ml-20' : 'md:ml-60'} flex flex-col min-h-screen relative transition-all duration-300 ease-in-out`}>
           {/* TopNavBar */}
           <TopNavBar userEmail={user.email} />
 

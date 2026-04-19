@@ -11,6 +11,7 @@ import { signOut } from '@/app/login/actions'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useI18n } from '@/components/providers/LanguageProvider'
+import { getUIPreference, setUIPreference, UI_COOKIES } from '@/lib/ui-persistence'
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -29,6 +30,24 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+
+  // Load theme preference
+  useEffect(() => {
+    const savedTheme = getUIPreference(UI_COOKIES.THEME) as 'light' | 'dark'
+    if (savedTheme) {
+      setTheme(savedTheme)
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark')
+    }
+    setIsMounted(true)
+  }, [])
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light'
+    setTheme(newTheme)
+    setUIPreference(UI_COOKIES.THEME, newTheme)
+    document.documentElement.classList.toggle('dark', newTheme === 'dark')
+  }
 
   // 🛡️ OPTIMISATION RECHERCHE : Debounce de 500ms pour éviter de bombarder la DB
   useEffect(() => {
@@ -219,6 +238,17 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
             )}
           </AnimatePresence>
         </div>
+
+        {/* 🌓 THEME TOGGLE (Category 2: Functional Cookie) */}
+        <motion.button
+          whileHover={{ scale: 1.05, rotate: 5 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={toggleTheme}
+          className="p-3 rounded-2xl bg-slate-50/50 text-slate-400 hover:bg-white hover:text-primary hover:shadow-md border border-slate-100/50 transition-all flex items-center justify-center"
+          title={theme === 'light' ? 'Passer au mode sombre' : 'Passer au mode clair'}
+        >
+          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} className="text-amber-500" />}
+        </motion.button>
 
         {/* 👤 PREMIUM USER SECTION */}
         <div className="flex items-center gap-2 pl-6 border-l border-slate-100 ml-2">

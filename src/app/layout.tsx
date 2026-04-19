@@ -30,9 +30,12 @@ export default async function RootLayout({
   const nonce = (await headers()).get("x-nonce") ?? "";
   const cookieStore = await cookies();
   const hasConsent = cookieStore.get("artisanflow_analytics_consent")?.value === "true";
+  
+  // 🟡 COOKIE FONCTIONNEL : Thème persistant dès le chargement serveur
+  const theme = cookieStore.get("af_theme")?.value || 'light';
 
   return (
-    <html lang="fr" className={`${inter.variable}`}>
+    <html lang="fr" className={`${inter.variable} ${theme}`}>
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
