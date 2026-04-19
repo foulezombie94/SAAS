@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { stripe } from '@/lib/stripe'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, requireAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 
 const CreateSessionSchema = z.object({
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: limit.message }, { status: 429 })
     }
 
-    const supabase = createAdminClient()
+    const supabase = requireAdminClient()!
     let paymentData: {
       amount: number,
       name: string,
@@ -112,6 +112,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
+    if (err.message === 'SERVICE_UNAVAILABLE') {
+      return NextResponse.json({ error: 'Service de paiement momentanément indisponible.' }, { status: 503 })
+    }
     console.error('Stripe Session Error:', err?.message)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
