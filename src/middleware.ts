@@ -11,7 +11,11 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-nonce', nonce)
 
   // 3. SECURITY REPUTATION CHECK (Anti-Bypass: IP + Cookie)
-  const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  // 🛡️ Type fix: Access IP via headers first, then try the .ip property with cast
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+             request.headers.get('x-real-ip') || 
+             (request as any).ip || 
+             '127.0.0.1'
   const secToken = request.cookies.get('af_sec_rep')?.value
   
   // Allow the /blocked page itself and static assets to avoid loops

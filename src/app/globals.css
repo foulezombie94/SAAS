@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* 🎨 Tailwind CSS v4 Theme Configuration (Ignore Linter Warning: Unknown at rule @theme) */
   /* Colors from user provided config (Final Professional) */
   --color-tertiary-fixed-dim: #ffb95f;
   --color-surface-container: #eeedf4;
