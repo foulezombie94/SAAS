@@ -6,8 +6,19 @@ import { Redis } from '@upstash/redis'
 const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET
 const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
 const COOKIE_NAME = 'af_sec_rep'
-const redis = Redis.fromEnv()
 const encoder = new TextEncoder()
+
+// 🚀 PERFORMANCE: Optional Redis initialization
+let redis: Redis | null = null
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = Redis.fromEnv()
+  } else {
+    console.warn('⚠️ [ArtisanFlow] Upstash Redis environment variables missing. Rate limiting and IP banning disabled.')
+  }
+} catch (e) {
+  console.error('❌ [ArtisanFlow] Failed to initialize Redis:', e)
+}
 
 /**
  * 🔐 Validates HMAC signature using standard Web Crypto API (Edge Compatible)
@@ -47,19 +58,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
-  // 2. 🛡️ IP BAN CHECK (Redis)
-  try {
-    const ip = request.headers.get('x-real-ip') || 
-               request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-               '127.0.0.1'
-    
-    const isBanned = await redis.get(`ban:${ip}`)
-    if (isBanned && !pathname.startsWith('/blocked')) {
-      console.warn(`🚫 Blocking banned IP: ${ip}`)
-      return NextResponse.redirect(new URL('/blocked', request.url))
+  // 2. 🛡️ IP BAN CHECK (Redis) - Only if Redis is available
+  if (redis) {
+    try {
+      const ip = request.headers.get('x-real-ip') || 
+                 request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                 '127.0.0.1'
+      
+      const isBanned = await redis.get(`ban:${ip}`)
+      if (isBanned && !pathname.startsWith('/blocked')) {
+        console.warn(`🚫 Blocking banned IP: ${ip}`)
+        return NextResponse.redirect(new URL('/blocked', request.url))
+      }
+    } catch (e) {
+      console.error('Redis check failed (Fail-Open):', e)
     }
-  } catch (e) {
-    console.error('Redis check failed (Fail-Open):', e)
   }
 
   // 3. 🛡️ REPUTATION HMAC VALIDATION
