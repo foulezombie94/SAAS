@@ -87,18 +87,17 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="inline-block px-4 py-1.5 bg-[#002878]/5 text-[#002878] text-[10px] font-black tracking-[0.4em] uppercase mb-8 rounded-full border border-[#002878]/10"
             >
-              L'OUTIL DES BÂTISSEURS MODERNES
+              LA SOLUTION FRANÇAISE
             </motion.span>
             
-            <h1 className="text-7xl md:text-[110px] font-black tracking-[-0.05em] text-[#002878] leading-[0.85] mb-12 uppercase italic max-w-6xl mx-auto drop-shadow-[0_10px_20px_rgba(0,40,120,0.1)]">
-              LA SOLUTION FRANÇAISE <br className="hidden md:block" />
-              QUI <span className="text-[#ef9900] text-glow">DOMINE</span> LE <br className="hidden md:block" />
-              CHANTIER.
+            <h1 className="text-5xl md:text-[90px] font-black tracking-[-0.05em] text-[#002878] leading-[0.9] mb-12 uppercase italic max-w-6xl mx-auto drop-shadow-[0_10px_20px_rgba(0,40,120,0.1)]">
+              DEVIS, FACTURES <br className="hidden md:block" />
+              <span className="text-[#ef9900] text-glow">& PAIEMENTS</span>
             </h1>
             
-            <p className="text-base md:text-lg text-slate-500 leading-relaxed mb-16 max-w-2xl font-bold uppercase tracking-[0.2em] opacity-80">
-              Dites adieu au chaos administratif. <br className="hidden md:block" /> 
-              Pilotez vos devis, factures et chantiers avec une précision chirurgicale.
+            <p className="text-sm md:text-base text-slate-500 leading-relaxed mb-16 max-w-3xl font-bold uppercase tracking-[0.2em] opacity-80">
+              De la création client au suivi de votre agenda, gérez votre administratif sans prise de tête. <br className="hidden md:block" /> 
+              Le logiciel 100% français qui centralise votre activité et accélère vos encaissements.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-xl mx-auto">
