@@ -49,10 +49,10 @@ export function CookieConsent() {
               
               <div className="flex-1">
                 <h3 className="font-headline font-black text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
-                  Statistiques & Précision
+                  Sécurité & Statistiques
                 </h3>
                 <p className="font-body text-[11px] font-medium leading-relaxed opacity-80 mb-6">
-                  Nous analysons le trafic pour identifier les pages les plus lues et optimiser votre expérience. Vos données nous aident à perfectionner l'outil.
+                  Nous utilisons des cookies <strong>essentiels</strong> pour votre connexion et des cookies <strong>statistiques</strong> pour analyser le trafic et optimiser votre expérience de pilotage.
                 </p>
                 
                 <div className="flex items-center gap-3">
