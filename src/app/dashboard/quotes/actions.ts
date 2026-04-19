@@ -163,6 +163,10 @@ export async function acceptQuoteAction(rawData: unknown) {
       }
       throw e
     }
+  } catch (err: any) {
+    console.error('[acceptQuoteAction] Critical Failure:', err)
+    return { success: false, error: err.message }
+  }
 }
 
 export async function sendQuoteEmailAction(rawData: unknown) {
