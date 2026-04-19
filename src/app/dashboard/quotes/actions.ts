@@ -6,7 +6,7 @@ import { getUsageLimits } from '@/app/dashboard/actions'
 import { revalidateTag, revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
-import { createAdminClient } from '@/utils/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidateDashboardCache, revalidateDocumentCache } from '@/utils/supabase/revalidate'
 
 export async function createQuoteAction(rawData: unknown) {

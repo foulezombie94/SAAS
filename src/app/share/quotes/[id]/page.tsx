@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createAdminClient } from '@/utils/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { QuotePublicView } from './QuotePublicView'
 import { Quote } from '@/types/dashboard'
 import { LinkExpired } from '@/components/share/LinkExpired'
