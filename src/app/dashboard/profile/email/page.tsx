@@ -152,6 +152,19 @@ export default function EmailSettingsPage() {
           animate={{ opacity: 1, x: 0 }}
           className="lg:col-span-7 bg-white p-10 rounded-[2.5rem] shadow-[0_32px_80px_rgba(0,35,111,0.04)] border border-slate-100 flex flex-col gap-10"
         >
+          {/* Valeurs Courantes - Compact View */}
+          <div className="flex items-center gap-8 bg-slate-50/50 p-5 rounded-3xl border border-slate-100/50">
+             <div className="flex flex-col">
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Outlook / 365</span>
+                <span className="text-[11px] font-bold text-[#00236f]">smtp.office365.com : 587</span>
+             </div>
+             <div className="w-px h-8 bg-slate-200/50" />
+             <div className="flex flex-col">
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Gmail / Google</span>
+                <span className="text-[11px] font-bold text-[#00236f]">smtp.gmail.com : 465</span>
+             </div>
+          </div>
+
           <div className="flex items-center gap-4 border-b border-slate-50 pb-8">
              <div className="p-3 bg-blue-50 rounded-2xl">
                 <Server size={20} className="text-[#00236f]" />
@@ -233,26 +246,7 @@ export default function EmailSettingsPage() {
           animate={{ opacity: 1, x: 0 }}
           className="lg:col-span-5 flex flex-col gap-10"
         >
-          {/* Quick Defaults Card */}
-          <div className="bg-[#00236f] p-8 rounded-[2rem] shadow-xl shadow-blue-900/10 relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full translate-x-16 -translate-y-16" />
-             <div className="relative z-10 space-y-6">
-                <div className="flex items-center gap-3">
-                   <HelpCircle className="text-blue-300" size={18} />
-                   <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Valeurs Courantes</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-6 border-t border-white/10 pt-6">
-                   <div>
-                      <p className="text-[9px] font-black text-blue-300 uppercase tracking-tighter mb-1">Outlook / 365</p>
-                      <p className="text-[11px] font-bold text-white">smtp.office365.com <br/>Port: 587</p>
-                   </div>
-                   <div>
-                      <p className="text-[9px] font-black text-blue-300 uppercase tracking-tighter mb-1">Gmail / Google</p>
-                      <p className="text-[11px] font-bold text-white">smtp.gmail.com <br/>Port: 465</p>
-                   </div>
-                </div>
-             </div>
-          </div>
+
 
           {/* Guide Card */}
           <div className="bg-slate-50 border border-slate-100 p-8 rounded-[2rem] space-y-8">
@@ -278,39 +272,32 @@ export default function EmailSettingsPage() {
                 ))}
              </div>
           </div>
+
+          {/* Video Tutorial Small */}
+          <div className="bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm space-y-5">
+             <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-50 rounded-xl">
+                   <Play size={14} className="text-amber-600" />
+                </div>
+                <h3 className="text-[10px] font-black text-[#00236f] uppercase tracking-widest">Aide Vidéo</h3>
+             </div>
+             <div className="relative rounded-2xl overflow-hidden aspect-video bg-slate-100 border border-slate-100">
+                <video 
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline 
+                  controls
+                  className="w-full h-full object-cover"
+                >
+                  <source src="/videos/EXPLICATION MDP GOOGLE.MP4.mp4" type="video/mp4" />
+                </video>
+             </div>
+             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Générer un MDP d&apos;application</p>
+          </div>
         </motion.div>
       </div>
-      {/* Video Tutorial Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white p-10 rounded-[2.5rem] shadow-[0_32px_80px_rgba(0,35,111,0.04)] border border-slate-100 flex flex-col gap-8"
-      >
-        <div className="flex items-center gap-4 border-b border-slate-50 pb-8">
-           <div className="p-3 bg-amber-50 rounded-2xl">
-              <Play size={20} className="text-amber-600" />
-           </div>
-           <div>
-              <h2 className="text-xl font-black text-[#00236f] tracking-tight uppercase italic">Tutoriel Vidéo</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Comment générer votre mot de passe d&apos;application Google</p>
-           </div>
-        </div>
 
-        <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200 aspect-video group bg-slate-100">
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-            controls
-            className="w-full h-full object-cover"
-          >
-            <source src="/videos/EXPLICATION MDP GOOGLE.MP4.mp4" type="video/mp4" />
-            Votre navigateur ne supporte pas la lecture de vidéos.
-          </video>
-        </div>
-      </motion.div>
     </main>
   )
 }
