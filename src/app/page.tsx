@@ -90,15 +90,15 @@ export default function Home() {
               L'OUTIL DES BÂTISSEURS MODERNES
             </motion.span>
             
-            <h1 className="text-7xl md:text-[120px] font-black tracking-[-0.05em] text-[#002878] leading-[0.85] mb-12 uppercase italic max-w-5xl mx-auto drop-shadow-[0_10px_20px_rgba(0,40,120,0.1)]">
-              LE SUCCÈS <br className="hidden md:block" />
-              <span className="text-[#ef9900] text-glow">COMMENCE</span> <br className="hidden md:block" />
-              ICI.
+            <h1 className="text-7xl md:text-[110px] font-black tracking-[-0.05em] text-[#002878] leading-[0.85] mb-12 uppercase italic max-w-6xl mx-auto drop-shadow-[0_10px_20px_rgba(0,40,120,0.1)]">
+              LA SOLUTION FRANÇAISE <br className="hidden md:block" />
+              QUI <span className="text-[#ef9900] text-glow">DOMINE</span> LE <br className="hidden md:block" />
+              CHANTIER.
             </h1>
             
             <p className="text-base md:text-lg text-slate-500 leading-relaxed mb-16 max-w-2xl font-bold uppercase tracking-[0.2em] opacity-80">
-              Passez du chantier à la facture en 120 secondes. <br className="hidden md:block" /> 
-              La puissance du digital au service de votre savoir-faire.
+              Dites adieu au chaos administratif. <br className="hidden md:block" /> 
+              Pilotez vos devis, factures et chantiers avec une précision chirurgicale.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-xl mx-auto">
