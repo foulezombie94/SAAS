@@ -18,13 +18,18 @@ export function CookieConsent() {
   }, [])
 
   const handleAccept = () => {
-    localStorage.setItem('artisanflow_cookie_consent', 'accepted')
-    setIsVisible(false)
+    // Set cookie for server-side detection (Next.js layout)
+    document.cookie = "artisanflow_analytics_consent=true; path=/; max-age=31536000; SameSite=Lax";
+    localStorage.setItem('artisanflow_cookie_consent', 'accepted');
+    setIsVisible(false);
+    // Refresh to mount analytics in layout
+    window.location.reload();
   }
 
   const handleDecline = () => {
-    localStorage.setItem('artisanflow_cookie_consent', 'declined')
-    setIsVisible(false)
+    document.cookie = "artisanflow_analytics_consent=false; path=/; max-age=31536000; SameSite=Lax";
+    localStorage.setItem('artisanflow_cookie_consent', 'declined');
+    setIsVisible(false);
   }
 
   return (
@@ -44,10 +49,10 @@ export function CookieConsent() {
               
               <div className="flex-1">
                 <h3 className="font-headline font-black text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
-                  Cookies & Contrôle
+                  Statistiques & Précision
                 </h3>
                 <p className="font-body text-[11px] font-medium leading-relaxed opacity-80 mb-6">
-                  Nous utilisons des cookies pour optimiser votre expérience de pilotage. En poursuivant votre navigation, vous acceptez l'usage de ces outils de précision.
+                  Nous analysons le trafic pour identifier les pages les plus lues et optimiser votre expérience. Vos données nous aident à perfectionner l'outil.
                 </p>
                 
                 <div className="flex items-center gap-3">

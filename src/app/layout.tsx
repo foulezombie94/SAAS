@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import "./globals.css";
 import { Toaster } from 'sonner'
 import { Analytics } from "@vercel/analytics/next"
@@ -26,8 +26,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Retrieve the cryptographic nonce generated in middleware
+  // Retrieve context and consent
   const nonce = (await headers()).get("x-nonce") ?? "";
+  const cookieStore = await cookies();
+  const hasConsent = cookieStore.get("artisanflow_analytics_consent")?.value === "true";
 
   return (
     <html lang="fr" className={`${inter.variable}`}>
@@ -37,7 +39,7 @@ export default async function RootLayout({
       <body className="antialiased">
         <Toaster position="top-right" expand={true} richColors closeButton />
         {children}
-        <Analytics />
+        {hasConsent && <Analytics />}
       </body>
     </html>
   );
