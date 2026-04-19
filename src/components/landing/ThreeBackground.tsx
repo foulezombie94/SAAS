@@ -4,46 +4,45 @@ import React, { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { 
   Float, 
-  MeshDistortMaterial, 
   MeshTransmissionMaterial, 
   PerspectiveCamera,
-  Environment
+  Environment,
+  Sparkles
 } from '@react-three/drei'
 import * as THREE from 'three'
 
-function FloatingShape({ shape, color, position, rotation, speed, scrollY }: any) {
+function CentralMonolith({ scrollY }: { scrollY: any }) {
   const mesh = useRef<THREE.Mesh>(null!)
   
   useFrame((state) => {
     const time = state.clock.getElapsedTime()
-    mesh.current.rotation.x = rotation[0] + time * speed * 0.2
-    mesh.current.rotation.y = rotation[1] + time * speed * 0.3
+    // Slow organic rotation
+    mesh.current.rotation.x = time * 0.1
+    mesh.current.rotation.y = time * 0.15
     
-    // Scroll reaction: Move up/down and rotate based on scroll
-    const scrollEffect = scrollY.get() * 2
-    mesh.current.position.y = position[1] - scrollEffect * speed * 0.5
-    mesh.current.rotation.z += scrollEffect * 0.001
+    // Scroll reaction: Scale and slight position shift
+    const scrollProgress = scrollY.get()
+    const scale = 1.5 + scrollProgress * 0.5
+    mesh.current.scale.set(scale, scale, scale)
+    mesh.current.position.y = -scrollProgress * 2
   })
 
   return (
-    <Float speed={2} rotationIntensity={1} floatIntensity={2}>
-      <mesh ref={mesh} position={position} rotation={rotation}>
-        {shape === 'torus' && <torusKnotGeometry args={[1, 0.3, 128, 32]} />}
-        {shape === 'icosahedron' && <icosahedronGeometry args={[1, 0]} />}
-        {shape === 'dodecahedron' && <dodecahedronGeometry args={[1, 0]} />}
-        
+    <Float speed={1.5} rotationIntensity={0.5} floatIntensity={1}>
+      <mesh ref={mesh}>
+        <icosahedronGeometry args={[1, 15]} />
         <MeshTransmissionMaterial
           backside
-          samples={4}
-          thickness={0.5}
-          chromaticAberration={0.06}
-          anisotropy={0.1}
-          distortion={0.3}
-          distortionScale={0.3}
-          temporalDistortion={0.5}
+          samples={8}
+          thickness={1}
+          chromaticAberration={0.1}
+          anisotropy={0.3}
+          distortion={0.5}
+          distortionScale={0.5}
+          temporalDistortion={0.2}
           ior={1.2}
-          color={color}
-          roughness={0}
+          color="#ffffff"
+          roughness={0.1}
           transmission={1}
         />
       </mesh>
@@ -51,28 +50,48 @@ function FloatingShape({ shape, color, position, rotation, speed, scrollY }: any
   )
 }
 
-export default function ThreeBackground({ scrollY }: { scrollY: any }) {
+function SmallFloatingShapes({ scrollY }: { scrollY: any }) {
   const shapes = useMemo(() => [
-    { shape: 'torus', color: '#002878', position: [4, 2, -2], rotation: [0.5, 0.5, 0], speed: 1.2 },
-    { shape: 'icosahedron', color: '#ef9900', position: [-5, -1, -3], rotation: [0, 1, 0.5], speed: 0.8 },
-    { shape: 'dodecahedron', color: '#002878', position: [2, -4, -1], rotation: [1, 0.2, 0], speed: 1.5 },
-    { shape: 'torus', color: '#ffffff', position: [-3, 4, -4], rotation: [0.2, 0, 1], speed: 1 },
+    { position: [5, 3, -5], scale: 0.2, speed: 0.5 },
+    { position: [-6, -2, -4], scale: 0.3, speed: 0.8 },
+    { position: [4, -5, -6], scale: 0.25, speed: 0.6 },
   ], [])
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[-1] opacity-60">
+    <>
+      {shapes.map((s, i) => (
+        <Float key={i} speed={s.speed} position={s.position as any}>
+          <mesh scale={s.scale}>
+            <dodecahedronGeometry />
+            <meshStandardMaterial color="#002878" wireframe />
+          </mesh>
+        </Float>
+      ))}
+    </>
+  )
+}
+
+export default function ThreeBackground({ scrollY }: { scrollY: any }) {
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[-1] bg-black">
       <Canvas dpr={[1, 2]}>
-        <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={40} />
-        <ambientLight intensity={0.5} />
-        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#002878" />
+        <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={35} />
         
-        {shapes.map((s, i) => (
-          <FloatingShape key={i} {...s} scrollY={scrollY} />
-        ))}
+        {/* Cinematic Lighting */}
+        <ambientLight intensity={0.2} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} color="#ffffff" castShadow />
+        <pointLight position={[-10, -10, -5]} intensity={1} color="#002878" />
         
-        <Environment preset="city" />
+        <CentralMonolith scrollY={scrollY} />
+        <SmallFloatingShapes scrollY={scrollY} />
+        
+        <Sparkles count={100} scale={15} size={1} speed={0.4} color="#ffffff" />
+        
+        <Environment preset="night" />
       </Canvas>
+      
+      {/* Film Grain / Vignette Overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.6)_100%)]" />
     </div>
   )
 }
