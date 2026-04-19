@@ -16,49 +16,45 @@ export const Navbar = () => {
   }, []);
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm border-b-0">
-      <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-        <div className="text-2xl font-bold tracking-tighter text-blue-900 dark:text-blue-100 italic">
-          ArtisanFlow
+    <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-2xl border-b border-slate-100 transition-all duration-300">
+      <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-5">
+        <div className="text-2xl font-black tracking-tighter text-[#002878] italic group cursor-pointer transition-all">
+          ARTISAN<span className="text-[#ef9900] group-hover:text-[#002878] transition-colors">FLOW</span>
         </div>
-        <div className="hidden md:flex gap-8 items-center">
-          <Link 
-            className="text-slate-600 dark:text-slate-400 font-medium hover:text-blue-900 transition-all duration-200" 
-            href="#features"
-          >
-            Fonctions
-          </Link>
-          <Link 
-            className="text-slate-600 dark:text-slate-400 font-medium hover:text-blue-900 transition-all duration-200" 
-            href="#pricing"
-          >
-            Tarifs
-          </Link>
+        <div className="hidden md:flex gap-10 items-center">
+          {["Fonctions", "Tarifs", "Méthode"].map((item) => (
+            <Link 
+              key={item}
+              className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-[#002878] transition-all duration-200" 
+              href={`#${item.toLowerCase().replace('é', 'e')}`}
+            >
+              {item}
+            </Link>
+          ))}
           
           {user ? (
             <Link href="/dashboard">
-              <Button className="bg-primary text-on-primary px-6 py-2 rounded-md font-bold transition-all duration-200 hover:opacity-90 active:scale-95">
-                Tableau de Bord
-              </Button>
+              <button className="bg-[#002878] text-white px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-[#002878]/10 hover:shadow-xl hover:scale-105 transition-all active:scale-95">
+                Dashboard
+              </button>
             </Link>
           ) : (
-            <>
+            <div className="flex items-center gap-8">
               <Link 
-                className="text-slate-600 dark:text-slate-400 font-medium hover:text-blue-900 transition-all duration-200" 
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-[#002878] hover:opacity-70 transition-all" 
                 href="/login"
               >
                 Connexion
               </Link>
               <Link href="/login?signup=true">
-                <Button className="bg-primary text-on-primary px-6 py-2 rounded-md font-bold transition-all duration-200 hover:opacity-90 active:scale-95">
-                  Démarrer Gratuitement
-                </Button>
+                <button className="bg-[#002878] text-white px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-[#002878]/10 hover:shadow-xl hover:scale-105 transition-all active:scale-95">
+                  Démarrer
+                </button>
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>
-      <div className="h-1 w-full bg-gradient-to-r from-blue-900/5 via-blue-900/10 to-transparent"></div>
     </nav>
   );
 };
