@@ -20,9 +20,15 @@ import {
   Share2
 } from "lucide-react";
 import { Experience3D } from "@/components/landing/Experience3D";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 
 export default function Home() {
+  const { scrollYProgress } = useScroll();
+  
+  // UI dimension effects
+  const globalBlur = useTransform(scrollYProgress, [0, 0.25, 0.33, 0.66, 0.75, 1], [0, 10, 0, 0, 10, 0])
+  const globalScale = useTransform(scrollYProgress, [0, 0.25, 0.33, 0.66, 0.75, 1], [1, 0.9, 1, 1, 0.9, 1])
+
   const [isYearly, setIsYearly] = useState(true);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -72,7 +78,13 @@ export default function Home() {
       <Experience3D />
       <Navbar />
 
-      <main className="pt-24 overflow-hidden">
+      <motion.main 
+        style={{ 
+          filter: useTransform(globalBlur, (v) => `blur(${v}px)`),
+          scale: globalScale,
+        }}
+        className="pt-24 overflow-hidden origin-center"
+      >
         {/* HERO SECTION - RE-CENTERED PREVIOUS STYLE */}
         <section className="relative px-6 py-20 md:py-40 max-w-7xl mx-auto min-h-[90vh] flex flex-col items-center justify-center text-center">
           <motion.div 
