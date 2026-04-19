@@ -41,10 +41,10 @@ function applySecurityHeaders(response: NextResponse, nonce: string) {
     default-src 'self';
     script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""} https://js.stripe.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com https://lh3.googleusercontent.com;
+    img-src 'self' blob: data: https://*.supabase.co https://*.stripe.com https://images.unsplash.com https://*.unsplash.com https://lh3.googleusercontent.com https://www.transparenttextures.com;
     font-src 'self' data: https://fonts.gstatic.com;
     media-src 'self' https://assets.mixkit.co;
-    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com https://raw.githack.com https://*.githubusercontent.com;
     frame-src 'self' https://js.stripe.com https://checkout.stripe.com;
     object-src 'none';
     base-uri 'self';

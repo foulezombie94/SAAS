@@ -22,6 +22,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.transparenttextures.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'raw.githack.com',
+      },
     ],
   },
 
