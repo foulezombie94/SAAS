@@ -127,49 +127,49 @@ export default function EmailSettingsPage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto w-full px-6 py-12 flex flex-col gap-12 relative">
+    <main className="max-w-6xl mx-auto w-full px-6 py-6 flex flex-col gap-8 relative">
       {/* Breadcrumb & Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
         <Link href="/dashboard/profile" className="flex items-center gap-2 text-slate-400 hover:text-[#00236f] font-bold text-[10px] uppercase tracking-widest transition-colors group">
            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
            Retour au profil
         </Link>
         <div className="flex items-center gap-4">
-           <div className="w-12 h-12 bg-blue-50 text-[#00236f] rounded-2xl flex items-center justify-center shadow-sm">
-              <Mail size={24} />
+           <div className="w-10 h-10 bg-blue-50 text-[#00236f] rounded-xl flex items-center justify-center shadow-sm">
+              <Mail size={20} />
            </div>
            <div>
-              <h1 className="text-4xl font-black text-[#00236f] tracking-tighter font-headline leading-none">Messagerie Pro</h1>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Envoyez vos devis avec votre propre adresse</p>
+              <h1 className="text-3xl font-black text-[#00236f] tracking-tighter font-headline leading-none">Messagerie Pro</h1>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1.5">Envoyez vos devis avec votre propre adresse</p>
            </div>
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Main Config Card */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }} 
           animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-7 bg-white p-10 rounded-[2.5rem] shadow-[0_32px_80px_rgba(0,35,111,0.04)] border border-slate-100 flex flex-col gap-10"
+          className="lg:col-span-7 bg-white p-8 rounded-[2rem] shadow-[0_32px_80px_rgba(0,35,111,0.04)] border border-slate-100 flex flex-col gap-8"
         >
           {/* Valeurs Courantes - Compact View */}
-          <div className="flex items-center gap-8 bg-slate-50/50 p-5 rounded-3xl border border-slate-100/50">
+          <div className="flex items-center gap-8 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
              <div className="flex flex-col">
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Outlook / 365</span>
-                <span className="text-[11px] font-bold text-[#00236f]">smtp.office365.com : 587</span>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Outlook / 365</span>
+                <span className="text-[10px] font-bold text-[#00236f]">smtp.office365.com : 587</span>
              </div>
-             <div className="w-px h-8 bg-slate-200/50" />
+             <div className="w-px h-6 bg-slate-200/50" />
              <div className="flex flex-col">
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Gmail / Google</span>
-                <span className="text-[11px] font-bold text-[#00236f]">smtp.gmail.com : 465</span>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Gmail / Google</span>
+                <span className="text-[10px] font-bold text-[#00236f]">smtp.gmail.com : 465</span>
              </div>
           </div>
 
-          <div className="flex items-center gap-4 border-b border-slate-50 pb-8">
-             <div className="p-3 bg-blue-50 rounded-2xl">
-                <Server size={20} className="text-[#00236f]" />
+          <div className="flex items-center gap-4 border-b border-slate-50 pb-6">
+             <div className="p-2.5 bg-blue-50 rounded-xl">
+                <Server size={18} className="text-[#00236f]" />
              </div>
-             <h2 className="text-xl font-black text-[#00236f] tracking-tight uppercase italic">Configuration Technique</h2>
+             <h2 className="text-lg font-black text-[#00236f] tracking-tight uppercase italic">Configuration Technique</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -244,12 +244,12 @@ export default function EmailSettingsPage() {
         <motion.div 
           initial={{ opacity: 0, x: 20 }} 
           animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-5 flex flex-col gap-10"
+          className="lg:col-span-5 flex flex-col gap-6"
         >
 
 
           {/* Guide Card */}
-          <div className="bg-slate-50 border border-slate-100 p-8 rounded-[2rem] space-y-8">
+          <div className="bg-slate-50 border border-slate-100 p-6 rounded-[2rem] space-y-6">
              <div className="flex items-center gap-3">
                 <ShieldCheck className="text-[#00236f]" size={18} />
                 <h3 className="text-sm font-black text-[#00236f] uppercase italic">Sécurité & Spam</h3>
