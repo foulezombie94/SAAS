@@ -440,7 +440,7 @@ export default function Home() {
             </div>
           </motion.div>
         </section>
-      </main>
+      </motion.main>
 
       <footer className="bg-white w-full py-24 px-6 border-t border-slate-100">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
