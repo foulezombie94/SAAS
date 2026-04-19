@@ -68,19 +68,24 @@ export async function login(prevState: any, formData: FormData) {
 
   // 🚀 HARDENED SECURITY: Record fingerprint in app_metadata (Tamper-proof)
   const { headers } = await import('next/headers')
-  const { createAdminClient } = await import('@/utils/supabase/admin')
+  const { createAdminClient } = await import('@/lib/supabase/admin')
   const headerStore = await headers()
   const ip = headerStore.get('x-forwarded-for') || 'unknown'
   const ua = headerStore.get('user-agent') || 'unknown'
 
-  const supabaseAdmin = createAdminClient()
-  await supabaseAdmin.auth.admin.updateUserById(user.id, {
-    app_metadata: { 
-      last_login_ip: ip,
-      last_login_ua: ua,
-      last_login_at: new Date().toISOString()
-    }
-  })
+  try {
+    const supabaseAdmin = createAdminClient()
+    await supabaseAdmin.auth.admin.updateUserById(user.id, {
+      app_metadata: { 
+        last_login_ip: ip,
+        last_login_ua: ua,
+        last_login_at: new Date().toISOString()
+      }
+    })
+  } catch (e) {
+    console.error('⚠️ Admin metadata update failed (likely missing service key):', e)
+    // Non-blocking: Login continues
+  }
 
   // Check if onboarding is completed
   const { data: profile } = await supabase

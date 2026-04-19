@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { stripe } from '@/lib/stripe'
-import { createAdminClient } from '@/utils/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type Stripe from 'stripe'
 
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
