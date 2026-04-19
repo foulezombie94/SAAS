@@ -340,41 +340,95 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="max-w-xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+              {/* PLAN STARTER */}
               <motion.div 
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-[3rem] p-12 shadow-diffused border-2 border-[#002878] relative overflow-hidden"
+                whileHover={{ y: -10 }}
+                className="bg-white/50 backdrop-blur-xl rounded-[3rem] p-12 shadow-diffused border border-slate-100 relative overflow-hidden flex flex-col"
               >
-                <div className="absolute top-0 right-0 bg-[#002878] text-white px-8 py-2 rounded-bl-3xl font-black text-[10px] uppercase tracking-widest">Offre Lancement</div>
-                
-                <h3 className="text-2xl font-black text-[#002878] mb-2 uppercase italic tracking-tighter">LE PLAN ARTISAN</h3>
-                <div className="flex items-baseline gap-2 mb-8">
-                  <span className="text-6xl font-black text-[#002878] transition-all">{isYearly ? "29€" : "36€"}</span>
-                  <span className="text-slate-400 font-black uppercase text-xs tracking-widest">/ mois</span>
+                <div className="mb-8">
+                  <h3 className="text-xl font-black text-[#002878] mb-2 uppercase italic tracking-tighter opacity-40">STARTER</h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-6xl font-black text-[#002878]">0€</span>
+                    <span className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Gratuit à vie</span>
+                  </div>
                 </div>
 
-                <ul className="space-y-6 mb-12">
+                <ul className="space-y-6 mb-12 flex-grow">
                   {[
-                    "Devis & Factures illimités",
-                    "Paiement Stripe intégré",
-                    "Signature électronique certifiée",
-                    "Planning & Géolocalisation",
-                    "Support Prioritaire 24/7"
+                    "Jusqu'à 3 Clients",
+                    "Jusqu'à 3 Devis & Factures",
+                    "Signature Manuelle",
+                    "Paiement Stripe inclus",
+                    "Support Communautaire"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-4">
-                      <div className="w-6 h-6 bg-emerald-50 rounded-full flex items-center justify-center">
-                        <CheckCircle2 size={16} className="text-emerald-500" />
+                      <div className="w-5 h-5 bg-slate-50 rounded-full flex items-center justify-center">
+                        <CheckCircle2 size={14} className="text-slate-300" />
                       </div>
-                      <span className="text-sm font-bold text-slate-600 uppercase tracking-tight">{item}</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item}</span>
                     </li>
                   ))}
                 </ul>
 
                 <button 
                   onClick={handleFreeAction}
-                  className="w-full bg-[#ef9900] text-white py-6 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-[#ef9900]/20 hover:bg-[#ffb95f] transition-all active:scale-95"
+                  className="w-full border-2 border-[#002878]/10 text-[#002878] py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-[#002878]/5 transition-all active:scale-95"
                 >
-                  Démarrer l'essai gratuit
+                  Démarrer gratuitement
+                </button>
+              </motion.div>
+
+              {/* PLAN PRO */}
+              <motion.div 
+                whileHover={{ y: -10 }}
+                className="bg-white rounded-[3rem] p-12 shadow-2xl border-2 border-[#002878] relative overflow-hidden flex flex-col"
+              >
+                <div className="absolute top-0 right-0 bg-[#002878] text-white px-8 py-2 rounded-bl-3xl font-black text-[10px] uppercase tracking-widest animate-pulse">Populaire</div>
+                
+                <div className="mb-8">
+                  <h3 className="text-xl font-black text-[#002878] mb-2 uppercase italic tracking-tighter">ARTISAN PRO</h3>
+                  <div className="flex flex-col gap-1">
+                    {!isYearly ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-6xl font-black text-[#002878]">22€</span>
+                        <span className="text-slate-400 font-black uppercase text-[10px] tracking-widest">/ mois</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-6xl font-black text-[#002878]">199€</span>
+                          <span className="text-slate-400 font-black uppercase text-[10px] tracking-widest">/ an</span>
+                        </div>
+                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter mt-1">Soit environ 16€/mois (-24%)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <ul className="space-y-6 mb-12 flex-grow">
+                  {[
+                    "Devis & Factures illimités",
+                    "Signature électronique certifiée",
+                    "Emailing SMTP Personnalisé",
+                    "Agenda Interactif & Planning",
+                    "Support Prioritaire 24/7",
+                    "Zéro publicité"
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-4">
+                      <div className="w-5 h-5 bg-emerald-50 rounded-full flex items-center justify-center">
+                        <CheckCircle2 size={14} className="text-emerald-500" />
+                      </div>
+                      <span className="text-[10px] font-black text-[#002878] uppercase tracking-widest">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button 
+                  onClick={handleProAction}
+                  className="w-full bg-[#ef9900] text-white py-6 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-[#ef9900]/20 hover:bg-[#002878] transition-all active:scale-95"
+                >
+                  Passer au niveau PRO
                 </button>
               </motion.div>
             </div>
