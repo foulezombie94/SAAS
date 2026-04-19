@@ -74,8 +74,8 @@ export async function login(prevState: any, formData: FormData) {
   const ua = headerStore.get('user-agent') || 'unknown'
 
   try {
-    const supabaseAdmin = requireAdminClient()
-    await supabaseAdmin.auth.admin.updateUserById(user.id, {
+    const adminSupabase = requireAdminClient()!
+    await adminSupabase.auth.admin.updateUserById(user.id, {
       app_metadata: { 
         last_login_ip: ip,
         last_login_ua: ua,

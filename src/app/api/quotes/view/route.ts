@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'ID de devis invalide' }, { status: 400 })
     }
 
-    const adminSupabase = requireAdminClient()
+    const adminSupabase = requireAdminClient()!
 
     // 2. VERIFY TOKEN & UPDATE VIEWED_AT
     // We update only if the token matches to prevent unauthorized polling

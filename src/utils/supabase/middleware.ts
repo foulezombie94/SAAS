@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { redis } from '@/lib/rate-limit'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, requireAdminClient } from '@/lib/supabase/admin'
 
 export async function updateSession(request: NextRequest, requestHeaders?: Headers) {
   // 1. On initialise la réponse par défaut avec les headers passés (pour le nonce CSP)
@@ -144,20 +144,29 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
       const lastSeenSync = request.cookies.get('af_last_seen_sync')
       
       if (!lastSeenSync) {
-        const supabaseAdmin = createAdminClient()
-        
-        await supabaseAdmin.auth.admin.updateUserById(user.id, {
-          app_metadata: { last_seen_at: new Date().toISOString() }
-        })
+        try {
+          const supabaseAdmin = requireAdminClient()!
+          
+          await supabaseAdmin.auth.admin.updateUserById(user.id, {
+            app_metadata: { last_seen_at: new Date().toISOString() }
+          })
 
-        // Cookie de 24 heures
-        supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
-          maxAge: 86400,
-          path: '/',
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
-        })
+          // Cookie de 24 heures
+          supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
+            maxAge: 86400,
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+          })
+        } catch (e: any) {
+          if (e.message === 'SERVICE_UNAVAILABLE') {
+            console.warn('⚠️ [MIDDLEWARE] Tracking activité ignoré : Service Admin indisponible.')
+          } else {
+            console.error('⚠️ [MIDDLEWARE] Tracking activité échoué:', e.message)
+          }
+          // Fail-Soft: On ne bloque pas la réponse si le tracking échoue
+        }
       }
     }
   }
