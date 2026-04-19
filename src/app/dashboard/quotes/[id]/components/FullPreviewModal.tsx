@@ -2,10 +2,11 @@
 
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download, Landmark, FileText } from 'lucide-react'
+import { X, Landmark, FileText } from 'lucide-react'
 import { QuotePreview } from './QuotePreview'
 import { Quote } from '@/types/dashboard'
 import { Button } from '@/components/ui/Button'
+import { PdfIcon } from '@/components/icons/PdfIcon'
 
 interface FullPreviewModalProps {
   isOpen: boolean
@@ -69,7 +70,7 @@ export function FullPreviewModal({ isOpen, onClose, quote, onDownloadPdf }: Full
               onClick={onDownloadPdf}
               className="hidden md:flex h-11 px-5 rounded-2xl bg-white/5 hover:bg-white/10 text-white items-center gap-2 transition-all border border-white/5 hover:border-white/10 font-bold text-xs uppercase tracking-widest"
             >
-              <Download size={16} /> PDF
+              <PdfIcon size={16} /> PDF
             </button>
             <button 
               onClick={onClose}
@@ -98,7 +99,7 @@ export function FullPreviewModal({ isOpen, onClose, quote, onDownloadPdf }: Full
             className="rounded-full px-10 py-7 font-black uppercase tracking-widest text-xs btn-primary shadow-3xl hover:scale-105 active:scale-95 transition-transform"
             onClick={onDownloadPdf}
            >
-             <Download className="mr-3" size={18} /> Télécharger le PDF
+             <PdfIcon className="mr-3" size={18} /> Télécharger le PDF
            </Button>
         </div>
       </div>

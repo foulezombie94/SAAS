@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner'
 import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
+import { PdfIcon } from '@/components/icons/PdfIcon'
 
 interface QuotePublicViewProps {
   quote: Quote
@@ -709,7 +710,7 @@ export function QuotePublicView({ quote, publicToken }: QuotePublicViewProps) {
           isLoading={isGeneratingPdf}
           className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-3 border-slate-100 hover:bg-slate-50"
         >
-          <Download size={20} /> Télécharger
+          <PdfIcon size={20} /> Télécharger
         </Button>
 
         {/* Payment Button Removed from here as requested */}

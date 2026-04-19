@@ -10,7 +10,6 @@ import {
   User, 
   Calendar, 
   ShieldCheck, 
-  Download, 
   Send, 
   CreditCard,
   History,
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { PdfIcon } from '@/components/icons/PdfIcon'
 
 interface InvoiceClientProps {
   invoice: any
@@ -218,13 +218,13 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
         </div>
         
         <div className="flex items-center gap-4">
-           <Button 
+            <Button 
             variant="tertiary" 
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
             className="h-14 px-8 font-black uppercase tracking-widest text-xs gap-3 bg-[#002878] text-white hover:bg-slate-900"
            >
-              {isGeneratingPdf ? <Loader className="animate-spin" size={20} /> : <Download size={20} />}
+              {isGeneratingPdf ? <Loader className="animate-spin" size={20} /> : <PdfIcon size={20} />}
               Télécharger PDF
            </Button>
            {invoice.profiles?.is_pro && (
@@ -321,7 +321,7 @@ export function InvoiceClient({ invoice }: InvoiceClientProps) {
                 
                 <div className="grid grid-cols-2 gap-4">
                    <button onClick={handleDownloadPdf} className="h-16 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 group">
-                      <Download size={20} className="mb-2 group-hover:scale-110 transition-transform" />
+                      <PdfIcon size={20} className="mb-2 group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-black uppercase tracking-widest">PDF</span>
                    </button>
                    <button className="h-16 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 group">

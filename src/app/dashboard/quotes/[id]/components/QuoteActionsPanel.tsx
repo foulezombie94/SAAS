@@ -13,6 +13,7 @@ import {
   Table as TableIcon,
   Timer
 } from 'lucide-react'
+import { PdfIcon } from '@/components/icons/PdfIcon'
 import { Quote } from '@/types/dashboard'
 import { cn } from '@/lib/utils'
 
@@ -122,7 +123,7 @@ export function QuoteActionsPanel({
             size="icon"
             className="flex-1 h-12"
           >
-            {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 text-[#00236f]" strokeWidth={2.5} />}
+            {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <PdfIcon className="w-5 h-5" fill="#00236f" />}
           </Button>
           
           <Button 
