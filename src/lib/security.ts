@@ -123,9 +123,11 @@ export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
     if (newState.attempts >= 5) newState.status = 'SUSPICIOUS'
   }
 
+  const isProd = process.env.NODE_ENV === 'production'
+
   cookieStore.set(COOKIE_NAME, signState(newState), {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
     sameSite: 'lax',
     path: '/',
     maxAge: 72 * 60 * 60,

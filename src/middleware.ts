@@ -1,5 +1,34 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
+import { Redis } from '@upstash/redis'
+import { createHmac, timingSafeEqual } from 'crypto'
+
+// 🛡️ SECURITY PARANOIA: Same secret logic as security.ts
+const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET
+const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
+
+// 🚀 PERFORMANCE: Static Redis instance
+const redis = Redis.fromEnv()
+
+/**
+ * 🔐 Validates HMAC signature for Edge Runtime
+ */
+function isValidSignature(token: string): boolean {
+  try {
+    const [dataB64, signature] = token.split('.')
+    if (!dataB64 || !signature) return false
+
+    const data = atob(dataB64)
+    const expectedSignature = createHmac('sha256', FINAL_SECRET).update(data).digest('hex')
+
+    const sigBuf = Buffer.from(signature, 'hex')
+    const expBuf = Buffer.from(expectedSignature, 'hex')
+
+    return sigBuf.length === expBuf.length && timingSafeEqual(sigBuf, expBuf)
+  } catch {
+    return false
+  }
+}
 
 export async function middleware(request: NextRequest) {
   // 1. Generate a cryptographically secure nonce for CSP (Direct UUID is safest for Edge)
@@ -22,22 +51,18 @@ export async function middleware(request: NextRequest) {
   if (!request.nextUrl.pathname.startsWith('/blocked') && !request.nextUrl.pathname.startsWith('/_next')) {
     try {
       // 🛡️ ARCHITECTURE FIX: Priority 1 - Centralized IP Block (Vercel Edge / Redis)
-      const { Redis } = await import('@upstash/redis')
-      const redis = Redis.fromEnv()
       const ipBlocked = await redis.get(`blocked:ip:${ip}`)
       
       if (ipBlocked) {
         return NextResponse.redirect(new URL('/blocked', request.url))
       }
 
-      // 🛡️ Priority 2 - Session Cookie Reputation
-      if (secToken) {
+      // 🛡️ Priority 2 - Session Cookie Reputation (Now with HMAC Validation!)
+      if (secToken && isValidSignature(secToken)) {
         const dataB64 = secToken.split('.')[0]
-        if (dataB64) {
-          const data = JSON.parse(atob(dataB64))
-          if (data.status === 'BLOCKED' && (!data.expiry || Date.now() < data.expiry)) {
-            return NextResponse.redirect(new URL('/blocked', request.url))
-          }
+        const data = JSON.parse(atob(dataB64))
+        if (data.status === 'BLOCKED' && (!data.expiry || Date.now() < data.expiry)) {
+          return NextResponse.redirect(new URL('/blocked', request.url))
         }
       }
     } catch (e) {
