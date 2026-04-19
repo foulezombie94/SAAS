@@ -10,7 +10,25 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-nonce', nonce)
 
-  // 3. Special case for public share routes - skip auth but apply security
+  // 3. SECURITY REPUTATION CHECK (Block malicious actors early)
+  const secToken = request.cookies.get('af_sec_rep')?.value
+  // Allow the /blocked page itself and static assets to avoid loops
+  if (secToken && !request.nextUrl.pathname.startsWith('/blocked') && !request.nextUrl.pathname.startsWith('/_next')) {
+    try {
+      // Small inline check for BLOCKED status in the signed cookie (without heavy imports)
+      const dataB64 = secToken.split('.')[0]
+      if (dataB64) {
+        const data = JSON.parse(atob(dataB64))
+        if (data.status === 'BLOCKED' && (!data.expiry || Date.now() < data.expiry)) {
+          return NextResponse.redirect(new URL('/blocked', request.url))
+        }
+      }
+    } catch (e) {
+      // Ignore parsing errors for security cookie
+    }
+  }
+
+  // 4. Special case for public share routes - skip auth but apply security
   if (request.nextUrl.pathname.startsWith('/share/')) {
     const response = NextResponse.next({
       request: {

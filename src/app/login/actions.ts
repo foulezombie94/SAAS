@@ -6,11 +6,36 @@ import { redirect } from 'next/navigation'
 import { rateLimit } from '@/lib/rate-limit'
 import { signupSchema } from '@/lib/validations/secure-inputs'
 import { z } from 'zod'
+import { reportSecurityEvent, getSecurityReputation, resetSecurityReputation } from '@/lib/security'
 
 export async function login(prevState: any, formData: FormData) {
-  // 1. ANTI-BRUTE FORCE (10 tentatives / minute par IP)
+  // 0. SECURITY REPUTATION CHECK
+  const security = await getSecurityReputation()
+  if (security.status === 'BLOCKED') {
+    redirect('/blocked')
+  }
+
+  // 1. HONEYPOT CHECK (Bot Detection)
+  const honeypot = formData.get('hp_firm_id') as string
+  if (honeypot) {
+    console.warn('🚨 Bot detected via Honeypot!')
+    await reportSecurityEvent('BOT')
+    redirect('/blocked')
+  }
+
+  // 2. TIMING ATTACK / BOT CHECK
+  const loadTime = parseInt(formData.get('lt_sys') as string || '0')
+  const submitTime = Date.now()
+  if (loadTime > 0 && (submitTime - loadTime) < 2000) { // Less than 2 seconds
+    console.warn('🚨 Bot detected via fast submission!')
+    await reportSecurityEvent('FAIL') // Increment suspicion
+    return { error: 'Vitesse de soumission suspecte. Veuillez réessayer lentement.' }
+  }
+
+  // 3. ANTI-BRUTE FORCE (10 tentatives / minute par IP)
   const limit = await rateLimit('auth-login', 10, 60000)
   if (!limit.success) {
+    await reportSecurityEvent('FAIL')
     return { error: limit.message }
   }
 
@@ -29,12 +54,17 @@ export async function login(prevState: any, formData: FormData) {
   })
 
   if (error || !user) {
+    await reportSecurityEvent('FAIL')
     let errorMessage = error?.message || 'Email ou mot de passe incorrect'
     if (error?.message === 'Invalid login credentials') {
       errorMessage = 'Email ou mot de passe incorrect'
     }
     return { error: errorMessage }
   }
+
+  // Success! Reset reputation
+  await resetSecurityReputation()
+  console.log('✅ Login success for', email)
 
   // 🚀 HARDENED SECURITY: Record fingerprint in app_metadata (Tamper-proof)
   const { headers } = await import('next/headers')

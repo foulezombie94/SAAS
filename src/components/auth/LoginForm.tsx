@@ -97,6 +97,23 @@ export function LoginForm() {
         </label>
       </div>
 
+      {/* SECURITY: Honeypot field (invisible to humans, trapped for bots) */}
+      <div className="sr-only opacity-0 absolute -z-10 pointer-events-none" aria-hidden="true">
+        <label htmlFor="hp_firm_id">ID Entreprise Interne</label>
+        <input 
+          type="text" 
+          id="hp_firm_id" 
+          name="hp_firm_id" 
+          tabIndex={-1} 
+          autoComplete="off" 
+        />
+        <input 
+          type="hidden" 
+          name="lt_sys" 
+          value={Date.now()} 
+        />
+      </div>
+
       {state?.error && (
         <div className="p-4 bg-error-container text-on-error-container rounded-md text-sm font-bold border border-error/10 animate-shake">
           {state.error}
