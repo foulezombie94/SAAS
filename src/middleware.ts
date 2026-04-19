@@ -89,9 +89,8 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response, nonce)
   }
 
-  // 4. Update session (Auth logic)
-  // Note: updateSession handles redirects for protected routes
-  let response = await updateSession(request)
+  // 5. Update session (Auth logic)
+  let response = await updateSession(request, requestHeaders)
   
   // Merge the x-nonce header into the final response
   // and apply the Content-Security-Policy

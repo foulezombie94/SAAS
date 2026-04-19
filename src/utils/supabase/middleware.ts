@@ -1,11 +1,11 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function updateSession(request: NextRequest) {
-  // 1. On initialise la réponse par défaut
+export async function updateSession(request: NextRequest, requestHeaders?: Headers) {
+  // 1. On initialise la réponse par défaut avec les headers passés (pour le nonce CSP)
   let supabaseResponse = NextResponse.next({
     request: {
-      headers: request.headers,
+      headers: requestHeaders || request.headers,
     },
   })
 
@@ -22,7 +22,9 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
             supabaseResponse = NextResponse.next({
-              request,
+              request: {
+                headers: requestHeaders || request.headers,
+              },
             })
             supabaseResponse.cookies.set(name, value, {
               ...options,
