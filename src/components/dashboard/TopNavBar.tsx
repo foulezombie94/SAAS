@@ -222,29 +222,31 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
 
         {/* 👤 PREMIUM USER SECTION */}
         <div className="flex items-center gap-2 pl-6 border-l border-slate-100 ml-2">
-          <motion.div 
-            whileHover={{ x: -4 }}
-            className="flex items-center gap-4 bg-slate-50/50 hover:bg-white border border-slate-100/50 hover:border-slate-200 hover:shadow-sm px-4 py-2 rounded-[1.25rem] transition-all group cursor-default"
-          >
-            <div className="text-right hidden sm:block">
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5 leading-none">
-                {t('navbar.connected_as')}
-              </p>
-              <p className="text-[12px] font-bold text-slate-700 truncate max-w-[140px] leading-tight">
-                {userEmail?.split('@')[0]}
-                <span className="text-slate-300 font-medium">@{userEmail?.split('@')[1]}</span>
-              </p>
-            </div>
-            
-            <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary-container p-[1px] shadow-sm group-hover:shadow-md transition-all">
-                <div className="w-full h-full rounded-[0.95rem] bg-white flex items-center justify-center overflow-hidden">
-                  <User size={20} className="text-primary/70 group-hover:scale-110 transition-transform" />
-                </div>
+          <Link href="/dashboard/profile">
+            <motion.div 
+              whileHover={{ x: -4 }}
+              className="flex items-center gap-4 bg-slate-50/50 hover:bg-white border border-slate-100/50 hover:border-slate-200 hover:shadow-sm px-4 py-2 rounded-[1.25rem] transition-all group cursor-pointer"
+            >
+              <div className="text-right hidden sm:block">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5 leading-none">
+                  {t('navbar.connected_as')}
+                </p>
+                <p className="text-[12px] font-bold text-slate-700 truncate max-w-[140px] leading-tight">
+                  {userEmail?.split('@')[0]}
+                  <span className="text-slate-300 font-medium">@{userEmail?.split('@')[1]}</span>
+                </p>
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-            </div>
-          </motion.div>
+              
+              <div className="relative">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary-container p-[1px] shadow-sm group-hover:shadow-md transition-all">
+                  <div className="w-full h-full rounded-[0.95rem] bg-white flex items-center justify-center overflow-hidden">
+                    <User size={20} className="text-primary/70 group-hover:scale-110 transition-transform" />
+                  </div>
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+              </div>
+            </motion.div>
+          </Link>
 
           <Button 
             onClick={handleSignOut}
