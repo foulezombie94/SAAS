@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { redis } from '@/lib/rate-limit'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function updateSession(request: NextRequest, requestHeaders?: Headers) {
   // 1. On initialise la réponse par défaut avec les headers passés (pour le nonce CSP)
@@ -90,7 +92,6 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
     // 🔒 Logique pour les routes protégées (Dashboard/Onboarding)
     if (isProtectedPath) {
       // 🛑 INSTANT BAN CHECK (Redis) - Throttled by cookie to 10m
-      const { redis } = await import('@/lib/rate-limit')
       if (redis) {
         const banSynced = request.cookies.get('af_ban_synced')
         
@@ -139,20 +140,18 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
       }
 
       // B. 🛡️ ACTIVITY TRACKING (SITE ENTRY ONLY)
-      // Se déclenche une seule fois lors de l'ouverture initiale du site (n'importe quelle page protégée).
       const lastSeenSync = request.cookies.get('af_last_seen_sync')
       
       if (!lastSeenSync) {
-        const { createAdminClient } = await import('../../lib/supabase/admin')
         const supabaseAdmin = createAdminClient()
         
         await supabaseAdmin.auth.admin.updateUserById(user.id, {
           app_metadata: { last_seen_at: new Date().toISOString() }
         })
 
-        // Cookie de 24 heures : une seule mise à jour par jour max, peu importe la page d'entrée
+        // Cookie de 24 heures
         supabaseResponse.cookies.set('af_last_seen_sync', 'true', {
-          maxAge: 86400, // 24 heures
+          maxAge: 86400,
           path: '/',
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
