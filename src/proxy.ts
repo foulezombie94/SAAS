@@ -89,7 +89,7 @@ export async function proxy(request: NextRequest) {
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' blob: data: https://*.stripe.com https://*.supabase.co https://lh3.googleusercontent.com https://res.cloudinary.com https://images.unsplash.com https://*.unsplash.com;
     frame-src 'self' https://js.stripe.com https://checkout.stripe.com;
-    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.stripe.com https://raw.githack.com https://vitals.vercel-insights.com https://api.capsule.social;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.stripe.com https://raw.githack.com https://raw.githubusercontent.com https://vitals.vercel-insights.com https://api.capsule.social;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
