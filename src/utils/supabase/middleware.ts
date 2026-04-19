@@ -21,17 +21,11 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // 1. On synchronise d'abord tous les cookies sur la requête pour les Server Components
+          // 1. On synchronise tous les cookies sur la requête pour les Server Components
+          // Note : on ne recrée plus la réponse pour éviter d'écraser des headers (nonce, CSP)
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           
-          // 2. On recrée la réponse UNE SEULE FOIS pour embarquer les nouveaux headers et cookies
-          supabaseResponse = NextResponse.next({
-            request: {
-              headers: requestHeaders || request.headers,
-            },
-          })
-          
-          // 3. On applique chaque cookie à la réponse finale pour le navigateur
+          // 2. On applique chaque cookie directement sur la réponse existante (Mutation)
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, {
               ...options,
@@ -102,7 +96,14 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
             url.pathname = '/'
             url.searchParams.set('error', 'banned')
             const response = NextResponse.redirect(url)
-            response.cookies.delete('sb-hnruthegzshajfreocpp-auth-token')
+            
+            // 🛡️ DYNAMISME : On supprime tous les cookies auth Supabase sans coder l'ID projet 
+            request.cookies.getAll().forEach(cookie => {
+              if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
+                response.cookies.delete(cookie.name)
+              }
+            })
+            
             return response
           }
 
