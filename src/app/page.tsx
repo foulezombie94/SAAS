@@ -46,7 +46,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
  */
 function ScrollyScene({ 
   children, 
-  height = "250vh", 
+  height = "120vh", 
   isFirst = false 
 }: { 
   children: React.ReactNode, 
@@ -66,10 +66,11 @@ function ScrollyScene({
   const arrivalBlurStart = isFirst ? 0 : 30;
   const arrivalYStart = isFirst ? 0 : 100;
 
-  const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalOpacityStart, 1, 1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalScaleStart, 1, 1, 2.5]);
-  const blur = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalBlurStart, 0, 0, 40]);
-  const y = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalYStart, 0, 0, -50]);
+  // NEW CONTINUOUS MOTION LOGIC: Something always moves
+  const opacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalOpacityStart, 1, 1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalScaleStart, 1.0, 1.1, 2.8]);
+  const blur = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalBlurStart, 0, 0, 50]);
+  const y = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalYStart, 0, -40, -120]);
 
   return (
     <section ref={containerRef} style={{ height }} className="relative w-full">
