@@ -50,7 +50,13 @@
   --color-inverse-on-surface: #f1f0f7;
   --color-on-secondary-fixed-variant: #3d4565;
 
-  /* Border Radii */
+  /* Additional missing colors if any from request */
+  --color-surface-container-highest: #e3e1e9;
+  --color-surface-container-low: #f4f3fa;
+  --color-inverse-on-surface: #f1f0f7;
+  --color-on-secondary-fixed: #111a37;
+  
+  /* Border Radii (Updated per HTML request) */
   --radius-default: 0.125rem;
   --radius-lg: 0.25rem;
   --radius-xl: 0.5rem;
@@ -62,8 +68,24 @@
   --font-label: "Inter", sans-serif;
 }
 
-/* Custom Utilities for Glassmorphism & Misc */
+/* Custom Utilities for Login & Blueprints */
 @layer utilities {
+  .blueprint-gradient {
+      background: linear-gradient(135deg, #00236f 0%, #1e3a8a 100%);
+  }
+  
+  .form-input-ghost {
+      border: 1px solid rgba(197, 197, 211, 0.2);
+      transition: all 0.2s ease-in-out;
+  }
+  
+  .form-input-ghost:focus {
+      border-color: transparent !important;
+      border-bottom: 2px solid #00236f !important;
+      outline: none !important;
+      box-shadow: none !important;
+  }
+
   .glass {
     background-color: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(24px);
@@ -77,36 +99,11 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
   
-  .neon-shadow {
-    box-shadow: 0 0 20px rgba(0, 35, 111, 0.05), 0 0 40px rgba(0, 35, 111, 0.02);
-  }
-
   .shadow-diffused {
     box-shadow: 0px 24px 48px rgba(0, 35, 111, 0.06);
   }
 
-  /* Premium Buttons (Refined blocky design) */
-  .btn {
-    @apply inline-flex items-center justify-center font-black uppercase tracking-[0.15em] text-[11px] transition-all duration-200 cursor-pointer select-none active:scale-95 disabled:opacity-50 disabled:pointer-events-none rounded-md px-8 py-3 min-h-[48px] shadow-sm;
-  }
-
-  .btn-primary {
-    @apply bg-primary text-on-primary hover:bg-primary/95 hover:shadow-md active:bg-primary;
-  }
-
-  .btn-tertiary {
-    @apply bg-tertiary-fixed-dim text-on-tertiary-fixed hover:bg-tertiary-fixed hover:shadow-md active:bg-tertiary-fixed-dim;
-  }
-
-  .btn-outline {
-    @apply bg-white border border-slate-200 text-primary hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100;
-  }
-
   /* Notification Animation */
-  .animate-bounce-subtle {
-    animation: bounce-subtle 2s infinite ease-in-out;
-  }
-
   @keyframes bounce-subtle {
     0%, 100% {
       transform: translateY(0);
@@ -116,42 +113,12 @@
     }
   }
 
-  @keyframes ring {
-    0% { transform: rotate(0); }
-    10% { transform: rotate(15deg); }
-    20% { transform: rotate(-10deg); }
-    30% { transform: rotate(8deg); }
-    40% { transform: rotate(-5deg); }
-    50% { transform: rotate(0); }
-    100% { transform: rotate(0); }
-  }
-
-  .animate-ring {
-    animation: ring 2s infinite ease-in-out;
-    transform-origin: top center;
-  }
-
-  .glow-primary {
-    box-shadow: 0 0 15px rgba(0, 35, 111, 0.2);
-  }
-
-  .text-glow {
-    text-shadow: 0 0 10px rgba(0, 35, 111, 0.1);
-  }
-
-  .border-glass {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-  }
-
-  .bg-glass {
-    background: rgba(255, 255, 255, 0.03) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s infinite ease-in-out;
   }
 }
 
-
-/* Base resets and Google Fonts specific styles */
+/* Base resets */
 :root {
   font-family: 'Inter', sans-serif;
   scroll-behavior: smooth;
