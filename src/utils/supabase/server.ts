@@ -6,4 +6,4 @@
  */
 
 export { createClient } from '@/lib/supabase/client'
-export { createAdminClient } from '@/lib/supabase/admin'
+export { createAdminClient, requireAdminClient } from '@/lib/supabase/admin'

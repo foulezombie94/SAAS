@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, requireAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 import { revalidatePath, revalidateTag } from 'next/cache'
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'ID de devis invalide' }, { status: 400 })
     }
 
-    const adminSupabase = createAdminClient()
+    const adminSupabase = requireAdminClient()
 
     // 2. VERIFY TOKEN & UPDATE VIEWED_AT
     // We update only if the token matches to prevent unauthorized polling
@@ -43,6 +43,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
 
   } catch (err: any) {
+    if (err.message === 'SERVICE_UNAVAILABLE') {
+      return NextResponse.json({ error: 'Service de validation momentanément indisponible.' }, { status: 503 })
+    }
     console.error('Critical View Recording Failure:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }

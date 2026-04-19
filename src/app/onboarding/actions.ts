@@ -41,12 +41,21 @@ export async function setFreePlan() {
 
     if (error) return { data: null, error: error.message }
     
-    // 🚀 SENIOR OPTIMIZATION: Sync to JWT
-    const { createAdminClient } = await import('@/lib/supabase/admin')
-    const adminClient = createAdminClient()
-    await adminClient.auth.admin.updateUserById(user.id, {
-      app_metadata: { plan: 'free' }
-    })
+    // 🚀 SENIOR OPTIMIZATION: Sync to JWT (Fail-Soft Pattern)
+    try {
+      const { requireAdminClient } = await import('@/lib/supabase/admin')
+      const adminClient = requireAdminClient()
+      await adminClient.auth.admin.updateUserById(user.id, {
+        app_metadata: { plan: 'free' }
+      })
+    } catch (e: any) {
+      if (e.message === 'SERVICE_UNAVAILABLE') {
+        console.warn('⚠️ [ONBOARDING] Service Admin indisponible. La mise à jour du plan JWT est ignorée.')
+      } else {
+        console.error('⚠️ [ONBOARDING] Erreur inattendue lors de la mise à jour JWT:', e.message)
+      }
+      // On continue : l'utilisateur est quand même créé dans la DB
+    }
 
     // Revlaidation pour s'assurer que le tableau de bord affiche les bonnes informations.
     revalidatePath('/dashboard', 'layout')

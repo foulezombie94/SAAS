@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, requireAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 import { rateLimit } from '@/lib/rate-limit'
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       }
 
       const fileName = `sig_${quoteId}_${Date.now()}.${ext}`
-      const adminSupabase = createAdminClient()
+      const adminSupabase = requireAdminClient()
       
       const { error: uploadError } = await adminSupabase.storage
         .from('signatures')
@@ -96,6 +96,9 @@ export async function POST(req: Request) {
     })
 
   } catch (err: any) {
+    if (err.message === 'SERVICE_UNAVAILABLE') {
+      return NextResponse.json({ error: 'Service de signature momentanément indisponible (Configuration Admin manquante).' }, { status: 503 })
+    }
     console.error('Critical Acceptance Failure:', err)
     return NextResponse.json({ 
       error: err.message || "Une erreur fatale est survenue lors de l'acceptation." 

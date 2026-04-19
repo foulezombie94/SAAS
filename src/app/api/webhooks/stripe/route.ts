@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { stripe } from '@/lib/stripe'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, requireAdminClient } from '@/lib/supabase/admin'
 import type Stripe from 'stripe'
 
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -10,7 +10,16 @@ const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 export async function POST(req: Request) {
   const body = await req.text()
   const sig = (await headers()).get('stripe-signature') as string
-  const supabase = createAdminClient()
+  let supabase: any
+  try {
+    supabase = requireAdminClient()
+  } catch (e: any) {
+    if (e.message === 'SERVICE_UNAVAILABLE') {
+      console.error('🚨 [STRIPE WEBHOOK] Admin Client unavailable (503). Retrying later...')
+      return NextResponse.json({ error: 'Service Unavailable' }, { status: 503 })
+    }
+    throw e
+  }
 
   let event: Stripe.Event
 

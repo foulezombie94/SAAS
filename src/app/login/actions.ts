@@ -68,13 +68,13 @@ export async function login(prevState: any, formData: FormData) {
 
   // 🚀 HARDENED SECURITY: Record fingerprint in app_metadata (Tamper-proof)
   const { headers } = await import('next/headers')
-  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const { requireAdminClient } = await import('@/lib/supabase/admin')
   const headerStore = await headers()
   const ip = headerStore.get('x-forwarded-for') || 'unknown'
   const ua = headerStore.get('user-agent') || 'unknown'
 
   try {
-    const supabaseAdmin = createAdminClient()
+    const supabaseAdmin = requireAdminClient()
     await supabaseAdmin.auth.admin.updateUserById(user.id, {
       app_metadata: { 
         last_login_ip: ip,
@@ -82,8 +82,12 @@ export async function login(prevState: any, formData: FormData) {
         last_login_at: new Date().toISOString()
       }
     })
-  } catch (e) {
-    console.error('⚠️ Admin metadata update failed (likely missing service key):', e)
+  } catch (e: any) {
+    if (e.message === 'SERVICE_UNAVAILABLE') {
+      console.warn('⚠️ [LOGIN] Service Admin indisponible. La synchronisation des métadonnées est ignorée.')
+    } else {
+      console.error('⚠️ [LOGIN] Erreur inattendue lors de la mise à jour des métadonnées:', e.message)
+    }
     // Non-blocking: Login continues
   }
 
