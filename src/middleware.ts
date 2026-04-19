@@ -11,9 +11,9 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-nonce', nonce)
 
   // 3. SECURITY REPUTATION CHECK (Anti-Bypass: IP + Cookie)
-  // 🛡️ Type fix: Access IP via headers first, then try the .ip property with cast
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
-             request.headers.get('x-real-ip') || 
+  // 🛡️ PARANOIA FIX: Prioritize x-real-ip (unforgeable on Vercel) to prevent IP Spoofing
+  const ip = request.headers.get('x-real-ip') || 
+             request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
              (request as any).ip || 
              '127.0.0.1'
   const secToken = request.cookies.get('af_sec_rep')?.value

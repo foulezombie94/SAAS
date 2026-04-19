@@ -2,8 +2,15 @@ import { cookies, headers } from 'next/headers'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { Redis } from '@upstash/redis'
 
-// 🛡️ SECURITY HARDENING: Use a dedicated secret, avoid falling back to crown jewels (Supabase Key)
-const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET || 'artisan-flow-def-sec-7721'
+// 🛡️ SECURITY PARANOIA: Prevent execution in production without a dedicated secret.
+// Using a fallback only in development.
+const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET
+
+if (!SECURITY_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('🚨 CRITICAL: SECURITY_SIGN_SECRET is missing! Production deployment halted for safety.')
+}
+
+const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
 
 const redis = Redis.fromEnv()
 
@@ -19,11 +26,21 @@ interface SecurityState {
 const COOKIE_NAME = 'af_sec_rep'
 
 /**
+ * Robust IP retrieval to prevent Spoofing
+ * 🛡️ Priority 1: x-real-ip (Injected by Vercel/Trusted Proxies)
+ * 🛡️ Priority 2: x-forwarded-for (Only the first entry)
+ */
+async function getSafeIp(): Promise<string> {
+  const h = await headers()
+  return h.get('x-real-ip') || h.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1'
+}
+
+/**
  * Validates and signs a security state to prevent client-side tampering
  */
 function signState(state: SecurityState): string {
   const data = JSON.stringify(state)
-  const hmac = createHmac('sha256', SECURITY_SECRET)
+  const hmac = createHmac('sha256', FINAL_SECRET)
   const signature = hmac.update(data).digest('hex')
   return `${Buffer.from(data).toString('base64')}.${signature}`
 }
@@ -37,7 +54,7 @@ function verifyState(token: string): SecurityState | null {
     if (!dataB64 || !signature) return null
 
     const data = Buffer.from(dataB64, 'base64').toString()
-    const hmac = createHmac('sha256', SECURITY_SECRET)
+    const hmac = createHmac('sha256', FINAL_SECRET)
     const expectedSignature = hmac.update(data).digest('hex')
 
     // 🛡️ SECURITY FIX: Timing-safe comparison
@@ -62,8 +79,8 @@ export async function getSecurityReputation(): Promise<SecurityState> {
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
 
-  // 1. Check IP-based block (Anti-Bypass)
-  const ip = (await headers()).get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  // 1. Check IP-based block (Anti-Bypass + Anti-Spoofing)
+  const ip = await getSafeIp()
   const ipBlocked = await redis.get(`blocked:ip:${ip}`)
   
   if (ipBlocked) {
@@ -90,7 +107,7 @@ export async function getSecurityReputation(): Promise<SecurityState> {
 export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
   const state = await getSecurityReputation()
   const cookieStore = await cookies()
-  const ip = (await headers()).get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  const ip = await getSafeIp()
 
   let newState: SecurityState = { ...state }
   const expiry = Date.now() + 72 * 60 * 60 * 1000 // 72 Hours
@@ -119,7 +136,7 @@ export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
 
 export async function resetSecurityReputation() {
   const cookieStore = await cookies()
-  const ip = (await headers()).get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  const ip = await getSafeIp()
   
   cookieStore.delete(COOKIE_NAME)
   await redis.del(`blocked:ip:${ip}`)
