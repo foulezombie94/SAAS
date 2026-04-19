@@ -1,9 +1,7 @@
 import { cookies, headers } from 'next/headers'
-import { createHmac, timingSafeEqual } from 'crypto'
 import { Redis } from '@upstash/redis'
 
-// 🛡️ SECURITY PARANOIA: Prevent execution in production without a dedicated secret.
-// Using a fallback only in development.
+// 🛡️ SECURITY PARANOIA: Same strict secret requirement
 const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET
 
 if (!SECURITY_SECRET && process.env.NODE_ENV === 'production') {
@@ -11,7 +9,6 @@ if (!SECURITY_SECRET && process.env.NODE_ENV === 'production') {
 }
 
 const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
-
 const redis = Redis.fromEnv()
 
 export type SecurityStatus = 'TRUSTED' | 'SUSPICIOUS' | 'BLOCKED'
@@ -25,10 +22,25 @@ interface SecurityState {
 
 const COOKIE_NAME = 'af_sec_rep'
 
+// --- 🛠️ WEB CRYPTO UTILITIES ---
+
+const encoder = new TextEncoder()
+
 /**
- * Robust IP retrieval to prevent Spoofing
- * 🛡️ Priority 1: x-real-ip (Injected by Vercel/Trusted Proxies)
- * 🛡️ Priority 2: x-forwarded-for (Only the first entry)
+ * Imports the secret key for HMAC
+ */
+async function getCryptoKey() {
+  return crypto.subtle.importKey(
+    'raw',
+    encoder.encode(FINAL_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify']
+  )
+}
+
+/**
+ * Robust IP retrieval to prevent Spoofing (Edge Compatible)
  */
 async function getSafeIp(): Promise<string> {
   const h = await headers()
@@ -38,30 +50,36 @@ async function getSafeIp(): Promise<string> {
 /**
  * Validates and signs a security state to prevent client-side tampering
  */
-function signState(state: SecurityState): string {
+async function signState(state: SecurityState): Promise<string> {
   const data = JSON.stringify(state)
-  const hmac = createHmac('sha256', FINAL_SECRET)
-  const signature = hmac.update(data).digest('hex')
-  return `${Buffer.from(data).toString('base64')}.${signature}`
+  const key = await getCryptoKey()
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data))
+  
+  // Convert signature to hex
+  const sigHex = Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+    
+  return `${btoa(data)}.${sigHex}`
 }
 
 /**
- * Verifies the signature using timingSafeEqual to prevent Timing Attacks
+ * Verifies the signature using Web Crypto's native timing-safe verification
  */
-function verifyState(token: string): SecurityState | null {
+async function verifyState(token: string): Promise<SecurityState | null> {
   try {
     const [dataB64, signature] = token.split('.')
     if (!dataB64 || !signature) return null
 
-    const data = Buffer.from(dataB64, 'base64').toString()
-    const hmac = createHmac('sha256', FINAL_SECRET)
-    const expectedSignature = hmac.update(data).digest('hex')
+    const data = atob(dataB64)
+    const key = await getCryptoKey()
+    
+    // Convert hex signature back to Uint8Array
+    const sigArray = new Uint8Array(signature.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+    
+    const isValid = await crypto.subtle.verify('HMAC', key, sigArray, encoder.encode(data))
 
-    // 🛡️ SECURITY FIX: Timing-safe comparison
-    const sigBuf = Buffer.from(signature, 'hex')
-    const expBuf = Buffer.from(expectedSignature, 'hex')
-
-    if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+    if (!isValid) {
       console.warn('🚨 Invalid signature detected!')
       return null
     }
@@ -79,7 +97,7 @@ export async function getSecurityReputation(): Promise<SecurityState> {
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
 
-  // 1. Check IP-based block (Anti-Bypass + Anti-Spoofing)
+  // 1. Check IP-based block
   const ip = await getSafeIp()
   const ipBlocked = await redis.get(`blocked:ip:${ip}`)
   
@@ -89,7 +107,7 @@ export async function getSecurityReputation(): Promise<SecurityState> {
 
   // 2. Check Cookie-based block
   if (token) {
-    const state = verifyState(token)
+    const state = await verifyState(token)
     if (state) {
       if (state.status === 'BLOCKED' && state.expiry && Date.now() > state.expiry) {
         return { status: 'TRUSTED', attempts: 0, lastAttempt: Date.now() }
@@ -102,7 +120,7 @@ export async function getSecurityReputation(): Promise<SecurityState> {
 }
 
 /**
- * Updates reputation and PERSISTS block to IP if necessary (Anti-Bypass)
+ * Updates reputation and PERSISTS block to IP if necessary
  */
 export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
   const state = await getSecurityReputation()
@@ -115,7 +133,6 @@ export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
   if (event === 'BOT' || (event === 'FAIL' && newState.attempts >= 9)) {
     newState.status = 'BLOCKED'
     newState.expiry = expiry
-    // 🛡️ ARCHITECTURE FIX: Persist block to IP in Redis to prevent cookie clearing bypass
     await redis.set(`blocked:ip:${ip}`, expiry, { px: 72 * 60 * 60 * 1000 })
   } else if (event === 'FAIL') {
     newState.attempts++
@@ -123,9 +140,10 @@ export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
     if (newState.attempts >= 5) newState.status = 'SUSPICIOUS'
   }
 
+  const signed = await signState(newState)
   const isProd = process.env.NODE_ENV === 'production'
 
-  cookieStore.set(COOKIE_NAME, signState(newState), {
+  cookieStore.set(COOKIE_NAME, signed, {
     httpOnly: true,
     secure: isProd,
     sameSite: 'lax',

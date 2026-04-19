@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 import { Redis } from '@upstash/redis'
-import { createHmac, timingSafeEqual } from 'crypto'
 
 // 🛡️ SECURITY PARANOIA: Same secret logic as security.ts
 const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET
@@ -9,22 +8,32 @@ const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
 
 // 🚀 PERFORMANCE: Static Redis instance
 const redis = Redis.fromEnv()
+const encoder = new TextEncoder()
 
 /**
- * 🔐 Validates HMAC signature for Edge Runtime
+ * 🔐 Validates HMAC signature using standard Web Crypto API (Edge Compatible)
  */
-function isValidSignature(token: string): boolean {
+async function isValidSignature(token: string): Promise<boolean> {
   try {
     const [dataB64, signature] = token.split('.')
     if (!dataB64 || !signature) return false
 
     const data = atob(dataB64)
-    const expectedSignature = createHmac('sha256', FINAL_SECRET).update(data).digest('hex')
+    
+    // Import Key
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(FINAL_SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    )
 
-    const sigBuf = Buffer.from(signature, 'hex')
-    const expBuf = Buffer.from(expectedSignature, 'hex')
-
-    return sigBuf.length === expBuf.length && timingSafeEqual(sigBuf, expBuf)
+    // Convert hex signature back to Uint8Array
+    const sigArray = new Uint8Array(signature.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+    
+    // Verify using native Web Crypto (Timing-safe by default)
+    return await crypto.subtle.verify('HMAC', key, sigArray, encoder.encode(data))
   } catch {
     return false
   }
@@ -58,7 +67,7 @@ export async function middleware(request: NextRequest) {
       }
 
       // 🛡️ Priority 2 - Session Cookie Reputation (Now with HMAC Validation!)
-      if (secToken && isValidSignature(secToken)) {
+      if (secToken && await isValidSignature(secToken)) {
         const dataB64 = secToken.split('.')[0]
         const data = JSON.parse(atob(dataB64))
         if (data.status === 'BLOCKED' && (!data.expiry || Date.now() < data.expiry)) {
