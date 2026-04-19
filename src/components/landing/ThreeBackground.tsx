@@ -1,129 +1,126 @@
 'use client'
 
 import React, { useRef, useMemo } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { 
-  Float, 
   MeshTransmissionMaterial, 
-  PerspectiveCamera,
   Environment,
   Sparkles,
-  ContactShadows
+  Float,
+  PerspectiveCamera,
+  RoundedBox
 } from '@react-three/drei'
 import * as THREE from 'three'
-import { useTransform, useSpring, motion } from 'framer-motion'
+import { useTransform } from 'framer-motion'
 
-// Dimension Profiles: [Position 0 (Hero), 0.33 (Features), 0.66 (Process), 1.0 (Pricing)]
-const DIMENSIONS = {
-  colors: ['#002878', '#ef9900', '#6366f1', '#0f172a'], // Blue, Amber, Indigo, Dark
-  distortion: [0.3, 0.8, 0.2, 0.5],
-  ior: [1.2, 1.5, 1.1, 1.4],
-  thickness: [0.5, 2, 0.2, 1],
-}
+function SceneController({ scrollY }: { scrollY: any }) {
+  // MainLabs-style Camera Movement: Deep Dolly Zoom
+  // Camera moves forward as we scroll
+  const cameraZ = useTransform(scrollY, [0, 1], [10, -5])
+  const cameraRotationX = useTransform(scrollY, [0, 1], [0, -0.3])
+  const fov = useTransform(scrollY, [0, 0.5, 1], [45, 55, 35])
 
-function SceneContent({ scrollY }: { scrollY: any }) {
-  // Map scroll to global dimension parameters
-  const color1 = useTransform(scrollY, [0, 0.33, 0.66, 1], ['#002878', '#ef9900', '#ffffff', '#002878'])
-  const color2 = useTransform(scrollY, [0, 0.33, 0.66, 1], ['#ef9900', '#ffffff', '#002878', '#ef9900'])
-  const distortion = useTransform(scrollY, [0, 0.25, 0.33, 0.66, 0.75, 1], [0.3, 1.5, 0.8, 0.2, 1.2, 0.5])
-  const cameraZ = useTransform(scrollY, [0, 0.5, 1], [8, 12, 6])
-  const fov = useTransform(scrollY, [0, 0.5, 1], [40, 50, 35])
-  const bgIntensity = useTransform(scrollY, [0, 0.5, 1], [0.5, 1.5, 0.2])
-
-  const shapes = useMemo(() => [
-    { shape: 'torus', baseColor: '#002878', position: [4, 2, -2], rotation: [0.5, 0.5, 0], speed: 1.2 },
-    { shape: 'icosahedron', baseColor: '#ef9900', position: [-5, -1, -3], rotation: [0, 1, 0.5], speed: 0.8 },
-    { shape: 'dodecahedron', baseColor: '#002878', position: [2, -4, -1], rotation: [1, 0.2, 0], speed: 1.5 },
-    { shape: 'torus', baseColor: '#ffffff', position: [-3, 4, -4], rotation: [0.2, 0, 1], speed: 1 },
-  ], [])
-
-  return (
-    <>
-      <PerspectiveCamera makeDefault position={[0, 0, cameraZ.get()]} fov={fov.get()} />
-      <ambientLight intensity={bgIntensity.get()} />
-      <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} />
-      <pointLight position={[-10, -10, -10]} intensity={1} color={color1.get()} />
-      
-      {shapes.map((s, i) => (
-        <FloatingShape 
-          key={i} 
-          {...s} 
-          scrollY={scrollY} 
-          globalDistortion={distortion}
-          colorShift={i % 2 === 0 ? color1 : color2}
-        />
-      ))}
-
-      <Sparkles count={100} scale={20} size={2} speed={0.5} opacity={bgIntensity.get() * 0.5} />
-      <ContactShadows position={[0, -5, 0]} opacity={0.4} scale={20} blur={2.5} far={4.5} />
-      <Environment preset="city" />
-    </>
-  )
-}
-
-function FloatingShape({ shape, position, rotation, speed, scrollY, globalDistortion, colorShift }: any) {
-  const mesh = useRef<THREE.Mesh>(null!)
-  const materialRef = useRef<any>(null!)
-  
   useFrame((state) => {
-    const time = state.clock.getElapsedTime()
-    const s = scrollY.get()
-    
-    // Smoothly apply scroll-based transformations
-    mesh.current.rotation.x = rotation[0] + time * speed * 0.1 + s * 2
-    mesh.current.rotation.y = rotation[1] + time * speed * 0.15 + s * 3
-    
-    // Drift effect
-    mesh.current.position.y = position[1] + Math.sin(time + position[0]) * 0.5 - s * 10
-    mesh.current.position.x = position[0] + Math.cos(time + position[1]) * 0.2
-    
-    // Update material properties dynamically from Scroll progress
-    if (materialRef.current) {
-      materialRef.current.distortion = globalDistortion.get()
-      materialRef.current.color.lerp(new THREE.Color(colorShift.get()), 0.05)
+    state.camera.position.z = THREE.MathUtils.lerp(state.camera.position.z, cameraZ.get(), 0.05)
+    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, cameraRotationX.get(), 0.05)
+    if (state.camera instanceof THREE.PerspectiveCamera) {
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, fov.get(), 0.05)
+      state.camera.updateProjectionMatrix()
     }
   })
 
+  return null
+}
+
+function FloatingShape({ scrollY, position, color, delay = 0, scale = 1 }: any) {
+  const meshRef = useRef<THREE.Mesh>(null!)
+  
+  // High-end MainLabs blur effects: chromatic aberration and thickness shifts
+  const thickness = useTransform(scrollY, [0, 0.4, 0.6, 1], [1, 5, 5, 1])
+  const chromaticAberration = useTransform(scrollY, [0, 0.4, 0.6, 1], [0.05, 0.4, 0.4, 0.05])
+  const transmission = useTransform(scrollY, [0, 0.5, 1], [1, 0.8, 1])
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime() + delay
+    const s = scrollY.get()
+    
+    // Smooth floating and reaction to scroll
+    meshRef.current.rotation.x = Math.sin(time * 0.2) * 0.2 + s * 0.5
+    meshRef.current.rotation.y = Math.cos(time * 0.3) * 0.2 + s * 0.8
+    
+    // FLY GLIDE: Objects move past the camera slightly on scroll
+    meshRef.current.position.z = position[2] + s * 15
+    meshRef.current.position.y = position[1] + Math.sin(time * 0.5) * 0.2
+  })
+
   return (
-    <Float speed={2} rotationIntensity={1} floatIntensity={1}>
-      <mesh ref={mesh} position={position} rotation={rotation}>
-        {shape === 'torus' && <torusKnotGeometry args={[1, 0.3, 128, 32]} />}
-        {shape === 'icosahedron' && <icosahedronGeometry args={[1.2, 0]} />}
-        {shape === 'dodecahedron' && <dodecahedronGeometry args={[1, 0]} />}
-        
+    <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+      <RoundedBox 
+        ref={meshRef} 
+        args={[2, 4, 0.1]} 
+        radius={0.1} 
+        smoothness={4}
+        position={position} 
+        scale={scale}
+      >
         <MeshTransmissionMaterial
-          ref={materialRef}
           backside
-          samples={4}
-          thickness={1}
-          chromaticAberration={0.1}
-          anisotropy={0.3}
+          samples={16} // High quality blur
+          thickness={thickness.get()}
+          roughness={0.05}
+          transmission={transmission.get()}
+          chromaticAberration={chromaticAberration.get()}
+          anisotropy={1.5}
           distortion={0.3}
           distortionScale={0.5}
-          temporalDistortion={0.5}
-          ior={1.2}
-          roughness={0.1}
-          transmission={1}
+          temporalDistortion={0.1}
+          color={color}
         />
-      </mesh>
+      </RoundedBox>
     </Float>
   )
 }
 
 export default function ThreeBackground({ scrollY }: { scrollY: any }) {
+  const shapes = useMemo(() => [
+    { position: [0, 0, 0] as [number, number, number], color: "#ffffff", scale: 1 },
+    { position: [-6, 3, -4] as [number, number, number], color: "#002878", scale: 0.8, delay: 1 },
+    { position: [6, -2, -2] as [number, number, number], color: "#ef9900", scale: 0.7, delay: 2 },
+    { position: [-4, -4, -6] as [number, number, number], color: "#cbd5e1", scale: 1.2, delay: 3 },
+    { position: [5, 5, -8] as [number, number, number], color: "#002878", scale: 0.9, delay: 4 },
+  ], [])
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-[-1]">
-      {/* Background layer color shift using Framer Motion */}
-      <motion.div 
-        style={{
-          backgroundColor: useTransform(scrollY, [0, 0.5, 1], ['rgba(255,255,255,1)', 'rgba(0,40,120,0.05)', 'rgba(255,255,255,1)'])
-        }}
-        className="absolute inset-0 transition-colors duration-1000"
-      />
-      
-      <Canvas dpr={[1, 1.5]} gl={{ antialias: false }}>
-        <SceneContent scrollY={scrollY} />
+    <div className="fixed inset-0 pointer-events-none z-[-1] bg-white">
+      <Canvas shadows dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
+        <PerspectiveCamera makeDefault position={[0, 0, 10]} fov={45} />
+        <SceneController scrollY={scrollY} />
+        
+        <color attach="background" args={['#ffffff']} />
+        <fog attach="fog" args={['#ffffff', 5, 20]} />
+        
+        <ambientLight intensity={0.5} />
+        <spotLight position={[15, 20, 5]} angle={0.2} penumbra={1} intensity={2} castShadow />
+        <pointLight position={[-10, -5, -5]} intensity={1} color="#002878" />
+
+        {shapes.map((s, i) => (
+          <FloatingShape key={i} scrollY={scrollY} {...s} />
+        ))}
+
+        <Sparkles 
+          count={250} 
+          scale={20} 
+          size={2.5} 
+          speed={0.6} 
+          opacity={0.4} 
+          color="#002878" 
+        />
+        
+        <Environment preset="city" />
       </Canvas>
+      
+      {/* Noise overlay for cinematic texture */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://res.cloudinary.com/dvwvkt76a/image/upload/v1713532467/noise_tvxq9j.png')] mix-blend-overlay" />
     </div>
   )
 }
