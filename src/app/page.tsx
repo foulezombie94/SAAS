@@ -59,21 +59,19 @@ function ScrollyScene({
     offset: ["start start", "end end"]
   });
 
-  // IMMERSIVE TUNNEL LOGIC:
-  // Arrival: Flying from behind viewer (Huge Scale -> 1.0)
-  // Departure: Sinking into the screen (1.0 -> Small)
+  // FORWARD TUNNEL LOGIC: Small (Depth) -> Fit (Focus) -> Huge (Viewer)
   const arrivalOpacityStart = isFirst ? 1 : 0;
-  const arrivalScaleStart = isFirst ? 1 : 4.0; // Start huge for arrival feel
-  const arrivalBlurStart = isFirst ? 0 : 40;
+  const arrivalScaleStart = isFirst ? 1 : 0.2; // Start small in the distance
+  const arrivalBlurStart = isFirst ? 0 : 20;
 
   const opacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalOpacityStart, 1, 1, 0]);
   
-  // The 'Inward' path: 4.0 (Viewer) -> 1.0 (Screen) -> 0.8 (Drift) -> 0.1 (Void)
-  const scale = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalScaleStart, 1.0, 0.9, 0.1]);
+  // The 'Forward' path: 0.2 (Depth) -> 1.0 (Screen) -> 1.1 (Focus) -> 20.0 (Viewer head)
+  const scale = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalScaleStart, 1.0, 1.1, 20.0]);
   
-  const blur = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalBlurStart, 0, 0, 30]);
+  const blur = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalBlurStart, 0, 0, 40]);
   
-  // No vertical 'slide', just a subtle drift back
+  // STRICTLY ZERO Y-OFFSET: Eliminate any 'descending' feel
   const y = useTransform(scrollYProgress, [0, 1], [0, 0]);
 
   return (
