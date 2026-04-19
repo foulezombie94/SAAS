@@ -66,10 +66,10 @@ function ScrollyScene({
   const arrivalBlurStart = isFirst ? 0 : 30;
   const arrivalYStart = isFirst ? 0 : 100;
 
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [arrivalOpacityStart, 1, 1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [arrivalScaleStart, 1, 1, 2.5]);
-  const blur = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [arrivalBlurStart, 0, 0, 40]);
-  const y = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [arrivalYStart, 0, 0, -50]);
+  const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalOpacityStart, 1, 1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalScaleStart, 1, 1, 2.5]);
+  const blur = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalBlurStart, 0, 0, 40]);
+  const y = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalYStart, 0, 0, -50]);
 
   return (
     <section ref={containerRef} style={{ height }} className="relative w-full">
@@ -175,7 +175,7 @@ export default function Home() {
           </ScrollyScene>
 
           {/* SCENE 2: FEATURES GRID */}
-          <ScrollyScene height="300vh">
+          <ScrollyScene height="200vh">
             <div className="max-w-7xl mx-auto w-full">
               <div className="text-center mb-16">
                 <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-[#002878] mb-6 uppercase italic">L'EXCELLENCE <span className="text-[#ef9900]">OPÉRATIONNELLE</span></h2>
@@ -204,7 +204,7 @@ export default function Home() {
           </ScrollyScene>
 
           {/* SCENE 3: DASHBOARD PREVIEW */}
-          <ScrollyScene height="250vh">
+          <ScrollyScene height="200vh">
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center w-full">
               <div className="order-2 lg:order-1">
                 <span className="text-[10px] font-black tracking-[0.4em] text-[#ef9900] uppercase mb-6 block">PILOTAGE CENTRALISÉ</span>
@@ -228,22 +228,63 @@ export default function Home() {
           </ScrollyScene>
 
           {/* SCENE 4: PRICING */}
-          <ScrollyScene height="250vh">
+          <ScrollyScene height="200vh">
             <div className="max-w-7xl mx-auto w-full">
               <div className="text-center mb-16">
-                <h2 className="text-5xl font-black tracking-tighter text-[#002878] mb-6 uppercase italic underline decoration-[#ef9900] underline-offset-8">TARIFICATION <span className="text-[#ef9900]">FIXE.</span></h2>
+                <h2 className="text-5xl font-black tracking-tighter text-[#002878] mb-8 uppercase italic underline decoration-[#ef9900] underline-offset-8">TARIFICATION <span className="text-[#ef9900]">FIXE.</span></h2>
+                
+                {/* PRICING TOGGLE */}
+                <div className="flex items-center justify-center gap-6 mt-12">
+                  <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isYearly ? 'text-[#002878]' : 'text-slate-400'}`}>Mensuel</span>
+                  <button 
+                    onClick={() => setIsYearly(!isYearly)}
+                    className="relative w-16 h-8 bg-[#002878]/5 rounded-full p-1 border border-[#002878]/10"
+                  >
+                    <motion.div 
+                      animate={{ x: isYearly ? 32 : 0 }}
+                      className="w-6 h-6 bg-[#ef9900] rounded-full shadow-lg"
+                    />
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isYearly ? 'text-[#002878]' : 'text-slate-400'}`}>Annuel</span>
+                    <span className="bg-[#ef9900] text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">-20%</span>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-                <div className="bg-white/50 backdrop-blur-xl rounded-[3rem] p-12 shadow-diffused border border-slate-100">
-                  <h3 className="text-sm font-black text-slate-400 mb-2 uppercase tracking-widest">STARTER</h3>
-                  <div className="text-5xl font-black text-[#002878] mb-8">0€</div>
+                <div className="bg-white/50 backdrop-blur-xl rounded-[3rem] p-12 shadow-diffused border border-slate-100 flex flex-col justify-between h-full">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-400 mb-2 uppercase tracking-widest">STARTER</h3>
+                    <div className="text-5xl font-black text-[#002878] mb-8">0€</div>
+                    <ul className="space-y-3 mb-12 list-none p-0">
+                      {["10 Devis / mois", "Factures Illimitées", "Support Email"].map((f, i) => (
+                        <li key={i} className="text-[10px] font-bold text-slate-500 uppercase tracking-tight flex items-center gap-2">
+                           <CheckCircle2 size={12} className="text-[#002878]" /> {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   <button onClick={handleFreeAction} className="w-full border-2 border-[#002878]/10 text-[#002878] py-5 rounded-2xl font-black uppercase text-[10px]">C'est parti</button>
                 </div>
-                <div className="bg-white rounded-[3rem] p-12 shadow-2xl border-2 border-[#002878] ring-8 ring-[#002878]/5">
-                  <h3 className="text-sm font-black text-[#002878] mb-2 uppercase tracking-widest">ARTISAN PRO</h3>
-                  <div className="text-5xl font-black text-[#002878] mb-8">22€ <span className="text-sm font-bold text-slate-400">/mois</span></div>
-                  <button onClick={handleProAction} className="w-full bg-[#ef9900] text-white py-6 rounded-2xl font-black uppercase text-[10px] shadow-[0_10px_30px_rgba(239,153,0,0.3)]">S'abonner maintenant</button>
+
+                <div className="bg-white rounded-[3rem] p-12 shadow-2xl border-2 border-[#002878] ring-8 ring-[#002878]/5 relative overflow-hidden flex flex-col justify-between h-full">
+                  <div className="absolute top-0 right-0 bg-[#002878] text-white text-[8px] font-black px-6 py-2 rotate-45 translate-x-3 translate-y-1">POPULAIRE</div>
+                  <div>
+                    <h3 className="text-sm font-black text-[#002878] mb-2 uppercase tracking-widest">ARTISAN PRO</h3>
+                    <div className="text-5xl font-black text-[#002878] mb-8">
+                      {isYearly ? "18€" : "22€"} 
+                      <span className="text-sm font-bold text-slate-400 italic"> /mois</span>
+                    </div>
+                    <ul className="space-y-3 mb-12 list-none p-0">
+                      {["Devis Illimités", "Acomptes CB", "Agenda Partagé", "Exports Comptables"].map((f, i) => (
+                        <li key={i} className="text-[10px] font-bold text-[#002878] uppercase tracking-tight flex items-center gap-2">
+                           <CheckCircle2 size={12} className="text-[#ef9900]" /> {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <button onClick={handleProAction} className="w-full bg-[#ef9900] text-white py-6 rounded-2xl font-black uppercase text-[10px] shadow-[0_10px_30px_rgba(239,153,0,0.3)] hover:scale-105 transition-transform">S'abonner maintenant</button>
                 </div>
               </div>
             </div>
