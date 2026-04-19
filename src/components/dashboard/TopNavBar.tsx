@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut, Check } from 'lucide-react'
+import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut, Check, Sun, Moon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'

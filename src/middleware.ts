@@ -10,21 +10,34 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-nonce', nonce)
 
-  // 3. SECURITY REPUTATION CHECK (Block malicious actors early)
+  // 3. SECURITY REPUTATION CHECK (Anti-Bypass: IP + Cookie)
+  const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
   const secToken = request.cookies.get('af_sec_rep')?.value
+  
   // Allow the /blocked page itself and static assets to avoid loops
-  if (secToken && !request.nextUrl.pathname.startsWith('/blocked') && !request.nextUrl.pathname.startsWith('/_next')) {
+  if (!request.nextUrl.pathname.startsWith('/blocked') && !request.nextUrl.pathname.startsWith('/_next')) {
     try {
-      // Small inline check for BLOCKED status in the signed cookie (without heavy imports)
-      const dataB64 = secToken.split('.')[0]
-      if (dataB64) {
-        const data = JSON.parse(atob(dataB64))
-        if (data.status === 'BLOCKED' && (!data.expiry || Date.now() < data.expiry)) {
-          return NextResponse.redirect(new URL('/blocked', request.url))
+      // 🛡️ ARCHITECTURE FIX: Priority 1 - Centralized IP Block (Vercel Edge / Redis)
+      const { Redis } = await import('@upstash/redis')
+      const redis = Redis.fromEnv()
+      const ipBlocked = await redis.get(`blocked:ip:${ip}`)
+      
+      if (ipBlocked) {
+        return NextResponse.redirect(new URL('/blocked', request.url))
+      }
+
+      // 🛡️ Priority 2 - Session Cookie Reputation
+      if (secToken) {
+        const dataB64 = secToken.split('.')[0]
+        if (dataB64) {
+          const data = JSON.parse(atob(dataB64))
+          if (data.status === 'BLOCKED' && (!data.expiry || Date.now() < data.expiry)) {
+            return NextResponse.redirect(new URL('/blocked', request.url))
+          }
         }
       }
     } catch (e) {
-      // Ignore parsing errors for security cookie
+      // Ignore parsing/network errors for security check to avoid killing the site
     }
   }
 

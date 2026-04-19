@@ -1,8 +1,11 @@
-import { cookies } from 'next/headers'
-import { createHash, createHmac } from 'crypto'
+import { cookies, headers } from 'next/headers'
+import { createHmac, timingSafeEqual } from 'crypto'
+import { Redis } from '@upstash/redis'
 
-// Use a fallback secret if process.env.NEXTAUTH_SECRET or similar is missing
-const SECURITY_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || 'artisan-flow-local-security-secret-2024'
+// 🛡️ SECURITY HARDENING: Use a dedicated secret, avoid falling back to crown jewels (Supabase Key)
+const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET || 'artisan-flow-def-sec-7721'
+
+const redis = Redis.fromEnv()
 
 export type SecurityStatus = 'TRUSTED' | 'SUSPICIOUS' | 'BLOCKED'
 
@@ -20,12 +23,13 @@ const COOKIE_NAME = 'af_sec_rep'
  */
 function signState(state: SecurityState): string {
   const data = JSON.stringify(state)
-  const signature = createHmac('sha256', SECURITY_SECRET).update(data).digest('hex')
+  const hmac = createHmac('sha256', SECURITY_SECRET)
+  const signature = hmac.update(data).digest('hex')
   return `${Buffer.from(data).toString('base64')}.${signature}`
 }
 
 /**
- * Verifies the signature of a received security cookie
+ * Verifies the signature using timingSafeEqual to prevent Timing Attacks
  */
 function verifyState(token: string): SecurityState | null {
   try {
@@ -33,9 +37,18 @@ function verifyState(token: string): SecurityState | null {
     if (!dataB64 || !signature) return null
 
     const data = Buffer.from(dataB64, 'base64').toString()
-    const expectedSignature = createHmac('sha256', SECURITY_SECRET).update(data).digest('hex')
+    const hmac = createHmac('sha256', SECURITY_SECRET)
+    const expectedSignature = hmac.update(data).digest('hex')
 
-    if (signature !== expectedSignature) return null
+    // 🛡️ SECURITY FIX: Timing-safe comparison
+    const sigBuf = Buffer.from(signature, 'hex')
+    const expBuf = Buffer.from(expectedSignature, 'hex')
+
+    if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+      console.warn('🚨 Invalid signature detected!')
+      return null
+    }
+
     return JSON.parse(data) as SecurityState
   } catch {
     return null
@@ -43,16 +56,24 @@ function verifyState(token: string): SecurityState | null {
 }
 
 /**
- * Gets the current security reputation of the session
+ * Gets the current security reputation (Considers both Cookie and IP)
  */
 export async function getSecurityReputation(): Promise<SecurityState> {
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
 
+  // 1. Check IP-based block (Anti-Bypass)
+  const ip = (await headers()).get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  const ipBlocked = await redis.get(`blocked:ip:${ip}`)
+  
+  if (ipBlocked) {
+    return { status: 'BLOCKED', attempts: 10, lastAttempt: Date.now(), expiry: Number(ipBlocked) }
+  }
+
+  // 2. Check Cookie-based block
   if (token) {
     const state = verifyState(token)
     if (state) {
-      // Check if BLOCKED expiry has passed
       if (state.status === 'BLOCKED' && state.expiry && Date.now() > state.expiry) {
         return { status: 'TRUSTED', attempts: 0, lastAttempt: Date.now() }
       }
@@ -64,27 +85,25 @@ export async function getSecurityReputation(): Promise<SecurityState> {
 }
 
 /**
- * Updates the security reputation based on events (failed login, bot detected)
+ * Updates reputation and PERSISTS block to IP if necessary (Anti-Bypass)
  */
 export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
   const state = await getSecurityReputation()
   const cookieStore = await cookies()
+  const ip = (await headers()).get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
 
   let newState: SecurityState = { ...state }
+  const expiry = Date.now() + 72 * 60 * 60 * 1000 // 72 Hours
 
-  if (event === 'BOT') {
+  if (event === 'BOT' || (event === 'FAIL' && newState.attempts >= 9)) {
     newState.status = 'BLOCKED'
-    newState.expiry = Date.now() + 72 * 60 * 60 * 1000 // 72 Hours
+    newState.expiry = expiry
+    // 🛡️ ARCHITECTURE FIX: Persist block to IP in Redis to prevent cookie clearing bypass
+    await redis.set(`blocked:ip:${ip}`, expiry, { px: 72 * 60 * 60 * 1000 })
   } else if (event === 'FAIL') {
     newState.attempts++
     newState.lastAttempt = Date.now()
-
-    if (newState.attempts >= 10) {
-      newState.status = 'BLOCKED'
-      newState.expiry = Date.now() + 72 * 60 * 60 * 1000
-    } else if (newState.attempts >= 5) {
-      newState.status = 'SUSPICIOUS'
-    }
+    if (newState.attempts >= 5) newState.status = 'SUSPICIOUS'
   }
 
   cookieStore.set(COOKIE_NAME, signState(newState), {
@@ -92,16 +111,16 @@ export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
     secure: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 72 * 60 * 60, // 3 days
+    maxAge: 72 * 60 * 60,
   })
 
   return newState
 }
 
-/**
- * Resets reputation on successful login
- */
 export async function resetSecurityReputation() {
   const cookieStore = await cookies()
+  const ip = (await headers()).get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+  
   cookieStore.delete(COOKIE_NAME)
+  await redis.del(`blocked:ip:${ip}`)
 }
