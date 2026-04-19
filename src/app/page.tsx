@@ -41,12 +41,12 @@ import { SmoothScroll } from "@/components/landing/SmoothScroll";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 /**
- * ScrollyScene - The MainLabs-style Pinning Container
- * Pins content while scrubbing through a defined scroll distance.
+ * ScrollyScene - The MainLabs-style Pinning Container (Tunnel Focus)
+ * Elements fly FROM the viewer INTO the screen depth.
  */
 function ScrollyScene({ 
   children, 
-  height = "120vh", 
+  height = "150vh", 
   isFirst = false 
 }: { 
   children: React.ReactNode, 
@@ -59,18 +59,22 @@ function ScrollyScene({
     offset: ["start start", "end end"]
   });
 
-  // INITIAL STATE FIX: If it's the first section, it starts at 100% opacity/focus
-  // Otherwise, it arrives from 0.
+  // IMMERSIVE TUNNEL LOGIC:
+  // Arrival: Flying from behind viewer (Huge Scale -> 1.0)
+  // Departure: Sinking into the screen (1.0 -> Small)
   const arrivalOpacityStart = isFirst ? 1 : 0;
-  const arrivalScaleStart = isFirst ? 1 : 0.8;
-  const arrivalBlurStart = isFirst ? 0 : 30;
-  const arrivalYStart = isFirst ? 0 : 100;
+  const arrivalScaleStart = isFirst ? 1 : 4.0; // Start huge for arrival feel
+  const arrivalBlurStart = isFirst ? 0 : 40;
 
-  // NEW CONTINUOUS MOTION LOGIC: Something always moves
   const opacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalOpacityStart, 1, 1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalScaleStart, 1.0, 1.1, 2.8]);
-  const blur = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalBlurStart, 0, 0, 50]);
-  const y = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [arrivalYStart, 0, -40, -120]);
+  
+  // The 'Inward' path: 4.0 (Viewer) -> 1.0 (Screen) -> 0.8 (Drift) -> 0.1 (Void)
+  const scale = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalScaleStart, 1.0, 0.9, 0.1]);
+  
+  const blur = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [arrivalBlurStart, 0, 0, 30]);
+  
+  // No vertical 'slide', just a subtle drift back
+  const y = useTransform(scrollYProgress, [0, 1], [0, 0]);
 
   return (
     <section ref={containerRef} style={{ height }} className="relative w-full">
@@ -81,7 +85,6 @@ function ScrollyScene({
             scale,
             filter: useTransform(blur, (v) => `blur(${v}px)`),
             y,
-            // GPU Acceleration for blur
             willChange: "transform, opacity, filter",
             transform: "translateZ(0)"
           }}
@@ -146,15 +149,15 @@ export default function Home() {
         <Experience3D />
         <Navbar />
 
-        <main className="relative z-10 origin-center">
-          {/* SCENE 1: HERO - Now with isFirst=true for immediate visibility */}
-          <ScrollyScene height="200vh" isFirst={true}>
+        <main className="relative z-10 origin-center text-[#002878]">
+          {/* SCENE 1: HERO */}
+          <ScrollyScene height="140vh" isFirst={true}>
             <div className="flex flex-col items-center text-center max-w-7xl mx-auto">
-              <span className="inline-block px-4 py-1.5 bg-[#002878]/5 text-[#002878] text-[10px] font-black tracking-[0.4em] uppercase mb-12 rounded-full border border-[#002878]/10">
+              <span className="inline-block px-4 py-1.5 bg-[#002878]/5 text-[#002878] text-[10px] font-black tracking-[0.4em] uppercase mb-12 rounded-full border border-[#002878]/10  shadow-inner">
                 LA SOLUTION FRANÇAISE
               </span>
               
-              <h1 className="text-6xl md:text-[120px] font-black tracking-[-0.05em] text-[#002878] leading-[0.8] mb-16 uppercase italic drop-shadow-[0_20px_40px_rgba(0,40,120,0.1)]">
+              <h1 className="text-6xl md:text-[120px] font-black tracking-[-0.05em] leading-[0.8] mb-16 uppercase italic drop-shadow-[0_20px_40px_rgba(0,40,120,0.1)]">
                 DEVIS, FACTURES <br className="hidden md:block" />
                 <span className="text-[#ef9900] text-glow">& PAIEMENTS</span>
               </h1>
@@ -176,10 +179,10 @@ export default function Home() {
           </ScrollyScene>
 
           {/* SCENE 2: FEATURES GRID */}
-          <ScrollyScene height="200vh">
+          <ScrollyScene height="140vh">
             <div className="max-w-7xl mx-auto w-full">
               <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-[#002878] mb-6 uppercase italic">L'EXCELLENCE <span className="text-[#ef9900]">OPÉRATIONNELLE</span></h2>
+                <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 uppercase italic text-[#002878]">L'EXCELLENCE <span className="text-[#ef9900]">OPÉRATIONNELLE</span></h2>
                 <div className="h-2 w-24 bg-[#ef9900] mx-auto rounded-full"></div>
               </div>
 
@@ -205,11 +208,11 @@ export default function Home() {
           </ScrollyScene>
 
           {/* SCENE 3: DASHBOARD PREVIEW */}
-          <ScrollyScene height="200vh">
+          <ScrollyScene height="140vh">
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center w-full">
               <div className="order-2 lg:order-1">
                 <span className="text-[10px] font-black tracking-[0.4em] text-[#ef9900] uppercase mb-6 block">PILOTAGE CENTRALISÉ</span>
-                <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-[#002878] mb-8 leading-[0.85] uppercase italic">VOTRE CHANTIER <br/> <span className="text-slate-300">DANS LA POCHE.</span></h2>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-[0.85] uppercase italic">VOTRE CHANTIER <br/> <span className="text-slate-300">DANS LA POCHE.</span></h2>
                 <p className="text-lg text-slate-500 font-bold leading-relaxed mb-10 uppercase tracking-tight opacity-80">
                   Tout votre historique client, vos notes et vos photos sont synchronisés en temps réel.
                 </p>
@@ -229,10 +232,10 @@ export default function Home() {
           </ScrollyScene>
 
           {/* SCENE 4: PRICING */}
-          <ScrollyScene height="200vh">
+          <ScrollyScene height="140vh">
             <div className="max-w-7xl mx-auto w-full">
               <div className="text-center mb-16">
-                <h2 className="text-5xl font-black tracking-tighter text-[#002878] mb-8 uppercase italic underline decoration-[#ef9900] underline-offset-8">TARIFICATION <span className="text-[#ef9900]">FIXE.</span></h2>
+                <h2 className="text-5xl font-black tracking-tighter mb-8 uppercase italic underline decoration-[#ef9900] underline-offset-8">TARIFICATION <span className="text-[#ef9900]">FIXE.</span></h2>
                 
                 {/* PRICING TOGGLE */}
                 <div className="flex items-center justify-center gap-6 mt-12">
@@ -292,7 +295,7 @@ export default function Home() {
           </ScrollyScene>
 
           {/* SCENE 5: CTA FINAL */}
-          <ScrollyScene height="150vh">
+          <ScrollyScene height="120vh">
             <div className="text-center">
               <h2 className="text-6xl md:text-[140px] font-black tracking-tighter text-[#002878] mb-12 leading-[0.75] uppercase italic">REJOIGNEZ <br/> <span className="text-[#ef9900]">L'ÉLITE.</span></h2>
               <button onClick={handleFreeAction} className="bg-[#002878] text-white px-20 py-10 text-lg font-black rounded-full shadow-3xl uppercase tracking-[0.4em] hover:scale-105 transition-transform active:scale-95">COMMENCER</button>
