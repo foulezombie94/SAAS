@@ -44,22 +44,32 @@ import { motion, useScroll, useTransform } from "framer-motion";
  * ScrollyScene - The MainLabs-style Pinning Container
  * Pins content while scrubbing through a defined scroll distance.
  */
-function ScrollyScene({ children, height = "250vh" }: { children: React.ReactNode, height?: string }) {
+function ScrollyScene({ 
+  children, 
+  height = "250vh", 
+  isFirst = false 
+}: { 
+  children: React.ReactNode, 
+  height?: string,
+  isFirst?: boolean
+}) {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
   });
 
-  // Lifecycle of a MainLabs Section:
-  // 0.0 -> 0.3: Arrival (Fade In, Blur dissipates, Scale up to 1)
-  // 0.3 -> 0.7: Reading (Solid, Static, Focused)
-  // 0.7 -> 1.0: Departure (Scale UP massively, Blur increases, Fade out)
-  
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.8, 1, 1, 2.5]);
-  const blur = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [30, 0, 0, 40]);
-  const y = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [100, 0, 0, -50]);
+  // INITIAL STATE FIX: If it's the first section, it starts at 100% opacity/focus
+  // Otherwise, it arrives from 0.
+  const arrivalOpacityStart = isFirst ? 1 : 0;
+  const arrivalScaleStart = isFirst ? 1 : 0.8;
+  const arrivalBlurStart = isFirst ? 0 : 30;
+  const arrivalYStart = isFirst ? 0 : 100;
+
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [arrivalOpacityStart, 1, 1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [arrivalScaleStart, 1, 1, 2.5]);
+  const blur = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [arrivalBlurStart, 0, 0, 40]);
+  const y = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [arrivalYStart, 0, 0, -50]);
 
   return (
     <section ref={containerRef} style={{ height }} className="relative w-full">
@@ -69,9 +79,12 @@ function ScrollyScene({ children, height = "250vh" }: { children: React.ReactNod
             opacity,
             scale,
             filter: useTransform(blur, (v) => `blur(${v}px)`),
-            y
+            y,
+            // GPU Acceleration for blur
+            willChange: "transform, opacity, filter",
+            transform: "translateZ(0)"
           }}
-          className="w-full flex flex-col items-center justify-center px-6 will-change-transform"
+          className="w-full flex flex-col items-center justify-center px-6"
         >
           {children}
         </motion.div>
@@ -133,8 +146,8 @@ export default function Home() {
         <Navbar />
 
         <main className="relative z-10 origin-center">
-          {/* SCENE 1: HERO */}
-          <ScrollyScene height="200vh">
+          {/* SCENE 1: HERO - Now with isFirst=true for immediate visibility */}
+          <ScrollyScene height="200vh" isFirst={true}>
             <div className="flex flex-col items-center text-center max-w-7xl mx-auto">
               <span className="inline-block px-4 py-1.5 bg-[#002878]/5 text-[#002878] text-[10px] font-black tracking-[0.4em] uppercase mb-12 rounded-full border border-[#002878]/10">
                 LA SOLUTION FRANÇAISE

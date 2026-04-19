@@ -23,12 +23,14 @@ function SceneController({ scrollY }: { scrollY: any }) {
     state.camera.position.z = THREE.MathUtils.lerp(state.camera.position.z, cameraZ.get(), 0.05)
     state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, cameraRotationX.get(), 0.05)
     
-    // Dimension Shudder effect
-    const shudder = Math.sin(scrollY.get() * Math.PI * 10) * 0.02 * (Math.sin(scrollY.get() * Math.PI) > 0.9 ? 1 : 0)
-    state.camera.position.x = shudder
+    // Dimension Shudder effect - Reduced for better performance feel
+    if (scrollY.get() > 0.1) {
+      const shudderIntensity = Math.max(0, Math.sin(scrollY.get() * Math.PI * 10) > 0.95 ? 0.01 : 0)
+      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, (Math.random() - 0.5) * shudderIntensity, 0.1)
+    }
 
     if (state.camera instanceof THREE.PerspectiveCamera) {
-      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, fov.get(), 0.1)
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, fov.get(), 0.08)
       state.camera.updateProjectionMatrix()
     }
   })
@@ -39,16 +41,15 @@ function SceneController({ scrollY }: { scrollY: any }) {
 function FloatingShape({ scrollY, position, color, delay = 0, scale = 1 }: any) {
   const meshRef = useRef<THREE.Mesh>(null!)
   
-  // Transition logic: Thickness and Distortion spike during 'Dimension Jumps'
-  // We simulate jumps at 20%, 40%, 60%, 80% scroll
+  // High-performance mapping for thickness and distortion
   const thickness = useTransform(scrollY, 
     [0, 0.18, 0.22, 0.38, 0.42, 0.58, 0.62, 0.78, 0.82, 1], 
-    [2, 8, 2, 8, 2, 8, 2, 8, 2, 2]
+    [2, 6, 2, 6, 2, 6, 2, 6, 2, 2]
   )
   
   const distortion = useTransform(scrollY, 
     [0, 0.18, 0.22, 0.38, 0.42, 0.58, 0.62, 0.78, 0.82, 1], 
-    [0.2, 2.0, 0.2, 2.0, 0.2, 2.0, 0.2, 2.0, 0.2, 0.2]
+    [0.1, 1.2, 0.1, 1.2, 0.1, 1.2, 0.1, 1.2, 0.1, 0.1]
   )
 
   useFrame((state) => {
@@ -57,17 +58,15 @@ function FloatingShape({ scrollY, position, color, delay = 0, scale = 1 }: any) 
     
     if (!meshRef.current) return
 
-    // Float + Scroll-influenced rotation
-    meshRef.current.rotation.x = Math.sin(time * 0.15) * 0.1 + s * 4
-    meshRef.current.rotation.y = Math.cos(time * 0.2) * 0.1 + s * 6
+    meshRef.current.rotation.x = Math.sin(time * 0.1) * 0.1 + s * 3
+    meshRef.current.rotation.y = Math.cos(time * 0.15) * 0.1 + s * 4
     
-    // Objects fly past the camera faster during transitions
-    meshRef.current.position.z = position[2] + s * 50
-    meshRef.current.position.y = position[1] + Math.sin(time * 0.4) * 0.5
+    meshRef.current.position.z = position[2] + s * 45
+    meshRef.current.position.y = position[1] + Math.sin(time * 0.3) * 0.4
   })
 
   return (
-    <Float speed={1.2} rotationIntensity={0.3} floatIntensity={0.5}>
+    <Float speed={1} rotationIntensity={0.2} floatIntensity={0.4}>
       <RoundedBox 
         ref={meshRef} 
         args={[2, 4, 0.1]} 
@@ -78,15 +77,15 @@ function FloatingShape({ scrollY, position, color, delay = 0, scale = 1 }: any) 
       >
         <MeshTransmissionMaterial
           backside
-          samples={16}
+          samples={8} // PERFORMANCE: Reduced from 16 to 8 for much better FPS
           thickness={thickness.get()}
-          roughness={0.02}
+          roughness={0.05}
           transmission={1}
-          chromaticAberration={0.5}
-          anisotropy={2}
+          chromaticAberration={0.4}
+          anisotropy={0.5}
           distortion={distortion.get()}
-          distortionScale={0.5}
-          temporalDistortion={0.1}
+          distortionScale={0.4}
+          temporalDistortion={0.05}
           color={color}
         />
       </RoundedBox>
@@ -101,12 +100,21 @@ export default function ThreeBackground({ scrollY }: { scrollY: any }) {
     { position: [8, -3, -2] as [number, number, number], color: "#ef9900", scale: 0.7, delay: 2 },
     { position: [-5, -6, -10] as [number, number, number], color: "#cbd5e1", scale: 1.5, delay: 3 },
     { position: [6, 7, -15] as [number, number, number], color: "#002878", scale: 1.1, delay: 4 },
-    { position: [0, -8, -20] as [number, number, number], color: "#ef9900", scale: 2, delay: 5 },
   ], [])
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[-1] bg-white">
-      <Canvas shadows dpr={[1, 1.5]} gl={{ antialias: true, alpha: true, stencil: false, depth: true }}>
+      <Canvas 
+        shadows={false} // PERFORMANCE: Disabled shadows for better performance
+        dpr={1.5} // PERFORMANCE: Capped dpr
+        gl={{ 
+          antialias: false, // PERFORMANCE: Disabled antialias
+          alpha: true, 
+          stencil: false, 
+          depth: true,
+          powerPreference: "high-performance"
+        }}
+      >
         <PerspectiveCamera makeDefault position={[0, 0, 12]} fov={45} />
         <SceneController scrollY={scrollY} />
         
@@ -114,7 +122,6 @@ export default function ThreeBackground({ scrollY }: { scrollY: any }) {
         <fog attach="fog" args={['#ffffff', 5, 45]} />
         
         <ambientLight intensity={1.5} />
-        <spotLight position={[20, 30, 10]} angle={0.15} penumbra={1} intensity={2} />
         <pointLight position={[-15, -10, -5]} intensity={1.5} color="#002878" />
 
         {shapes.map((s, i) => (
@@ -122,11 +129,11 @@ export default function ThreeBackground({ scrollY }: { scrollY: any }) {
         ))}
 
         <Sparkles 
-          count={400} 
+          count={200} // PERFORMANCE: Reduced count
           scale={[20, 20, 60]} 
-          size={2} 
-          speed={0.4} 
-          opacity={0.3} 
+          size={1.5} 
+          speed={0.3} 
+          opacity={0.2} 
           color="#002878" 
         />
         
@@ -134,7 +141,7 @@ export default function ThreeBackground({ scrollY }: { scrollY: any }) {
       </Canvas>
       
       {/* Dynamic grain/noise overlay */}
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://res.cloudinary.com/dvwvkt76a/image/upload/v1713532467/noise_tvxq9j.png')] mix-blend-overlay" />
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('https://res.cloudinary.com/dvwvkt76a/image/upload/v1713532467/noise_tvxq9j.png')] mix-blend-overlay" />
     </div>
   )
 }
