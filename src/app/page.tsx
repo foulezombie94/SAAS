@@ -68,54 +68,90 @@ export default function Home() {
     }
   };
   return (
-    <div className="bg-black text-white selection:bg-primary selection:text-white transition-colors duration-1000">
-      <div className="bg-noise" />
-      <div className="vignette" />
+    <div className="bg-white text-on-surface selection:bg-primary selection:text-white transition-colors duration-1000">
       <Experience3D />
       <Navbar />
 
-      <main className="pt-24 relative overflow-hidden">
-        {/* HERO SECTION - RE-CENTERED PREMIUM STYLE */}
-        <section className="min-h-screen flex flex-col items-center justify-center pt-24 pb-20 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+      <main className="pt-24 overflow-hidden">
+        {/* Hero Section */}
+        <section className="relative px-6 py-20 md:py-40 max-w-7xl mx-auto min-h-[90vh] flex items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col items-center"
             >
-              <h1 className="text-[12vw] md:text-[100px] font-black leading-[0.85] tracking-[-0.05em] text-white uppercase italic mb-10 max-w-5xl mx-auto drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                L'ARTISANAT <br className="hidden md:block" /> 
-                <span className="text-[#ef9900]">EXCEPTNEL.</span>
+              <motion.span 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-block px-4 py-1.5 bg-[#002878]/5 text-[#002878] text-[10px] font-black tracking-[0.3em] uppercase mb-8 rounded-full border border-[#002878]/10"
+              >
+                L'OUTIL DES BÂTISSEURS MODERNES
+              </motion.span>
+              <h1 className="text-6xl md:text-8xl font-black tracking-[ -0.05em] text-[#002878] leading-[0.9] mb-10 uppercase italic">
+                LE SUCCÈS <br/>
+                <span className="text-[#ef9900] text-glow">COMMENCE</span> <br/>
+                ICI.
               </h1>
-              
-              <p className="text-xs md:text-sm text-slate-400 font-black max-w-2xl mx-auto leading-relaxed uppercase tracking-[0.4em] opacity-80 mb-16">
-                Le premier protocole de gestion conçu pour une efficacité <br className="hidden md:block" /> 
-                instantanée et un déploiement à l'échelle pour les artisans modernes.
+              <p className="text-xl text-slate-500 leading-relaxed mb-12 max-w-xl font-bold uppercase tracking-tight opacity-80">
+                Passez du chantier à la facture en 120 secondes. La puissance du digital au service de votre savoir-faire artisanal.
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-6">
                 <motion.button 
-                  whileHover={{ scale: 1.05, backgroundColor: "#ffffff" }}
+                  whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,40,120,0.2)" }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleFreeAction}
-                  className="bg-[#cbd5e1] text-[#0f172a] px-10 py-5 text-[10px] font-black rounded-xl shadow-2xl transition-all uppercase tracking-[0.3em] flex-1"
+                  className="bg-[#002878] text-white px-12 py-6 text-xs font-black rounded-2xl shadow-2xl transition-all uppercase tracking-[0.2em] relative overflow-hidden group"
                 >
-                  S'INSCRIRE GRATUITEMENT
+                  <span className="relative z-10">Commencer l'aventure</span>
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                 </motion.button>
-                <motion.button 
-                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.05)" }}
-                  whileTap={{ scale: 0.95 }}
-                  className="border border-white/20 text-white px-10 py-5 text-[10px] font-black rounded-xl backdrop-blur-md transition-all uppercase tracking-[0.3em] flex-1"
+                <button className="px-10 py-6 text-xs font-black rounded-2xl border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-[0.2em]">
+                  Voir la démo
+                </button>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+              className="relative mt-20 lg:mt-0"
+            >
+              {/* Floating Dashboard Preview Card */}
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#002878] to-[#ef9900] rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative bg-white rounded-[3rem] p-4 shadow-2xl border border-slate-100 overflow-hidden">
+                   <div className="aspect-[4/3] rounded-[2.5rem] overflow-hidden bg-slate-50 relative">
+                     <img
+                       className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-110"
+                       alt="ArtisanFlow Interface Premium"
+                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuDahAP1wYn6P3n8SiLC7Z7uTTBWaBv84g4dSmuGjgpwj-J85Zd_VR3MqUDKRMesMKGSQRtcnxpnxcEJ8_1bMCLRGbWxwlomqyu7N_7JBP5xWILvxMfWiudm3WZuZ_G9GYTpLP1JvfvGzfZRKMh7XExc5D3UgCuNugNlA5z0r8E-voW9izDrp8Fp6TXla5s8Homu3mT7iJlQnWtnT8T51gzbjm_QWQ8ZB1k4gJaJbL5wx5T8CWzHAvAQGLI5WsmpGAd9tlJPFsl7uZf3"
+                     />
+                     <div className="absolute inset-0 bg-gradient-to-t from-[#002878]/20 to-transparent pointer-events-none" />
+                   </div>
+                </div>
+                
+                {/* Floating Micro-UI element */}
+                <motion.div 
+                  animate={{ y: [0, -20, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -right-8 bottom-12 bg-white/80 backdrop-blur-xl p-6 rounded-3xl shadow-3xl border border-white/50 hidden md:block"
                 >
-                  APPRENDRE ENCORE PLUS
-                </motion.button>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dernier Paiement</p>
+                      <p className="text-xl font-black text-[#002878]">+4,850.00 €</p>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </motion.div>
           </div>
-          
-          {/* Subtle bottom gradient */}
-          <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-black to-transparent z-0" />
         </section>
 
         <section id="features" className="py-32 relative">
