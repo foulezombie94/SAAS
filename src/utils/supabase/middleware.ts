@@ -19,13 +19,18 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value)
-            supabaseResponse = NextResponse.next({
-              request: {
-                headers: requestHeaders || request.headers,
-              },
-            })
+          // 1. On synchronise d'abord tous les cookies sur la requête pour les Server Components
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          
+          // 2. On recrée la réponse UNE SEULE FOIS pour embarquer les nouveaux headers et cookies
+          supabaseResponse = NextResponse.next({
+            request: {
+              headers: requestHeaders || request.headers,
+            },
+          })
+          
+          // 3. On applique chaque cookie à la réponse finale pour le navigateur
+          cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, {
               ...options,
               httpOnly: true,
@@ -34,7 +39,7 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
               sameSite: 'lax',
               path: '/',
             })
-          })
+          )
         },
       },
     }
