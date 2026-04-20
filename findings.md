@@ -29,7 +29,7 @@
 ## Issues Encountered
 | Issue | Resolution |
 |-------|------------|
-|       |            |
+| Next.js 15 Prop Mismatch | RevertedProps must be Promises (async/await) in Server Components. |
 
 ## Resources
 - Planning docs: [task_plan.md](file:///C:/Users/pc/.gemini/antigravity/scratch/artisan-flow/task_plan.md)
