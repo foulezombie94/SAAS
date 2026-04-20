@@ -3,11 +3,14 @@ import { Card } from '@/components/ui/Card'
 import { HardHat, CheckCircle2, ShieldCheck, Zap } from 'lucide-react'
 import Link from 'next/link'
 
-export default function SignupPage({
+export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: { message: string; error: string }
+  searchParams: Promise<{ message?: string; error?: string }>
 }) {
+  const params = await searchParams
+  const message = params.message
+  const error = params.error
   return (
     <div className="flex min-h-screen bg-surface">
       {/* Left Pane - Brand & Value Prop (Desktop Only) */}

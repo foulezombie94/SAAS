@@ -2,11 +2,14 @@ import { LoginForm } from '@/components/auth/LoginForm'
 import { CookieConsent } from '@/components/auth/CookieConsent'
 import Link from 'next/link'
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { message: string; error: string }
+  searchParams: Promise<{ message?: string; error?: string }>
 }) {
+  const params = await searchParams
+  const message = params.message
+  const error = params.error
   return (
     <div className="flex items-center justify-center min-h-screen bg-surface p-6 sm:p-12">
       {/* Cookie Consent Popup */}
@@ -30,9 +33,15 @@ export default function LoginPage({
           <p className="font-body text-on-surface-variant text-base">Connectez-vous pour piloter vos chantiers.</p>
         </div>
 
-        {searchParams?.message && (
+        {message && (
           <div className="mb-6 p-4 bg-secondary-container text-on-secondary-container rounded-md text-sm font-bold border border-secondary/10 shadow-sm animate-in fade-in slide-in-from-top-2">
-            {searchParams.message}
+            {message}
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-md text-sm font-bold border border-error/10 shadow-sm animate-in fade-in slide-in-from-top-2">
+            {error}
           </div>
         )}
 

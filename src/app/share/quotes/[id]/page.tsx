@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { requireAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { QuotePublicView } from './QuotePublicView'
 import { Quote } from '@/types/dashboard'
 import { LinkExpired } from '@/components/share/LinkExpired'
@@ -15,7 +15,21 @@ export default async function PublicQuotePage({
 }) {
   const { id } = await params
   const { token } = await searchParams
-  const supabase = requireAdminClient()
+  const supabase = createAdminClient()
+  
+  if (!supabase) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-md w-full text-center p-10 bg-white rounded-[2rem] shadow-diffused border border-slate-200">
+          <span className="material-symbols-outlined text-5xl text-amber-500 mb-6" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+          <h1 className="text-2xl font-headline font-black text-on-surface mb-4 uppercase">Service Indisponible</h1>
+          <p className="text-on-surface-variant font-medium leading-relaxed">
+            La configuration de signature est incomplète. Veuillez réessayer plus tard ou contacter l'expéditeur.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (!token) {
     return notFound()

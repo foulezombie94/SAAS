@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 
 /**
@@ -33,7 +33,12 @@ export async function POST(req: Request) {
     }
 
     // 3. Fetch via Admin Client (bypasses RLS) with token verification
-    const supabase = requireAdminClient()
+    const supabase = createAdminClient()
+    if (!supabase) {
+      return NextResponse.json({ 
+        error: 'Service indisponible (Configuration serveur manquante).' 
+      }, { status: 503 })
+    }
 
     const { data: quote, error } = await supabase
       .from('quotes')
