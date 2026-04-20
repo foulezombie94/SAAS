@@ -9,7 +9,11 @@ if (!SECURITY_SECRET && process.env.NODE_ENV === 'production') {
 }
 
 const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
-const redis = Redis.fromEnv()
+
+// 🟡 FAIL-SOFT: Initialize Redis only if keys are present to avoid top-level crash
+export const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+  ? Redis.fromEnv()
+  : null;
 
 export type SecurityStatus = 'TRUSTED' | 'SUSPICIOUS' | 'BLOCKED'
 
@@ -99,7 +103,7 @@ export async function getSecurityReputation(): Promise<SecurityState> {
 
   // 1. Check IP-based block
   const ip = await getSafeIp()
-  const ipBlocked = await redis.get(`blocked:ip:${ip}`)
+  const ipBlocked = redis ? await redis.get(`blocked:ip:${ip}`) : null
   
   if (ipBlocked) {
     return { status: 'BLOCKED', attempts: 10, lastAttempt: Date.now(), expiry: Number(ipBlocked) }
@@ -133,7 +137,9 @@ export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
   if (event === 'BOT' || (event === 'FAIL' && newState.attempts >= 9)) {
     newState.status = 'BLOCKED'
     newState.expiry = expiry
-    await redis.set(`blocked:ip:${ip}`, expiry, { px: 72 * 60 * 60 * 1000 })
+    if (redis) {
+      await redis.set(`blocked:ip:${ip}`, expiry, { px: 72 * 60 * 60 * 1000 })
+    }
   } else if (event === 'FAIL') {
     newState.attempts++
     newState.lastAttempt = Date.now()
@@ -159,5 +165,7 @@ export async function resetSecurityReputation() {
   const ip = await getSafeIp()
   
   cookieStore.delete(COOKIE_NAME)
-  await redis.del(`blocked:ip:${ip}`)
+  if (redis) {
+    await redis.del(`blocked:ip:${ip}`)
+  }
 }
