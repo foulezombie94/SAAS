@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminClient } from '@/lib/supabase/admin'
 import { QuotePublicView } from './QuotePublicView'
 import { Quote } from '@/types/dashboard'
 import { LinkExpired } from '@/components/share/LinkExpired'
@@ -15,7 +15,7 @@ export default async function PublicQuotePage({
 }) {
   const { id } = await params
   const { token } = await searchParams
-  const supabase = createAdminClient()
+  const supabase = requireAdminClient()
 
   if (!token) {
     return notFound()

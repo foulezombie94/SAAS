@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
 
     // 3. ATOMIC TRANSACTION (RPC v4 - Dual Signature Flow)
-    const adminSupabase = createAdminClient()
+    const adminSupabase = requireAdminClient()
     const { data: quoteResult, error: rpcError } = await adminSupabase.rpc('accept_quote_v4', {
       p_public_token: publicToken || 'invalid_token_placeholder',
       p_quote_id: quoteId,

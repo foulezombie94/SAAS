@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 
 /**
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     }
 
     // 3. Fetch via Admin Client (bypasses RLS) with token verification
-    const supabase = createAdminClient()
+    const supabase = requireAdminClient()
 
     const { data: quote, error } = await supabase
       .from('quotes')
