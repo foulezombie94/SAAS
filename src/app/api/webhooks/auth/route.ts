@@ -53,13 +53,11 @@ export async function POST(req: NextRequest) {
         pipeline.del(`artisan-flow:email-to-user:${oldNormalizedEmail}`)
       }
 
-      // Always maintain the current email mapping independently of the ban.
-      // We calculate a safe TTL: at least 24h, or the duration of the ban if it's longer.
-      // This prevents the mapping from expiring before a long ban does!
+      // Mapping indépendant du ban (cache fonctionnel)
+      // Survit 7 jours pour le login error recovery
       if (normalizedEmail) {
-        const banTtlSeconds = isBanned ? Math.ceil((bannedUntilTime - Date.now()) / 1000) : 0;
-        const safeTtlSeconds = Math.max(86400, banTtlSeconds);
-        pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { ex: safeTtlSeconds })
+        const ttlSeconds = 7 * 24 * 60 * 60 // 7 jours
+        pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { ex: ttlSeconds })
       }
 
       if (isBanned) {
