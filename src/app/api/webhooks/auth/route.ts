@@ -43,7 +43,14 @@ export async function POST(req: NextRequest) {
 
     if (redis) {
       const normalizedEmail = record.email?.trim().toLowerCase()
+      const oldNormalizedEmail = old_record?.email?.trim().toLowerCase()
       const pipeline = redis.pipeline()
+
+      // Handle email change: clean up old mapping to prevent security holes (zombie mapping)
+      if (oldNormalizedEmail && oldNormalizedEmail !== normalizedEmail) {
+        console.log(`[Webhook] Email changed. Deleting old mapping for ${oldNormalizedEmail}`)
+        pipeline.del(`artisan-flow:email-to-user:${oldNormalizedEmail}`)
+      }
 
       if (isBanned) {
         const ttl = bannedUntilTime - Date.now()
@@ -52,7 +59,9 @@ export async function POST(req: NextRequest) {
           pipeline.set(banKey, bannedUntilTime.toString(), { px: ttl })
           if (normalizedEmail) {
             // Mapping email -> userId for a single source of truth for ban expiration
-            pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { px: ttl })
+            // Using a max TTL of 24h for the mapping to prevent zombie data if missed
+            const mappingTtl = Math.min(ttl, 86400 * 1000)
+            pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { px: mappingTtl })
           }
         }
       } else {

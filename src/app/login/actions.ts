@@ -60,9 +60,11 @@ export async function login(prevState: any, formData: FormData) {
         const { redis } = await import('@/lib/rate-limit')
         if (redis && email) {
           const normalizedEmail = email.trim().toLowerCase()
+          
+          // 2 requêtes (très rapides sur Redis) pour récupérer d'abord l'ID, puis le ban
           const mappedUserId = await redis.get(`artisan-flow:email-to-user:${normalizedEmail}`)
           
-          if (mappedUserId) {
+          if (typeof mappedUserId === 'string' && mappedUserId.length > 0) {
             const bannedUntilStr = await redis.get(`artisan-flow:ban:${mappedUserId}`)
             if (bannedUntilStr) {
               const timestamp = Number(bannedUntilStr)
