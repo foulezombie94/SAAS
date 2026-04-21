@@ -24,14 +24,7 @@ export async function login(prevState: any, formData: FormData) {
     return { error: 'Votre navigateur a pré-rempli un champ caché. Veuillez vérifier vos extensions d\'auto-remplissage et réessayer.' }
   }
 
-  // 2. TIMING ATTACK / BOT CHECK
-  const loadTime = parseInt(formData.get('lt_sys') as string || '0')
-  const submitTime = Date.now()
-  if (loadTime > 0 && (submitTime - loadTime) < 1000) { // Less than 1 second (anti-bot)
-    console.warn('🚨 Bot detected via fast submission!')
-    await reportSecurityEvent('FAIL') // Increment suspicion
-    return { error: 'Vitesse de soumission suspecte. Veuillez réessayer lentement.' }
-  }
+
 
   // 3. ANTI-BRUTE FORCE (10 tentatives / minute par IP)
   const limit = await rateLimit('auth-login', 10, 60000)
@@ -59,6 +52,8 @@ export async function login(prevState: any, formData: FormData) {
     let errorMessage = error?.message || 'Email ou mot de passe incorrect'
     if (error?.message === 'Invalid login credentials') {
       errorMessage = 'Email ou mot de passe incorrect'
+    } else if (error?.message?.toLowerCase().includes('ban')) {
+      errorMessage = 'Votre compte est temporairement suspendu.'
     }
     return { error: errorMessage }
   }

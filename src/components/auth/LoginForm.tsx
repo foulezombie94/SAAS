@@ -107,11 +107,6 @@ export function LoginForm() {
           tabIndex={-1} 
           autoComplete="one-time-code" 
         />
-        <input 
-          type="hidden" 
-          name="lt_sys" 
-          value={Date.now()} 
-        />
       </div>
 
       {state?.error && (

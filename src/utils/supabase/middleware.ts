@@ -100,21 +100,25 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
         const banSynced = request.cookies.get('af_ban_synced')
         
         if (!banSynced) {
-          const isBanned = await redis.get(`artisan-flow:ban:${user.id}`)
-          if (isBanned) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/'
-            url.searchParams.set('error', 'banned')
-            const response = NextResponse.redirect(url)
-            
-            // 🛡️ DYNAMISME : On supprime tous les cookies auth Supabase sans coder l'ID projet 
-            request.cookies.getAll().forEach(cookie => {
-              if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
-                response.cookies.delete(cookie.name)
-              }
-            })
-            
-            return response
+          const bannedUntilStr = await redis.get(`artisan-flow:ban:${user.id}`)
+          if (bannedUntilStr) {
+            const bannedUntilTime = parseInt(bannedUntilStr as string, 10)
+            if (bannedUntilTime > Date.now()) {
+              const url = request.nextUrl.clone()
+              url.pathname = '/login'
+              url.searchParams.set('error', 'banned')
+              url.searchParams.set('until', bannedUntilTime.toString())
+              const response = NextResponse.redirect(url)
+              
+              // 🛡️ DYNAMISME : On supprime tous les cookies auth Supabase sans coder l'ID projet 
+              request.cookies.getAll().forEach(cookie => {
+                if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
+                  response.cookies.delete(cookie.name)
+                }
+              })
+              
+              return response
+            }
           }
 
           supabaseResponse.cookies.set('af_ban_synced', 'true', {

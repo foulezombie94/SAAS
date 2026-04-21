@@ -30,12 +30,22 @@ export async function POST(req: NextRequest) {
 
     // 2. Logic: Handle Update or Insert (specifically looking for banned_until)
     // In Supabase, if a user is banned, the 'banned_until' field is populated.
-    const isBanned = !!record.banned_until
+    let isBanned = false;
+    let bannedUntilTime = 0;
+
+    if (record.banned_until) {
+      const bannedUntilDate = new Date(record.banned_until);
+      bannedUntilTime = bannedUntilDate.getTime();
+      if (bannedUntilTime > Date.now()) {
+        isBanned = true;
+      }
+    }
 
     if (redis) {
       if (isBanned) {
-        console.log(`[Webhook] Banning user ${userId} in Redis`)
-        await redis.set(banKey, 'true')
+        console.log(`[Webhook] Banning user ${userId} in Redis until ${new Date(bannedUntilTime).toISOString()}`)
+        // Store the unban timestamp and set TTL so it auto-expires when unbanned
+        await redis.set(banKey, bannedUntilTime.toString(), { pxat: bannedUntilTime })
         // Also clear the sync cookie by forcing a re-check if we had session logic here
         // But since it's a server-side Redis update, the next middleware check (within max 10m) will catch it.
       } else {

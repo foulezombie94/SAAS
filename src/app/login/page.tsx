@@ -5,11 +5,27 @@ import Link from 'next/link'
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; error?: string }>
+  searchParams: Promise<{ message?: string; error?: string; until?: string }>
 }) {
   const params = await searchParams
   const message = params.message
-  const error = params.error
+  let error = params.error
+  const until = params.until
+
+  if (error === 'banned') {
+    error = 'Votre compte a été suspendu.'
+    if (until) {
+      const date = new Date(parseInt(until, 10))
+      error += ` Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}.`
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-surface p-6 sm:p-12">
       {/* Cookie Consent Popup */}
