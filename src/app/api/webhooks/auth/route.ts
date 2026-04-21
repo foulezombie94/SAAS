@@ -57,8 +57,8 @@ export async function POST(req: NextRequest) {
       // We calculate a safe TTL: at least 24h, or the duration of the ban if it's longer.
       // This prevents the mapping from expiring before a long ban does!
       if (normalizedEmail) {
-        const banTtl = isBanned ? bannedUntilTime - Date.now() : 0;
-        const safeTtlSeconds = Math.max(86400, Math.ceil(banTtl / 1000));
+        const banTtlSeconds = isBanned ? Math.ceil((bannedUntilTime - Date.now()) / 1000) : 0;
+        const safeTtlSeconds = Math.max(86400, banTtlSeconds);
         pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { ex: safeTtlSeconds })
       }
 
