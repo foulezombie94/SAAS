@@ -16,11 +16,12 @@ export async function login(prevState: any, formData: FormData) {
   }
 
   // 1. HONEYPOT CHECK (Bot Detection)
-  const honeypot = formData.get('hp_firm_id') as string
+  const honeypot = formData.get('__af_hpt_trap_91x') as string
   if (honeypot) {
     console.warn('🚨 Bot detected via Honeypot!')
-    await reportSecurityEvent('BOT')
-    redirect('/blocked')
+    // We only fail instead of permanently blocking, because password managers often trigger this.
+    await reportSecurityEvent('FAIL')
+    return { error: 'Votre navigateur a pré-rempli un champ caché. Veuillez vérifier vos extensions d\'auto-remplissage et réessayer.' }
   }
 
   // 2. TIMING ATTACK / BOT CHECK

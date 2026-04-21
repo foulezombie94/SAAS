@@ -25,7 +25,7 @@ interface SecurityState {
   expiry?: number
 }
 
-const COOKIE_NAME = 'af_sec_rep'
+const COOKIE_NAME = 'af_sec_rep_v2'
 
 // --- 🛠️ WEB CRYPTO UTILITIES ---
 

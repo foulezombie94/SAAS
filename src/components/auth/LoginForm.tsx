@@ -99,13 +99,13 @@ export function LoginForm() {
 
       {/* SECURITY: Honeypot field (invisible to humans, trapped for bots) */}
       <div className="sr-only opacity-0 absolute -z-10 pointer-events-none" aria-hidden="true">
-        <label htmlFor="hp_firm_id">ID Entreprise Interne</label>
+        <label htmlFor="__af_hpt_trap_91x">Laissez ce champ vide</label>
         <input 
           type="text" 
-          id="hp_firm_id" 
-          name="hp_firm_id" 
+          id="__af_hpt_trap_91x" 
+          name="__af_hpt_trap_91x" 
           tabIndex={-1} 
-          autoComplete="off" 
+          autoComplete="one-time-code" 
         />
         <input 
           type="hidden" 
