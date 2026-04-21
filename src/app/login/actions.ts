@@ -88,8 +88,20 @@ export async function login(prevState: any, formData: FormData) {
             await redis.expire(`artisan-flow:email-to-user:${normalizedEmail}`, 7 * 24 * 60 * 60)
             const bannedUntilStr = await redis.get(`artisan-flow:ban:${mappedUserId}`)
             if (bannedUntilStr) {
-              const timestamp = Number(bannedUntilStr)
-              if (Number.isFinite(timestamp)) {
+              let timestamp = Number(bannedUntilStr)
+              
+              // Handle legacy bans where the value was just "1" or "true"
+              // 1000000000000 is Sep 2001, anything smaller is likely not a real timestamp
+              if (!Number.isFinite(timestamp) || timestamp < 1000000000000) {
+                const ttlSeconds = await redis.ttl(`artisan-flow:ban:${mappedUserId}`)
+                if (ttlSeconds > 0) {
+                  timestamp = Date.now() + (ttlSeconds * 1000)
+                } else {
+                  timestamp = 0 // Fallback to hide date if no TTL
+                }
+              }
+
+              if (timestamp > Date.now()) {
                 const date = new Date(timestamp)
                 const banMessage = `Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
                   day: '2-digit',
