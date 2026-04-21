@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         // Also clear the sync cookie by forcing a re-check if we had session logic here
         // But since it's a server-side Redis update, the next middleware check (within max 10m) will catch it.
       } else {
-        console.log(`[Webhook] Unbanning user ${userId} in Redis`)
+        // Silently ensure user is not banned in Redis
         await redis.del(banKey)
       }
     }
