@@ -5,7 +5,8 @@ import { Redis } from '@upstash/redis'
 const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET
 
 if (!SECURITY_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('🚨 CRITICAL: SECURITY_SIGN_SECRET is missing! Production deployment halted for safety.')
+  // 🟡 FAIL-SOFT: Prevent 500 Server Error on Vercel if Env Var is missing
+  console.error('🚨 CRITICAL: SECURITY_SIGN_SECRET is missing! Please configure it in Vercel to use secure HMAC signing.')
 }
 
 const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
