@@ -15,14 +15,18 @@ export default async function LoginPage({
   if (error === 'banned') {
     error = 'Votre compte a été suspendu.'
     if (until) {
-      const date = new Date(parseInt(until, 10))
-      error += ` Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}.`
+      const timestamp = Number(until)
+      if (Number.isFinite(timestamp)) {
+        const date = new Date(timestamp)
+        const banMessage = `Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}.`
+        error = `${error} ${banMessage}`
+      }
     }
   }
 

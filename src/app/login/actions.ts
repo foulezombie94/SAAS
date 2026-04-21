@@ -55,31 +55,23 @@ export async function login(prevState: any, formData: FormData) {
     } else if (error?.message?.toLowerCase().includes('ban')) {
       errorMessage = 'Votre compte est temporairement suspendu.'
       
-      // Attempt to fetch the unban date from Redis using Admin API to resolve the email -> ID
+      // Attempt to fetch the unban date directly from Redis using the secondary email key
       try {
-        const { requireAdminClient } = await import('@/lib/supabase/admin')
-        const adminSupabase = requireAdminClient()
-        if (adminSupabase) {
-          const { data: profile } = await adminSupabase
-            .from('profiles')
-            .select('id')
-            .eq('email', email)
-            .single()
-
-          if (profile?.id) {
-            const { redis } = await import('@/lib/rate-limit')
-            if (redis) {
-              const bannedUntilStr = await redis.get(`artisan-flow:ban:${profile.id}`)
-              if (bannedUntilStr) {
-                const date = new Date(parseInt(bannedUntilStr as string, 10))
-                errorMessage += ` Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}.`
-              }
+        const { redis } = await import('@/lib/rate-limit')
+        if (redis && email) {
+          const bannedUntilStr = await redis.get(`artisan-flow:ban:email:${email}`)
+          if (bannedUntilStr) {
+            const timestamp = Number(bannedUntilStr)
+            if (Number.isFinite(timestamp)) {
+              const date = new Date(timestamp)
+              const banMessage = `Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}.`
+              errorMessage = `${errorMessage} ${banMessage}`
             }
           }
         }
