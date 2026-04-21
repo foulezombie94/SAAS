@@ -65,6 +65,8 @@ export async function login(prevState: any, formData: FormData) {
           const mappedUserId = await redis.get(`artisan-flow:email-to-user:${normalizedEmail}`)
           
           if (typeof mappedUserId === 'string' && mappedUserId.length > 0) {
+            // Keep the mapping alive for active users
+            await redis.expire(`artisan-flow:email-to-user:${normalizedEmail}`, 86400)
             const bannedUntilStr = await redis.get(`artisan-flow:ban:${mappedUserId}`)
             if (bannedUntilStr) {
               const timestamp = Number(bannedUntilStr)

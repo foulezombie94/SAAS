@@ -53,10 +53,13 @@ export async function POST(req: NextRequest) {
         pipeline.del(`artisan-flow:email-to-user:${oldNormalizedEmail}`)
       }
 
-      // Always maintain the current email mapping with a 24h TTL independently of the ban
-      // This guarantees the lookup works whenever a ban occurs, as the webhook fires on ban.
+      // Always maintain the current email mapping independently of the ban.
+      // We calculate a safe TTL: at least 24h, or the duration of the ban if it's longer.
+      // This prevents the mapping from expiring before a long ban does!
       if (normalizedEmail) {
-        pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { ex: 86400 })
+        const banTtl = isBanned ? bannedUntilTime - Date.now() : 0;
+        const safeTtlSeconds = Math.max(86400, Math.ceil(banTtl / 1000));
+        pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { ex: safeTtlSeconds })
       }
 
       if (isBanned) {
