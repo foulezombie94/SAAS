@@ -3,7 +3,6 @@
 import React, { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { 
-  MeshTransmissionMaterial, 
   Environment,
   Sparkles,
   Float,
@@ -17,12 +16,14 @@ function SceneController({ scrollY }: { scrollY: any }) {
   // FORWARD CHASE: Camera moves slightly back as objects fly past
   const cameraZ = useTransform(scrollY, [0, 1], [15, 30])
   const fov = useTransform(scrollY, [0, 0.5, 1], [35, 45, 60]) // Wider FOV as things come closer
+  const time = useRef(0)
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
+    time.current += delta
     state.camera.position.z = THREE.MathUtils.lerp(state.camera.position.z, cameraZ.get(), 0.05)
     
     // Immersive tilt
-    state.camera.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.2) * 0.05
+    state.camera.rotation.z = Math.sin(time.current * 0.2) * 0.05
 
     if (state.camera instanceof THREE.PerspectiveCamera) {
       state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, fov.get(), 0.05)
@@ -35,31 +36,33 @@ function SceneController({ scrollY }: { scrollY: any }) {
 
 function FloatingShape({ scrollY, position, color, delay = 0, scale = 1 }: any) {
   const meshRef = useRef<THREE.Mesh>(null!)
+  const materialRef = useRef<THREE.MeshPhysicalMaterial>(null!)
+  const time = useRef(0)
   
-  // High-performance mapping for thickness and distortion - FORWARD sync
+  // High-performance mapping for thickness - FORWARD sync
   const thickness = useTransform(scrollY, 
     [0, 0.4, 0.6, 1], 
     [2, 4, 3, 2]
   )
-  
-  const distortion = useTransform(scrollY, 
-    [0, 0.4, 0.6, 1], 
-    [0.1, 0.5, 0.3, 0.1]
-  )
 
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime() + delay
+  useFrame((state, delta) => {
+    time.current += delta
+    const t = time.current + delay
     const s = scrollY.get()
     
     if (!meshRef.current) return
 
     // Elements fly FORWARDS (towards viewer)
-    meshRef.current.rotation.x = time * 0.1 + s * 2
-    meshRef.current.rotation.z = time * 0.05 + s * 3
+    meshRef.current.rotation.x = t * 0.1 + s * 2
+    meshRef.current.rotation.z = t * 0.05 + s * 3
     
     // FLY THROUGH: Start deep (-60), fly past camera (+40)
     meshRef.current.position.z = position[2] - 40 + s * 100 
-    meshRef.current.position.y = position[1] + Math.sin(time * 0.5) * 0.2
+    meshRef.current.position.y = position[1] + Math.sin(t * 0.5) * 0.2
+    
+    if (materialRef.current) {
+      materialRef.current.thickness = thickness.get()
+    }
   })
 
   return (
@@ -72,18 +75,13 @@ function FloatingShape({ scrollY, position, color, delay = 0, scale = 1 }: any) 
         position={position} 
         scale={scale}
       >
-        <MeshTransmissionMaterial
-          backside
-          samples={6} 
-          thickness={thickness.get()}
+        <meshPhysicalMaterial
+          ref={materialRef}
           roughness={0.08}
           transmission={1}
-          chromaticAberration={0.3}
-          anisotropy={0.1}
-          distortion={distortion.get()}
-          distortionScale={0.3}
-          temporalDistortion={0.05}
+          ior={1.5}
           color={color}
+          transparent={true}
         />
       </RoundedBox>
     </Float>

@@ -54,6 +54,38 @@ export async function login(prevState: any, formData: FormData) {
       errorMessage = 'Email ou mot de passe incorrect'
     } else if (error?.message?.toLowerCase().includes('ban')) {
       errorMessage = 'Votre compte est temporairement suspendu.'
+      
+      // Attempt to fetch the unban date from Redis using Admin API to resolve the email -> ID
+      try {
+        const { requireAdminClient } = await import('@/lib/supabase/admin')
+        const adminSupabase = requireAdminClient()
+        if (adminSupabase) {
+          const { data: profile } = await adminSupabase
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .single()
+
+          if (profile?.id) {
+            const { redis } = await import('@/lib/rate-limit')
+            if (redis) {
+              const bannedUntilStr = await redis.get(`artisan-flow:ban:${profile.id}`)
+              if (bannedUntilStr) {
+                const date = new Date(parseInt(bannedUntilStr as string, 10))
+                errorMessage += ` Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}.`
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch ban expiration', e)
+      }
     }
     return { error: errorMessage }
   }
