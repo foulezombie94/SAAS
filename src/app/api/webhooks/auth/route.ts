@@ -42,21 +42,31 @@ export async function POST(req: NextRequest) {
     }
 
     if (redis) {
+      const normalizedEmail = record.email?.trim().toLowerCase()
+      const pipeline = redis.pipeline()
+
       if (isBanned) {
-        console.log(`[Webhook] Banning user ${userId} in Redis until ${new Date(bannedUntilTime).toISOString()}`)
-        // Store the unban timestamp and set TTL so it auto-expires when unbanned
-        await redis.set(banKey, bannedUntilTime.toString(), { pxat: bannedUntilTime })
-        if (record.email) {
-          await redis.set(`artisan-flow:ban:email:${record.email}`, bannedUntilTime.toString(), { pxat: bannedUntilTime })
+        const ttl = bannedUntilTime - Date.now()
+        if (ttl > 0) {
+          console.log(`[Webhook] Banning user ${userId} in Redis for ${Math.round(ttl / 1000)}s`)
+          pipeline.set(banKey, bannedUntilTime.toString(), { px: ttl })
+          if (normalizedEmail) {
+            // Mapping email -> userId for a single source of truth for ban expiration
+            pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { px: ttl })
+          }
         }
-        // Also clear the sync cookie by forcing a re-check if we had session logic here
-        // But since it's a server-side Redis update, the next middleware check (within max 10m) will catch it.
       } else {
-        // Silently ensure user is not banned in Redis
-        await redis.del(banKey)
-        if (record.email) {
-          await redis.del(`artisan-flow:ban:email:${record.email}`)
+        console.log(`[Webhook] Unbanning user ${userId} in Redis`)
+        pipeline.del(banKey)
+        if (normalizedEmail) {
+          pipeline.del(`artisan-flow:email-to-user:${normalizedEmail}`)
         }
+      }
+      
+      try {
+        await pipeline.exec()
+      } catch (err) {
+        console.error('[Webhook] Failed to execute Redis pipeline:', err)
       }
     }
 

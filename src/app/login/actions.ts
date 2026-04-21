@@ -55,23 +55,28 @@ export async function login(prevState: any, formData: FormData) {
     } else if (error?.message?.toLowerCase().includes('ban')) {
       errorMessage = 'Votre compte est temporairement suspendu.'
       
-      // Attempt to fetch the unban date directly from Redis using the secondary email key
+      // Attempt to fetch the unban date directly from Redis using the email mapping
       try {
         const { redis } = await import('@/lib/rate-limit')
         if (redis && email) {
-          const bannedUntilStr = await redis.get(`artisan-flow:ban:email:${email}`)
-          if (bannedUntilStr) {
-            const timestamp = Number(bannedUntilStr)
-            if (Number.isFinite(timestamp)) {
-              const date = new Date(timestamp)
-              const banMessage = `Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}.`
-              errorMessage = `${errorMessage} ${banMessage}`
+          const normalizedEmail = email.trim().toLowerCase()
+          const mappedUserId = await redis.get(`artisan-flow:email-to-user:${normalizedEmail}`)
+          
+          if (mappedUserId) {
+            const bannedUntilStr = await redis.get(`artisan-flow:ban:${mappedUserId}`)
+            if (bannedUntilStr) {
+              const timestamp = Number(bannedUntilStr)
+              if (Number.isFinite(timestamp)) {
+                const date = new Date(timestamp)
+                const banMessage = `Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}.`
+                errorMessage = `${errorMessage} ${banMessage}`
+              }
             }
           }
         }
