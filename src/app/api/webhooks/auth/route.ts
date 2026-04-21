@@ -53,23 +53,23 @@ export async function POST(req: NextRequest) {
         pipeline.del(`artisan-flow:email-to-user:${oldNormalizedEmail}`)
       }
 
+      if (isBanned) {
+        const banTtlSeconds = Math.ceil((bannedUntilTime - Date.now()) / 1000)
+        // Micro edge-case: Ignore TTLs less than 1 second to avoid useless sub-millisecond keys
+        if (banTtlSeconds > 1) {
+          if (isDev) console.log(`[Webhook] Banning user ${userId} in Redis for ${banTtlSeconds}s`)
+          pipeline.set(banKey, bannedUntilTime.toString(), { ex: banTtlSeconds })
+        }
+      } else {
+        if (isDev) console.log(`[Webhook] Unbanning user ${userId} in Redis`)
+        pipeline.del(banKey)
+      }
+
       // Mapping indépendant du ban (cache fonctionnel)
       // Survit 7 jours pour le login error recovery
       if (normalizedEmail) {
         const ttlSeconds = 7 * 24 * 60 * 60 // 7 jours
         pipeline.set(`artisan-flow:email-to-user:${normalizedEmail}`, userId, { ex: ttlSeconds })
-      }
-
-      if (isBanned) {
-        const ttl = bannedUntilTime - Date.now()
-        // Micro edge-case: Ignore TTLs less than 1 second to avoid useless sub-millisecond keys
-        if (ttl > 1000) {
-          if (isDev) console.log(`[Webhook] Banning user ${userId} in Redis for ${Math.round(ttl / 1000)}s`)
-          pipeline.set(banKey, bannedUntilTime.toString(), { px: ttl })
-        }
-      } else {
-        if (isDev) console.log(`[Webhook] Unbanning user ${userId} in Redis`)
-        pipeline.del(banKey)
       }
       
       try {

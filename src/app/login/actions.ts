@@ -62,8 +62,27 @@ export async function login(prevState: any, formData: FormData) {
           const normalizedEmail = email.trim().toLowerCase()
           
           // 2 requêtes (très rapides sur Redis) pour récupérer d'abord l'ID, puis le ban
-          const mappedUserId = await redis.get(`artisan-flow:email-to-user:${normalizedEmail}`)
+          let mappedUserId = await redis.get(`artisan-flow:email-to-user:${normalizedEmail}`)
           
+          // FALLBACK DB : si le mapping a expiré (ex: inactif > 7j) ou webhook perdu
+          if (!mappedUserId || typeof mappedUserId !== 'string' || mappedUserId.length === 0) {
+            const { requireAdminClient } = await import('@/lib/supabase/admin')
+            const adminSupabase = requireAdminClient()
+            if (adminSupabase) {
+              const { data: profile } = await adminSupabase
+                .from('profiles')
+                .select('id')
+                .eq('email', normalizedEmail)
+                .single()
+              
+              if (profile?.id) {
+                mappedUserId = profile.id
+                // Re-hydrate the cache (Self-Healing)
+                await redis.set(`artisan-flow:email-to-user:${normalizedEmail}`, mappedUserId, { ex: 7 * 24 * 60 * 60 })
+              }
+            }
+          }
+
           if (typeof mappedUserId === 'string' && mappedUserId.length > 0) {
             // Keep the mapping alive for active users (7 days)
             await redis.expire(`artisan-flow:email-to-user:${normalizedEmail}`, 7 * 24 * 60 * 60)
