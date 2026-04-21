@@ -104,7 +104,7 @@ export function ClientsClient({ initialClients, userId }: ClientsClientProps) {
             />
           </div>
           <Link href="/dashboard/clients/new" className="w-full md:w-auto">
-            <Button className="w-full h-14 px-8 bg-primary hover:bg-primary-container text-on-primary font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl active:scale-95 transition-all rounded-3xl">
+            <Button className="w-full h-14 px-8 bg-primary hover:bg-primary-container text-on-primary font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl active:scale-95 transition-all rounded-lg">
               <Plus size={20} /> Nouveau Client
             </Button>
           </Link>

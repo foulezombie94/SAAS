@@ -113,7 +113,7 @@ export function Sidebar({ isPro }: { isPro: boolean }) {
       <div className="mt-auto border-t border-slate-50 pt-6 px-2">
         <Link href="/dashboard/quotes/new">
           <Button className={cn(
-            "w-full justify-start gap-3 h-12 mb-4 bg-[#00236f] hover:bg-[#001b54] text-white rounded-xl shadow-lg shadow-blue-900/10 active:scale-95 transition-all overflow-hidden",
+            "w-full justify-start gap-3 h-12 mb-4 bg-[#00236f] hover:bg-[#001b54] text-white rounded-lg shadow-lg shadow-blue-900/10 active:scale-95 transition-all overflow-hidden",
             isCollapsed && "justify-center px-0"
           )}>
             <PlusCircle size={18} className="shrink-0" />
@@ -123,13 +123,13 @@ export function Sidebar({ isPro }: { isPro: boolean }) {
         
         {!isCollapsed && (
           isPro ? (
-            <div className="flex items-center gap-3 p-3 text-[#00236f] font-black text-[10px] uppercase tracking-widest bg-blue-50/50 rounded-xl border border-blue-100/50">
+            <div className="flex items-center gap-3 p-3 text-[#00236f] font-black text-[10px] uppercase tracking-widest bg-blue-50/50 rounded-lg border border-blue-100/50">
               <ShieldCheck size={16} className="text-primary" />
               {t('sidebar.pro_plan')}
             </div>
           ) : (
             <Link href="/onboarding/plans">
-              <div className="flex items-center gap-3 p-3 text-slate-500 hover:text-primary hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest rounded-xl group">
+              <div className="flex items-center gap-3 p-3 text-slate-500 hover:text-primary hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest rounded-lg group">
                 <div className="w-4 h-4 rounded-full border-2 border-slate-200 group-hover:border-primary flex items-center justify-center">
                   <div className="w-1.5 h-1.5 bg-slate-200 group-hover:bg-primary rounded-full" />
                 </div>

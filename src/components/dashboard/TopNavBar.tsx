@@ -101,7 +101,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
       <div className="flex items-center gap-6">
         <div className="hidden lg:flex items-center gap-3 pr-6 border-r border-slate-200/20 h-10">
           <Link href="/dashboard/quotes/new">
-            <Button size="sm" className="px-6 font-bold tracking-tight bg-[#00236f] hover:bg-[#001b54] text-white rounded-xl">
+            <Button size="sm" className="px-6 font-bold tracking-tight bg-[#00236f] hover:bg-[#001b54] text-white rounded-lg">
               {t('sidebar.create_quote')}
             </Button>
           </Link>
@@ -238,17 +238,6 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
             )}
           </AnimatePresence>
         </div>
-
-        {/* 🌓 THEME TOGGLE (Category 2: Functional Cookie) */}
-        <motion.button
-          whileHover={{ scale: 1.05, rotate: 5 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={toggleTheme}
-          className="p-3 rounded-2xl bg-slate-50/50 text-slate-400 hover:bg-white hover:text-primary hover:shadow-md border border-slate-100/50 transition-all flex items-center justify-center"
-          title={theme === 'light' ? 'Passer au mode sombre' : 'Passer au mode clair'}
-        >
-          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} className="text-amber-500" />}
-        </motion.button>
 
         {/* 👤 PREMIUM USER SECTION */}
         <div className="flex items-center gap-2 pl-6 border-l border-slate-100 ml-2">
