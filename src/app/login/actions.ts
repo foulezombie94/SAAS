@@ -26,7 +26,7 @@ export async function login(prevState: any, formData: FormData) {
   // 2. TIMING ATTACK / BOT CHECK
   const loadTime = parseInt(formData.get('lt_sys') as string || '0')
   const submitTime = Date.now()
-  if (loadTime > 0 && (submitTime - loadTime) < 2000) { // Less than 2 seconds
+  if (loadTime > 0 && (submitTime - loadTime) < 1000) { // Less than 1 second (anti-bot)
     console.warn('🚨 Bot detected via fast submission!')
     await reportSecurityEvent('FAIL') // Increment suspicion
     return { error: 'Vitesse de soumission suspecte. Veuillez réessayer lentement.' }
