@@ -125,16 +125,21 @@ export async function login(prevState: any, formData: FormData) {
             }
 
             if (timestamp > Date.now()) {
-              const date = new Date(timestamp)
-              const banMessage = `Fin de la suspension le ${date.toLocaleDateString('fr-FR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
-              })} à ${date.toLocaleTimeString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })}.`
-              errorMessage = `Votre compte est temporairement suspendu. ${banMessage}`
+              const tenYearsInMs = 10 * 365 * 24 * 60 * 60 * 1000;
+              if (timestamp - Date.now() > tenYearsInMs) {
+                errorMessage = 'Votre compte est définitivement banni.';
+              } else {
+                const date = new Date(timestamp)
+                const banMessage = `Fin de la suspension le ${date.toLocaleDateString('fr-FR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric'
+                })} à ${date.toLocaleTimeString('fr-FR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}.`
+                errorMessage = `Votre compte est temporairement suspendu. ${banMessage}`
+              }
             }
           }
         }
