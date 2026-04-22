@@ -25,7 +25,7 @@ interface SecurityState {
   expiry?: number
 }
 
-const COOKIE_NAME = 'af_sec_rep_v2'
+const COOKIE_NAME = 'af_sec_rep_v3'
 
 // --- 🛠️ WEB CRYPTO UTILITIES ---
 
@@ -104,7 +104,7 @@ export async function getSecurityReputation(): Promise<SecurityState> {
 
   // 1. Check IP-based block
   const ip = await getSafeIp()
-  const ipBlocked = redis ? await redis.get(`blocked:ip:${ip}`) : null
+  const ipBlocked = redis ? await redis.get(`blocked_v2:ip:${ip}`) : null
   
   if (ipBlocked) {
     return { status: 'BLOCKED', attempts: 10, lastAttempt: Date.now(), expiry: Number(ipBlocked) }
@@ -135,11 +135,11 @@ export async function reportSecurityEvent(event: 'FAIL' | 'BOT') {
   let newState: SecurityState = { ...state }
   const expiry = Date.now() + 72 * 60 * 60 * 1000 // 72 Hours
 
-  if (event === 'BOT' || (event === 'FAIL' && newState.attempts >= 9)) {
+  if (event === 'BOT') {
     newState.status = 'BLOCKED'
     newState.expiry = expiry
     if (redis) {
-      await redis.set(`blocked:ip:${ip}`, expiry, { px: 72 * 60 * 60 * 1000 })
+      await redis.set(`blocked_v2:ip:${ip}`, expiry, { px: 72 * 60 * 60 * 1000 })
     }
   } else if (event === 'FAIL') {
     newState.attempts++
@@ -167,6 +167,6 @@ export async function resetSecurityReputation() {
   
   cookieStore.delete(COOKIE_NAME)
   if (redis) {
-    await redis.del(`blocked:ip:${ip}`)
+    await redis.del(`blocked_v2:ip:${ip}`)
   }
 }
