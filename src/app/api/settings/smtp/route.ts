@@ -136,6 +136,7 @@ export async function POST(request: Request) {
           errorMessage = 'Erreur d\'authentification : Vérifiez votre email et mot de passe (ou utilisez un mot de passe d\'application).'
         } else if (err.code === 'ESOCKET' || err.code === 'ETIMEDOUT') {
           errorMessage = 'Erreur de connexion : Le serveur est injoignable ou le port est incorrect.'
+        }
         return NextResponse.json({
           error: errorMessage
         }, { status: 400 })
