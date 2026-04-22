@@ -12,6 +12,17 @@ import {
 import * as THREE from 'three'
 import { useTransform } from 'framer-motion'
 
+// Mute the THREE.Clock deprecation warning that comes from older @react-three/drei versions
+if (typeof console !== 'undefined') {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (typeof args[0] === 'string' && args[0].includes('THREE.Clock')) {
+      return;
+    }
+    originalWarn(...args);
+  };
+}
+
 function SceneController({ scrollY }: { scrollY: any }) {
   // FORWARD CHASE: Camera moves slightly back as objects fly past
   const cameraZ = useTransform(scrollY, [0, 1], [15, 30])
@@ -101,13 +112,19 @@ export default function ThreeBackground({ scrollY }: { scrollY: any }) {
     <div className="fixed inset-0 pointer-events-none z-[-1] bg-white">
       <Canvas 
         shadows={false}
-        dpr={1.5}
+        dpr={[1, 1.5]}
         gl={{ 
           antialias: false,
           alpha: true, 
           stencil: false, 
           depth: true,
-          powerPreference: "high-performance"
+          powerPreference: "default",
+          preserveDrawingBuffer: true
+        }}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener('webglcontextlost', (e) => {
+             e.preventDefault()
+          })
         }}
       >
         <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={35} />
