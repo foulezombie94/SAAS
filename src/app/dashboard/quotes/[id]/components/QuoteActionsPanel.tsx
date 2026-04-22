@@ -81,7 +81,7 @@ export function QuoteActionsPanel({
               )}
               disabled={isSigPadOpen}
             >
-              <PenTool className="w-5 h-5 fill-current mr-2" />
+              <PenTool className="w-5 h-5 mr-2" />
               {isSigPadOpen ? 'OUVERTURE...' : 'SIGNER (ARTISAN)'}
             </Button>
           </div>
@@ -91,7 +91,7 @@ export function QuoteActionsPanel({
           onClick={onOpenEmailModal}
           className="w-full bg-[#ef9900] text-[#2a1700] hover:bg-[#ef9900] hover:opacity-90 transition-all shadow-lg border-none h-12"
         >
-          <Send className="w-4 h-4 fill-current mr-2" strokeWidth={2.5} />
+          <Send className="w-4 h-4 mr-2" strokeWidth={2.5} />
           ENVOYER AU CLIENT
         </Button>
 
@@ -101,7 +101,7 @@ export function QuoteActionsPanel({
           variant="outline"
           className="w-full text-[#00236f] border border-[#00236f]/20 h-12"
         >
-          {isGeneratingLink ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4 mr-2" strokeWidth={2.5} />}
+          {isGeneratingLink ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LinkIcon className="w-4 h-4 mr-2" strokeWidth={2.5} />}
           GÉNÉRER LE LIEN
         </Button>
 
@@ -110,7 +110,7 @@ export function QuoteActionsPanel({
           disabled={isGeneratingInvoice || !isAccepted}
           className="w-full bg-[#00236f] text-white hover:bg-[#00236f] h-12 border-none disabled:opacity-50"
         >
-          {isGeneratingInvoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4 fill-current mr-2" />}
+          {isGeneratingInvoice ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
           CONVERTIR EN FACTURE
         </Button>
 
