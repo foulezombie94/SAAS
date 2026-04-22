@@ -158,11 +158,13 @@ export async function POST(req: Request) {
       }
 
       case 'invoice.paid': {
-        // FIX #14: Use proper Stripe.Invoice type instead of 'as any'
+        // Stripe v22: `invoice.subscription` removed — use `parent.subscription_details.subscription`
         const invoice = event.data.object as Stripe.Invoice
-        const subscriptionId = typeof invoice.subscription === 'string' 
-          ? invoice.subscription 
-          : invoice.subscription?.id;
+        const subscriptionId = invoice.parent?.type === 'subscription_details'
+          ? (typeof invoice.parent.subscription_details?.subscription === 'string'
+              ? invoice.parent.subscription_details.subscription
+              : invoice.parent.subscription_details?.subscription?.id)
+          : undefined;
 
         if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
@@ -241,9 +243,14 @@ export async function POST(req: Request) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
+        const failedSubId = invoice.parent?.type === 'subscription_details'
+          ? (typeof invoice.parent.subscription_details?.subscription === 'string'
+              ? invoice.parent.subscription_details.subscription
+              : invoice.parent.subscription_details?.subscription?.id)
+          : undefined;
         await supabase.from('webhook_logs').insert({
           event_type: 'invoice.payment_failed',
-          payload: { customer: invoice.customer, invoice_id: invoice.id } as any
+          payload: { customer: invoice.customer, invoice_id: invoice.id, subscription_id: failedSubId } as any
         })
         break
       }
