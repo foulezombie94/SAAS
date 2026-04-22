@@ -26,11 +26,11 @@ export async function login(prevState: any, formData: FormData) {
 
 
 
-  // 3. ANTI-BRUTE FORCE (10 tentatives / minute par IP)
-  const limit = await rateLimit('auth-login', 10, 60000)
+  // 3. ANTI-BRUTE FORCE (30 tentatives / minute par IP)
+  const limit = await rateLimit('auth-login', 30, 60000)
   if (!limit.success) {
     await reportSecurityEvent('FAIL')
-    return { error: limit.message }
+    return { error: 'Votre compte est temporairement suspendu.' }
   }
 
   const supabase = await createClient()
