@@ -66,9 +66,9 @@ export async function login(prevState: any, formData: FormData) {
           
           // FALLBACK DB : si le mapping a expiré (ex: inactif > 7j) ou webhook perdu
           if (!mappedUserId || typeof mappedUserId !== 'string' || mappedUserId.length === 0) {
-            const { requireAdminClient } = await import('@/lib/supabase/admin')
-            const adminSupabase = requireAdminClient()
-            if (adminSupabase) {
+            try {
+              const { requireAdminClient } = await import('@/lib/supabase/admin')
+              const adminSupabase = requireAdminClient()
               const { data: profile } = await adminSupabase
                 .from('profiles')
                 .select('id')
@@ -80,6 +80,8 @@ export async function login(prevState: any, formData: FormData) {
                 // Re-hydrate the cache (Self-Healing)
                 await redis.set(`artisan-flow:email-to-user:${normalizedEmail}`, mappedUserId, { ex: 7 * 24 * 60 * 60 })
               }
+            } catch (e) {
+              console.error('Failed to get mapped user id from db', e)
             }
           }
 
@@ -87,8 +89,11 @@ export async function login(prevState: any, formData: FormData) {
             // Keep the mapping alive for active users (7 days)
             await redis.expire(`artisan-flow:email-to-user:${normalizedEmail}`, 7 * 24 * 60 * 60)
             const bannedUntilStr = await redis.get(`artisan-flow:ban:${mappedUserId}`)
+            
+            let timestamp: number = 0;
+            
             if (bannedUntilStr) {
-              let timestamp = Number(bannedUntilStr)
+              timestamp = Number(bannedUntilStr)
               
               // Handle legacy bans where the value was just "1" or "true"
               // 1000000000000 is Sep 2001, anything smaller is likely not a real timestamp
@@ -100,18 +105,36 @@ export async function login(prevState: any, formData: FormData) {
                   timestamp = 0 // Fallback to hide date if no TTL
                 }
               }
-
-              if (timestamp > Date.now()) {
-                const date = new Date(timestamp)
-                const banMessage = `Vous pourrez vous reconnecter le ${date.toLocaleDateString('fr-FR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}.`
-                errorMessage = `${errorMessage} ${banMessage}`
+            } else {
+              // FALLBACK DB: check auth.users if ban missing in redis but supabase rejected login
+              try {
+                const { requireAdminClient } = await import('@/lib/supabase/admin')
+                const adminSupabase = requireAdminClient()
+                const { data: { user: adminUser } } = await adminSupabase.auth.admin.getUserById(mappedUserId)
+                if (adminUser?.banned_until) {
+                  timestamp = new Date(adminUser.banned_until).getTime()
+                  // Self-heal redis
+                  const banTtlSeconds = Math.ceil((timestamp - Date.now()) / 1000)
+                  if (banTtlSeconds > 0) {
+                    await redis.set(`artisan-flow:ban:${mappedUserId}`, timestamp.toString(), { ex: banTtlSeconds })
+                  }
+                }
+              } catch (e) {
+                console.error('Failed to fallback to admin user ban data', e)
               }
+            }
+
+            if (timestamp > Date.now()) {
+              const date = new Date(timestamp)
+              const banMessage = `Fin de la suspension le ${date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+              })} à ${date.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}.`
+              errorMessage = `Votre compte est temporairement suspendu. ${banMessage}`
             }
           }
         }
