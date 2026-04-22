@@ -36,7 +36,7 @@ export async function getQuotesServer(): Promise<Quote[]> {
   return data.reduce<Quote[]>((acc, item) => {
     const result = quoteWithClientSchema.safeParse(item)
     if (result.success) {
-      acc.push(result.data as any as Quote)
+      acc.push(result.data as unknown as Quote)
     } else {
       // Log détaillé pour identifier les records corrompus sans bloquer l'UI
       console.warn('[VALIDATION WARNING] Quote skipped:', item.id, result.error.format())
@@ -67,7 +67,7 @@ export async function getInvoicesServer(): Promise<Invoice[]> {
   return data.reduce<Invoice[]>((acc, item) => {
     const result = invoiceWithClientSchema.safeParse(item)
     if (result.success) {
-      acc.push(result.data as any as Invoice)
+      acc.push(result.data as unknown as Invoice)
     } else {
       console.warn('[VALIDATION WARNING] Invoice skipped:', item.id, result.error.format())
     }

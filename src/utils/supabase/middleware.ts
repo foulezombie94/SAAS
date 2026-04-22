@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { redis } from '@/lib/rate-limit'
 import { createAdminClient, requireAdminClient } from '@/lib/supabase/admin'
+import { REDIS_KEYS } from '@/lib/redis-keys'
 
 export async function updateSession(request: NextRequest, requestHeaders?: Headers) {
   // 1. On initialise la réponse par défaut avec les headers passés (pour le nonce CSP)
@@ -77,6 +78,7 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
   if (user) {
     // 🚀 Redirection vers Dashboard si sur "/" ou "/login" (Auto-login persistence)
     if (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login') {
+      // FIX #8/#9: Fetch plan once and reuse — avoids 2 DB round-trips per request
       let plan = user.app_metadata?.plan
       if (!plan) {
         const { data: profile } = await supabase
@@ -100,7 +102,7 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
         const banSynced = request.cookies.get('af_ban_synced')
         
         if (!banSynced) {
-          const bannedUntilStr = await redis.get(`artisan-flow:ban:${user.id}`)
+          const bannedUntilStr = await redis.get(REDIS_KEYS.userBan(user.id))
           if (bannedUntilStr) {
             const bannedUntilTime = parseInt(bannedUntilStr as string, 10)
             if (bannedUntilTime > Date.now()) {
@@ -131,7 +133,7 @@ export async function updateSession(request: NextRequest, requestHeaders?: Heade
         }
       }
 
-      // 🏎️ Plan verification
+      // FIX #8/#9: Reuse JWT plan — only hit DB if truly missing from JWT
       let plan = user.app_metadata?.plan
       if (!plan) {
         const { data: profile } = await supabase

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import crypto from 'crypto'
 
 interface SmtpConfig {
   host: string
@@ -8,20 +9,38 @@ interface SmtpConfig {
   from: string
 }
 
-export async function createTransporter(config: SmtpConfig) {
-  return nodemailer.createTransport({
+// FIX #13: Pool transporters by config hash to avoid a new TCP/TLS handshake per email
+const transporterCache = new Map<string, nodemailer.Transporter>()
+
+function getConfigHash(config: SmtpConfig): string {
+  const key = `${config.host}:${config.port}:${config.user}`
+  return crypto.createHash('sha256').update(key).digest('hex').slice(0, 16)
+}
+
+export function createTransporter(config: SmtpConfig) {
+  const hash = getConfigHash(config)
+  if (transporterCache.has(hash)) {
+    return transporterCache.get(hash)!
+  }
+
+  const transporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
     secure: config.port === 465, // true for 465, false for other ports
+    pool: true,                  // Enable connection pooling
+    maxConnections: 5,
+    maxMessages: 100,
     auth: {
       user: config.user,
       pass: config.pass,
     },
-    // Best practices to avoid spam
     tls: {
-      rejectUnauthorized: true
-    }
+      rejectUnauthorized: true,
+    },
   })
+
+  transporterCache.set(hash, transporter)
+  return transporter
 }
 
 export async function sendEmail(
@@ -32,7 +51,7 @@ export async function sendEmail(
   text?: string,
   attachments?: any[]
 ) {
-  const transporter = await createTransporter(config)
+  const transporter = createTransporter(config)
 
   const mailOptions = {
     from: `"${config.from}" <${config.user}>`,
@@ -41,13 +60,12 @@ export async function sendEmail(
     text: text || html.replace(/<[^>]*>?/gm, ''), // Fallback to plain text
     html,
     attachments,
-    // Anti-spam headers
     headers: {
       'X-Mailer': 'ArtisanFlow-SMTP',
-      'X-Priority': '3', // Normal priority
-      'Importance': 'Normal'
-    }
+      'X-Priority': '3',
+      'Importance': 'Normal',
+    },
   }
 
-  return await transporter.sendMail(mailOptions)
+  return transporter.sendMail(mailOptions)
 }

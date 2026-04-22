@@ -7,8 +7,15 @@ import { rateLimit } from '@/lib/rate-limit'
 import { signupSchema } from '@/lib/validations/secure-inputs'
 import { z } from 'zod'
 import { reportSecurityEvent, getSecurityReputation, resetSecurityReputation } from '@/lib/security'
+import { getBanExpiry, formatBanMessage } from '@/lib/ban-utils'
 
 export async function login(prevState: any, formData: FormData) {
+  // FIX #22: Rate limit FIRST to short-circuit bots before any Redis/cookie reads
+  const limit = await rateLimit('auth-login', 30, 60000)
+  if (!limit.success) {
+    return { error: 'Votre compte est temporairement suspendu.' }
+  }
+
   // 0. SECURITY REPUTATION CHECK
   const security = await getSecurityReputation()
   if (security.status === 'BLOCKED') {
@@ -19,18 +26,8 @@ export async function login(prevState: any, formData: FormData) {
   const honeypot = formData.get('__af_hpt_trap_91x') as string
   if (honeypot) {
     console.warn('🚨 Bot detected via Honeypot!')
-    // We only fail instead of permanently blocking, because password managers often trigger this.
     await reportSecurityEvent('FAIL')
     return { error: 'Votre navigateur a pré-rempli un champ caché. Veuillez vérifier vos extensions d\'auto-remplissage et réessayer.' }
-  }
-
-
-
-  // 3. ANTI-BRUTE FORCE (30 tentatives / minute par IP)
-  const limit = await rateLimit('auth-login', 30, 60000)
-  if (!limit.success) {
-    await reportSecurityEvent('FAIL')
-    return { error: 'Votre compte est temporairement suspendu.' }
   }
 
   const supabase = await createClient()
@@ -53,98 +50,12 @@ export async function login(prevState: any, formData: FormData) {
     if (error?.message === 'Invalid login credentials') {
       errorMessage = 'Email ou mot de passe incorrect'
     } else if (error?.message?.toLowerCase().includes('ban')) {
-      errorMessage = 'Votre compte est temporairement suspendu.'
-      
-      // Attempt to fetch the unban date directly from Redis using the email mapping
-      try {
-        const { redis } = await import('@/lib/rate-limit')
-        if (redis && email) {
-          const normalizedEmail = email.trim().toLowerCase()
-          
-          // 2 requêtes (très rapides sur Redis) pour récupérer d'abord l'ID, puis le ban
-          let mappedUserId = await redis.get(`artisan-flow:email-to-user:${normalizedEmail}`)
-          
-          // FALLBACK DB : si le mapping a expiré (ex: inactif > 7j) ou webhook perdu
-          if (!mappedUserId || typeof mappedUserId !== 'string' || mappedUserId.length === 0) {
-            try {
-              const { requireAdminClient } = await import('@/lib/supabase/admin')
-              const adminSupabase = requireAdminClient()
-              const { data: profile } = await adminSupabase
-                .from('profiles')
-                .select('id')
-                .eq('email', normalizedEmail)
-                .single()
-              
-              if (profile?.id) {
-                mappedUserId = profile.id
-                // Re-hydrate the cache (Self-Healing)
-                await redis.set(`artisan-flow:email-to-user:${normalizedEmail}`, mappedUserId, { ex: 7 * 24 * 60 * 60 })
-              }
-            } catch (e) {
-              console.error('Failed to get mapped user id from db', e)
-            }
-          }
-
-          if (typeof mappedUserId === 'string' && mappedUserId.length > 0) {
-            // Keep the mapping alive for active users (7 days)
-            await redis.expire(`artisan-flow:email-to-user:${normalizedEmail}`, 7 * 24 * 60 * 60)
-            const bannedUntilStr = await redis.get(`artisan-flow:ban:${mappedUserId}`)
-            
-            let timestamp: number = 0;
-            
-            if (bannedUntilStr) {
-              timestamp = Number(bannedUntilStr)
-              
-              // Handle legacy bans where the value was just "1" or "true"
-              // 1000000000000 is Sep 2001, anything smaller is likely not a real timestamp
-              if (!Number.isFinite(timestamp) || timestamp < 1000000000000) {
-                const ttlSeconds = await redis.ttl(`artisan-flow:ban:${mappedUserId}`)
-                if (ttlSeconds > 0) {
-                  timestamp = Date.now() + (ttlSeconds * 1000)
-                } else {
-                  timestamp = 0 // Fallback to hide date if no TTL
-                }
-              }
-            } else {
-              // FALLBACK DB: check auth.users if ban missing in redis but supabase rejected login
-              try {
-                const { requireAdminClient } = await import('@/lib/supabase/admin')
-                const adminSupabase = requireAdminClient()
-                const { data: { user: adminUser } } = await adminSupabase.auth.admin.getUserById(mappedUserId)
-                if (adminUser?.banned_until) {
-                  timestamp = new Date(adminUser.banned_until).getTime()
-                  // Self-heal redis
-                  const banTtlSeconds = Math.ceil((timestamp - Date.now()) / 1000)
-                  if (banTtlSeconds > 0) {
-                    await redis.set(`artisan-flow:ban:${mappedUserId}`, timestamp.toString(), { ex: banTtlSeconds })
-                  }
-                }
-              } catch (e) {
-                console.error('Failed to fallback to admin user ban data', e)
-              }
-            }
-
-            if (timestamp > Date.now()) {
-              const tenYearsInMs = 10 * 365 * 24 * 60 * 60 * 1000;
-              if (timestamp - Date.now() > tenYearsInMs) {
-                errorMessage = 'Votre compte est définitivement banni.';
-              } else {
-                const date = new Date(timestamp)
-                const banMessage = `Fin de la suspension le ${date.toLocaleDateString('fr-FR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric'
-                })} à ${date.toLocaleTimeString('fr-FR', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}.`
-                errorMessage = `Votre compte est temporairement suspendu. ${banMessage}`
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Failed to fetch ban expiration', e)
+      // FIX #10: Use centralized ban-utils instead of inline 80-line resolution chain
+      const banExpiry = await getBanExpiry(email)
+      if (banExpiry > Date.now()) {
+        errorMessage = formatBanMessage(banExpiry)
+      } else {
+        errorMessage = 'Votre compte est temporairement suspendu.'
       }
     }
     return { error: errorMessage }

@@ -10,7 +10,7 @@ const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 export async function POST(req: Request) {
   const body = await req.text()
   const sig = (await headers()).get('stripe-signature') as string
-  let supabase: any
+  let supabase: ReturnType<typeof requireAdminClient>
   try {
     supabase = requireAdminClient()
   } catch (e: any) {
@@ -52,7 +52,8 @@ export async function POST(req: Request) {
         // Ces métadonnées ont été injectées CÔTÉ SERVEUR lors de la création de la session
         // (voir src/app/api/billing/checkout/route.ts et src/app/api/payments/create-session/route.ts)
         const userId = session.client_reference_id || session.metadata?.userId
-        const planType = session.metadata?.plan || (session.amount_total === 2200 ? 'monthly' : 'yearly')
+        // FIX #6: Only use server-set metadata for plan type — never infer from amount
+        const planType = session.metadata?.plan || 'monthly'
         const factureId = session.metadata?.facture_id
         const quoteId = session.metadata?.quoteId || session.metadata?.devisId
 
@@ -135,28 +136,30 @@ export async function POST(req: Request) {
              }
           }
 
-          if (finalFactureId) {
-            await supabase.from('invoices').update({ 
-               status: 'paid', 
+          // FIX #7: Add userId ownership check to prevent unauthorized updates
+          if (finalFactureId && userId) {
+            await supabase.from('invoices').update({
+               status: 'paid',
                stripe_session_id: session.id,
                updated_at: new Date().toISOString()
-            }).eq('id', finalFactureId)
+            }).eq('id', finalFactureId).eq('user_id', userId)
           }
 
-          if (quoteId) {
-            await supabase.from('quotes').update({ 
-              status: 'paid', 
+          if (quoteId && userId) {
+            await supabase.from('quotes').update({
+              status: 'paid',
               payment_method: method,
               paid_at: new Date().toISOString(),
               payment_details: { stripe_session_id: session.id, payment_intent_id: session.payment_intent as string }
-            }).eq('id', quoteId)
+            }).eq('id', quoteId).eq('user_id', userId)
           }
         }
         break
       }
 
       case 'invoice.paid': {
-        const invoice = event.data.object as any
+        // FIX #14: Use proper Stripe.Invoice type instead of 'as any'
+        const invoice = event.data.object as Stripe.Invoice
         const subscriptionId = typeof invoice.subscription === 'string' 
           ? invoice.subscription 
           : invoice.subscription?.id;

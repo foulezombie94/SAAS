@@ -6,6 +6,16 @@ import { decrypt } from '@/lib/encryption'
 import { SendEmailSchema } from '@/lib/validations/email'
 import { rateLimit } from '@/lib/rate-limit'
 
+/** FIX #3: HTML-encode user-controlled strings before injecting into email HTML */
+function htmlEncode(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export async function POST(req: Request) {
   try {
     const supabase = await createClient()
@@ -107,7 +117,7 @@ export async function POST(req: Request) {
         <div style="padding: 40px; background-color: #ffffff;">
           <div style="border-left: 4px solid #00236f; padding-left: 20px; margin-bottom: 30px;">
             <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 600;">Message de votre artisan :</p>
-            <p style="margin: 10px 0 0 0; font-size: 16px; color: #1e293b; white-space: pre-wrap;">${message}</p>
+          <p style="margin: 10px 0 0 0; font-size: 16px; color: #1e293b; white-space: pre-wrap;">${htmlEncode(message)}</p>
           </div>
 
           <div style="background-color: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
@@ -115,7 +125,7 @@ export async function POST(req: Request) {
             <table style="width: 100%; font-size: 14px;">
               <tr>
                 <td style="color: #64748b; padding: 4px 0;">Client :</td>
-                <td style="text-align: right; font-weight: 700; color: #1e293b;">${quote.clients.name}</td>
+                <td style="text-align: right; font-weight: 700; color: #1e293b;">${htmlEncode(quote.clients.name)}</td>
               </tr>
               <tr>
                 <td style="color: #64748b; padding: 4px 0;">Montant :</td>

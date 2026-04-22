@@ -100,6 +100,15 @@ function FloatingShape({ scrollY, position, color, delay = 0, scale = 1 }: any) 
 }
 
 export default function ThreeBackground({ scrollY }: { scrollY: any }) {
+  // FIX #19: Skip 3D for reduced-motion users (accessibility + performance)
+  const prefersReduced =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (prefersReduced) {
+    return <div className="fixed inset-0 pointer-events-none z-[-1] bg-white" />
+  }
+
   const shapes = useMemo(() => [
     { position: [0, 0, 0] as [number, number, number], color: "#ffffff", scale: 1 },
     { position: [-12, 6, -10] as [number, number, number], color: "#002878", scale: 0.8, delay: 1 },

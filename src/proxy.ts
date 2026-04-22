@@ -1,24 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
-import { Redis } from '@upstash/redis'
+import { redis } from '@/lib/rate-limit'
+import { REDIS_KEYS } from '@/lib/redis-keys'
 
 // 🛡️ SECURITY CONFIG
+// FIX #1: Never fall back to a hardcoded secret in production.
 const SECURITY_SECRET = process.env.SECURITY_SIGN_SECRET
-const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721'
 const COOKIE_NAME = 'af_sec_rep'
 const encoder = new TextEncoder()
 
-// 🚀 PERFORMANCE: Optional Redis initialization
-let redis: Redis | null = null
-try {
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-    redis = Redis.fromEnv()
-  } else {
-    console.warn('⚠️ [ArtisanFlow] Upstash Redis environment variables missing. Rate limiting and IP banning disabled.')
-  }
-} catch (e) {
-  console.error('❌ [ArtisanFlow] Failed to initialize Redis:', e)
+if (!SECURITY_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error(
+    '🚨 FATAL: SECURITY_SIGN_SECRET environment variable is not set. Cannot start in production.'
+  )
 }
+
+const FINAL_SECRET = SECURITY_SECRET || 'artisan-flow-dev-fallback-7721' // dev only
 
 /**
  * 🔐 Validates HMAC signature using standard Web Crypto API (Edge Compatible)
@@ -48,24 +45,25 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-nonce', nonce)
 
-  // 1. Skip security for static assets
+  // FIX #5: Only skip specific static file extensions, not any path with a dot.
   const pathname = request.nextUrl.pathname
   if (
-    pathname.includes('.') || 
-    pathname.startsWith('/_next') || 
+    /\.(png|jpg|jpeg|gif|webp|svg|ico|woff2?|ttf|otf|eot|css|js|map)$/i.test(pathname) ||
+    pathname.startsWith('/_next') ||
     pathname.startsWith('/api/csp-report')
   ) {
     return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
-  // 2. 🛡️ IP BAN CHECK (Redis) - Only if Redis is available
+  // 2. 🛡️ IP BAN CHECK (Redis) — FIX #15: Use unified key from REDIS_KEYS
   if (redis) {
     try {
-      const ip = request.headers.get('x-real-ip') || 
-                 request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                 '127.0.0.1'
-      
-      const isBanned = await redis.get(`ban:${ip}`)
+      const ip =
+        request.headers.get('x-real-ip') ||
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        '127.0.0.1'
+
+      const isBanned = await redis.get(REDIS_KEYS.ipBan(ip))
       if (isBanned && !pathname.startsWith('/blocked')) {
         console.warn(`🚫 Blocking banned IP: ${ip}`)
         return NextResponse.redirect(new URL('/blocked', request.url))
@@ -93,11 +91,11 @@ export async function proxy(request: NextRequest) {
   // 4. SUPABASE SESSION & NONCE INJECTION
   const response = await updateSession(request, requestHeaders)
 
-  // 5. SECURITY HEADERS (CSP)
+  // 5. SECURITY HEADERS (CSP) — FIX #20: Removed 'unsafe-eval'
   const isProd = process.env.NODE_ENV === 'production'
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' https:;
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https:;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' blob: data: https://*.stripe.com https://*.supabase.co https://lh3.googleusercontent.com https://res.cloudinary.com https://images.unsplash.com https://*.unsplash.com;
@@ -107,7 +105,9 @@ export async function proxy(request: NextRequest) {
     form-action 'self';
     frame-ancestors 'none';
     ${isProd ? 'upgrade-insecure-requests;' : ''}
-  `.replace(/\s{2,}/g, ' ').trim()
+  `
+    .replace(/\s{2,}/g, ' ')
+    .trim()
 
   response.headers.set('Content-Security-Policy', cspHeader)
   response.headers.set('x-nonce', nonce)
