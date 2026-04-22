@@ -1,5 +1,3 @@
-'use server'
-
 import { redis } from '@/lib/rate-limit'
 import { REDIS_KEYS } from '@/lib/redis-keys'
 
