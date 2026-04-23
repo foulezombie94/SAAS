@@ -55,15 +55,13 @@ export function useQuoteRealtime(initialQuote: Quote) {
           const updated = payload.new as Quote
           
           setCurrentQuote(prev => {
-             // 🏎️ PERFORMANCE: Early return if no timestamp change
-             if (updated.updated_at === prev.updated_at) return prev;
-
              // 1. Vérifie si un changement réel a eu lieu sur les champs suivis
              const hasChanged = 
                 prev.status !== updated.status || 
                 prev.last_viewed_at !== updated.last_viewed_at ||
                 prev.client_signature_url !== updated.client_signature_url ||
-                prev.artisan_signature_url !== updated.artisan_signature_url;
+                prev.artisan_signature_url !== updated.artisan_signature_url ||
+                prev.updated_at !== updated.updated_at;
 
              if (!hasChanged) return prev;
 
