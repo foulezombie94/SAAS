@@ -40,9 +40,8 @@ export async function createQuote(input: CreateQuoteInput) {
   }
 
   // 1. Create Quote with Items via RPC (Atomic Transaction)
-  const { data: result, error: rpcError } = await supabase.rpc('create_quote_with_items', {
+  const { data: result, error: rpcError } = await supabase.rpc('create_quote_with_items_v3', {
     p_client_id: input.client_id,
-    p_number: input.number,
     p_status: input.status || 'draft',
     p_total_ht: input.total_ht,
     p_tax_rate: input.tax_rate,
