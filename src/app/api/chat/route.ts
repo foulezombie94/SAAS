@@ -91,13 +91,13 @@ async function findQuoteById(supabase: any, userId: string, number: string) {
   const client = (data.clients as any)?.name ?? 'Client inconnu'
   const status = STATUS_LABELS[data.status] ?? data.status
   const date = new Date(data.created_at).toLocaleDateString('fr-FR')
-  return `📄 **Devis #${data.number}**\n👤 Client : ${client}\n📅 Date : ${date}\n💶 Montant TTC : ${fmt(data.total_ttc)}\n📌 Statut : ${status}`
+  return `📄 **Devis #${data.number}**\n👤 Client : ${client}\n📅 Date : ${date}\n💶 Montant TTC : ${fmt(data.total_ttc)}\n📌 Statut : ${status}\n\n[Détails du devis](quote:${data.id})`
 }
 
 async function findQuotesByClient(supabase: any, userId: string, name: string) {
   const { data, error } = await supabase
     .from('quotes')
-    .select('number, status, total_ttc, created_at, clients:client_id(name)')
+    .select('id, number, status, total_ttc, created_at, clients:client_id(name)')
     .eq('user_id', userId)
     .ilike('clients.name', `%${name}%`)
     .order('created_at', { ascending: false })
@@ -107,7 +107,7 @@ async function findQuotesByClient(supabase: any, userId: string, name: string) {
 
   const lines = data.map((q: any) => {
     const status = STATUS_LABELS[q.status] ?? q.status
-    return `• Devis #${q.number} — ${fmt(q.total_ttc)} — ${status}`
+    return `• [Devis #${q.number}](quote:${q.id}) — ${fmt(q.total_ttc)} — ${status}`
   })
   const clientName = (data[0].clients as any)?.name ?? name
   return `📋 **Devis de ${clientName}** (${data.length} résultat${data.length > 1 ? 's' : ''}) :\n${lines.join('\n')}`
@@ -126,13 +126,13 @@ async function findInvoiceById(supabase: any, userId: string, number: string) {
   const client = (data.clients as any)?.name ?? 'Client inconnu'
   const status = STATUS_LABELS[data.status] ?? data.status
   const date = new Date(data.created_at).toLocaleDateString('fr-FR')
-  return `🧾 **Facture #${data.number}**\n👤 Client : ${client}\n📅 Date : ${date}\n💶 Montant TTC : ${fmt(data.total_ttc)}\n📌 Statut : ${status}`
+  return `🧾 **Facture #${data.number}**\n👤 Client : ${client}\n📅 Date : ${date}\n💶 Montant TTC : ${fmt(data.total_ttc)}\n📌 Statut : ${status}\n\n[Détails de la facture](invoice:${data.id})`
 }
 
 async function findInvoicesByClient(supabase: any, userId: string, name: string) {
   const { data, error } = await supabase
     .from('invoices')
-    .select('number, status, total_ttc, created_at, clients:client_id(name)')
+    .select('id, number, status, total_ttc, created_at, clients:client_id(name)')
     .eq('user_id', userId)
     .ilike('clients.name', `%${name}%`)
     .order('created_at', { ascending: false })
@@ -142,7 +142,7 @@ async function findInvoicesByClient(supabase: any, userId: string, name: string)
 
   const lines = data.map((inv: any) => {
     const status = STATUS_LABELS[inv.status] ?? inv.status
-    return `• Facture #${inv.number} — ${fmt(inv.total_ttc)} — ${status}`
+    return `• [Facture #${inv.number}](invoice:${inv.id}) — ${fmt(inv.total_ttc)} — ${status}`
   })
   const clientName = (data[0].clients as any)?.name ?? name
   return `📋 **Factures de ${clientName}** (${data.length} résultat${data.length > 1 ? 's' : ''}) :\n${lines.join('\n')}`

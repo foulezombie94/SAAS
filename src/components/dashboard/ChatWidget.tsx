@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X, Send, Paperclip, Sparkles } from 'lucide-react'
+import { MessageCircle, X, Send, Paperclip, Sparkles, ExternalLink, Calendar, User, FileText, CheckCircle2 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────
 interface Message {
@@ -22,15 +22,36 @@ function todayLabel() {
   return new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
-/** Minimal markdown → JSX: bold (**text**) and newlines */
-function renderMarkdown(text: string) {
+/** Minimal markdown → JSX: bold (**text**), links ([text](type:id)) and newlines */
+function renderMarkdown(text: string, onLinkClick: (type: string, id: string) => void) {
   return text.split('\n').map((line, i) => {
-    const parts = line.split(/\*\*(.+?)\*\*/g)
+    // 1. Detect links [Text](type:id)
+    const parts = line.split(/(\[.+?\]\(.+?\))/g)
+    
     return (
       <span key={i}>
-        {parts.map((part, j) =>
-          j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-        )}
+        {parts.map((part, j) => {
+          const linkMatch = part.match(/\[(.+?)\]\((.+?):(.+?)\)/)
+          if (linkMatch) {
+            const [, label, type, id] = linkMatch
+            return (
+              <button
+                key={j}
+                onClick={() => onLinkClick(type, id)}
+                className="text-amber-500 font-bold hover:underline inline-flex items-center gap-1 mx-1"
+              >
+                {label}
+                <ExternalLink size={12} />
+              </button>
+            )
+          }
+
+          // 2. Detect bold **text**
+          const boldParts = part.split(/\*\*(.+?)\*\*/g)
+          return boldParts.map((bp, k) => 
+            k % 2 === 1 ? <strong key={k}>{bp}</strong> : bp
+          )
+        })}
         {i < text.split('\n').length - 1 && <br />}
       </span>
     )
@@ -44,6 +65,10 @@ export function ChatWidget() {
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const [started, setStarted] = useState(false)
+  
+  // Side Panel State
+  const [selectedItem, setSelectedItem] = useState<{ type: string; id: string; data?: any } | null>(null)
+  const [loadingItem, setLoadingItem] = useState(false)
 
   const bottomRef  = useRef<HTMLDivElement>(null)
   const inputRef   = useRef<HTMLTextAreaElement>(null)
@@ -123,6 +148,25 @@ export function ChatWidget() {
       setTyping(false)
     }
   }, [input])
+
+  const handleLinkClick = async (type: string, id: string) => {
+    setLoadingItem(true)
+    setSelectedItem({ type, id })
+    
+    try {
+      // In a real app, you'd fetch from a specific preview API
+      // Here we'll simulate fetching or use the search API logic
+      const res = await fetch(`/api/chat/preview?type=${type}&id=${id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedItem({ type, id, data })
+      }
+    } catch (err) {
+      console.error('Error fetching preview:', err)
+    } finally {
+      setLoadingItem(false)
+    }
+  }
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -221,7 +265,7 @@ export function ChatWidget() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5" style={{ scrollbarWidth: 'thin' }}>
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5 font-['Inter']" style={{ scrollbarWidth: 'thin' }}>
                   {messages.map(msg => (
                     <div
                       key={msg.id}
@@ -241,12 +285,12 @@ export function ChatWidget() {
 
                         {/* Bubble */}
                         {msg.text && (
-                          <div className={`px-4 py-3 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
+                          <div className={`px-4 py-3 rounded-2xl text-[13px] leading-relaxed shadow-sm font-['Inter'] ${
                             msg.role === 'user'
                               ? 'bg-[#001142] text-white rounded-br-sm'
                               : 'bg-white border border-slate-100 text-slate-700 rounded-bl-sm'
                           }`}>
-                            {msg.isMarkdown ? renderMarkdown(msg.text) : msg.text}
+                            {msg.isMarkdown ? renderMarkdown(msg.text, handleLinkClick) : msg.text}
                             <p className={`text-[9px] mt-2 font-bold ${msg.role === 'user' ? 'text-white/40 text-right' : 'text-slate-300'}`}>
                               {msg.time}
                             </p>
@@ -291,7 +335,7 @@ export function ChatWidget() {
                 </div>
 
                 {/* Input bar */}
-                <div className="px-6 pb-6 pt-3 bg-[#faf8ff] border-t border-slate-100 shrink-0">
+                <div className="px-6 pb-6 pt-3 bg-[#faf8ff] border-t border-slate-100 shrink-0 font-['Inter']">
                   <div className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col shadow-sm focus-within:border-[#001142]/30 focus-within:shadow-md transition-all">
                     <textarea
                       ref={inputRef}
@@ -305,7 +349,7 @@ export function ChatWidget() {
                         }
                       }}
                       placeholder='Tapez votre message… ex: "devis #42" ou "devis de Martin"'
-                      className="w-full bg-transparent border-none focus:ring-0 resize-none text-[13px] text-slate-700 placeholder:text-slate-400 leading-relaxed"
+                      className="w-full bg-transparent border-none focus:ring-0 resize-none text-[13px] text-slate-700 placeholder:text-slate-400 leading-relaxed font-['Inter']"
                     />
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
                       <button
@@ -329,6 +373,93 @@ export function ChatWidget() {
                   </div>
                 </div>
               </div>
+
+              {/* ── Side Details Panel ── */}
+              <AnimatePresence>
+                {selectedItem && (
+                  <motion.div
+                    initial={{ x: 40, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: 40, opacity: 0 }}
+                    className="pointer-events-auto ml-6 w-[400px] bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-2xl flex flex-col font-['Inter']"
+                    style={{ height: 'min(680px, 90vh)' }}
+                  >
+                    <div className="bg-slate-50 border-b border-slate-100 p-6 flex items-center justify-between">
+                      <h3 className="font-black text-[10px] text-primary uppercase tracking-[0.2em]">Détails du document</h3>
+                      <button 
+                        onClick={() => setSelectedItem(null)}
+                        className="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                      {loadingItem ? (
+                        <div className="h-full flex items-center justify-center">
+                          <div className="w-8 h-8 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+                        </div>
+                      ) : selectedItem.data ? (
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary">
+                              {selectedItem.type === 'quote' ? <FileText size={28} /> : <CheckCircle2 size={28} />}
+                            </div>
+                            <div>
+                              <h4 className="text-xl font-black text-primary">
+                                {selectedItem.type === 'quote' ? 'Devis' : 'Facture'} #{selectedItem.data.number}
+                              </h4>
+                              <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md uppercase tracking-wider">
+                                {selectedItem.data.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-6">
+                            <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Informations Client</p>
+                              <div className="flex items-center gap-3 mb-2">
+                                <User size={16} className="text-primary/40" />
+                                <span className="text-sm font-bold text-slate-700">{selectedItem.data.clients?.name}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Calendar size={16} className="text-primary/40" />
+                                <span className="text-sm font-medium text-slate-500">Créé le {new Date(selectedItem.data.created_at).toLocaleDateString('fr-FR')}</span>
+                              </div>
+                            </div>
+
+                            <div className="bg-[#001142] p-6 rounded-2xl text-white shadow-xl shadow-primary/10">
+                              <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-2 text-center">Montant Total</p>
+                              <p className="text-3xl font-black text-center tabular-nums">
+                                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedItem.data.total_ttc)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t border-slate-100">
+                             <a 
+                               href={`/dashboard/${selectedItem.type === 'quote' ? 'quotes' : 'invoices'}/${selectedItem.id}`}
+                               className="w-full h-14 bg-slate-50 hover:bg-slate-100 border border-slate-100 flex items-center justify-center gap-2 rounded-2xl text-[12px] font-black text-primary uppercase tracking-widest transition-all"
+                             >
+                               Voir la page complète
+                               <ExternalLink size={14} />
+                             </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-center text-slate-400 py-12">Données indisponibles.</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
             </motion.div>
           </>
         )}
