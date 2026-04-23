@@ -10,7 +10,6 @@ interface Message {
   role: 'user' | 'agent'
   text: string
   time: string
-  file?: { name: string; size: string }
   isMarkdown?: boolean
 }
 
@@ -72,7 +71,6 @@ export function ChatWidget() {
 
   const bottomRef  = useRef<HTMLDivElement>(null)
   const inputRef   = useRef<HTMLTextAreaElement>(null)
-  const fileRef    = useRef<HTMLInputElement>(null)
 
   // Auto-scroll
   useEffect(() => {
@@ -113,8 +111,8 @@ export function ChatWidget() {
   }
 
   // ── Send message → API ────────────────────────
-  const sendMessage = useCallback(async (text = input.trim(), file?: { name: string; size: string }) => {
-    if (!text && !file) return
+  const sendMessage = useCallback(async (text = input.trim()) => {
+    if (!text) return
 
     // Optimistic user bubble
     setMessages(prev => [...prev, {
@@ -122,7 +120,6 @@ export function ChatWidget() {
       role: 'user',
       text,
       time: nowLabel(),
-      file,
     }])
     setInput('')
     setTyping(true)
@@ -164,16 +161,6 @@ export function ChatWidget() {
     } finally {
       setLoadingItem(false)
     }
-  }
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    if (!f) return
-    const size = f.size > 1024 * 1024
-      ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
-      : `${Math.round(f.size / 1024)} KB`
-    sendMessage(`J'ai joint un fichier : ${f.name}`, { name: f.name, size })
-    e.target.value = ''
   }
 
   // ── Render ────────────────────────────────────
@@ -273,17 +260,6 @@ export function ChatWidget() {
                             : 'bg-surface-container-lowest border border-surface-variant text-on-surface rounded-bl-sm shadow-[0_2px_10px_rgba(0,17,66,0.02)]'
                         }`}>
                           {msg.isMarkdown ? renderMarkdown(msg.text, handleLinkClick) : msg.text}
-                          
-                          {/* File attachment */}
-                          {msg.file && (
-                            <div className="mt-3 bg-white/10 border border-white/5 p-3 rounded-xl flex items-center gap-3">
-                              <span className="material-symbols-outlined text-inverse-primary" style={{ fontSize: '20px' }}>attach_file</span>
-                              <div>
-                                <p className="text-[12px] font-bold text-white">{msg.file.name}</p>
-                                <p className="text-[10px] text-inverse-primary opacity-80">{msg.file.size}</p>
-                              </div>
-                            </div>
-                          )}
 
                           <div className={`text-[10px] mt-3 font-medium ${msg.role === 'user' ? 'text-inverse-primary text-right' : 'text-on-surface-variant'}`}>
                             {msg.time}
@@ -330,15 +306,7 @@ export function ChatWidget() {
                       placeholder='Tapez votre message... ex: "42", "devis de Martin" ou "devis du 23/04"'
                       className="w-full bg-transparent border-none focus:ring-0 resize-none h-[48px] p-3 text-on-surface placeholder-on-surface-variant/60 text-[14px] font-body"
                     />
-                    <div className="flex justify-between items-center px-1 pt-2 mt-1">
-                      <button
-                        onClick={() => fileRef.current?.click()}
-                        className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors flex items-center justify-center"
-                        title="Joindre un fichier"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>attach_file</span>
-                      </button>
-                      <input ref={fileRef} type="file" className="hidden" onChange={handleFile} />
+                    <div className="flex justify-end items-center px-1 pt-2 mt-1">
                       
                       <button
                         onClick={() => sendMessage()}
