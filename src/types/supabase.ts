@@ -148,7 +148,7 @@ export type Database = {
           created_at?: string | null
           description?: string
           id?: string
-          invoice_id?: string
+          invoice_id: string
           quantity?: number | null
           tax_rate?: number | null
           total_ht?: number | null
@@ -170,6 +170,7 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string | null
+          deleted_at: string | null
           due_date: string | null
           id: string
           number: string
@@ -184,6 +185,7 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string | null
+          deleted_at?: string | null
           due_date?: string | null
           id?: string
           number: string
@@ -198,6 +200,7 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string | null
+          deleted_at?: string | null
           due_date?: string | null
           id?: string
           number?: string
@@ -230,17 +233,19 @@ export type Database = {
         Row: {
           address: string | null
           annual_revenue: string | null
-          bank_name: string | null
-          bic: string | null
+          business_description: string | null
           company_name: string | null
           current_period_end: string | null
           email: string
           first_name: string | null
           full_name: string | null
-          iban: string | null
           id: string
           is_pro: boolean | null
           last_name: string | null
+          last_seen_at: string | null
+          last_seen_notifications_at: string | null
+          legal_form: string | null
+          notification_preferences: Json | null
           num_contacts: string | null
           phone: string | null
           plan: string | null
@@ -251,33 +256,31 @@ export type Database = {
           smtp_pass: string | null
           smtp_port: number | null
           smtp_user: string | null
+          statement_descriptor: string | null
           stripe_account_id: string | null
           stripe_charges_enabled: boolean | null
           stripe_customer_id: string | null
           stripe_details_submitted: boolean | null
           stripe_subscription_id: string | null
-          updated_at: string | null
-          last_seen_notifications_at: string | null
-          notification_preferences: Json | null
-          business_description: string | null
-          statement_descriptor: string | null
-          legal_form: string | null
           tva_intra: string | null
+          updated_at: string | null
         }
         Insert: {
           address?: string | null
           annual_revenue?: string | null
-          bank_name?: string | null
-          bic?: string | null
+          business_description?: string | null
           company_name?: string | null
           current_period_end?: string | null
           email: string
           first_name?: string | null
           full_name?: string | null
-          iban?: string | null
           id: string
           is_pro?: boolean | null
           last_name?: string | null
+          last_seen_at?: string | null
+          last_seen_notifications_at?: string | null
+          legal_form?: string | null
+          notification_preferences?: Json | null
           num_contacts?: string | null
           phone?: string | null
           plan?: string | null
@@ -288,31 +291,31 @@ export type Database = {
           smtp_pass?: string | null
           smtp_port?: number | null
           smtp_user?: string | null
+          statement_descriptor?: string | null
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null
           stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
           stripe_subscription_id?: string | null
+          tva_intra?: string | null
           updated_at?: string | null
-          last_seen_notifications_at?: string | null
-          notification_preferences?: Json | null
-          business_description?: string | null
-          statement_descriptor?: string | null
         }
         Update: {
           address?: string | null
           annual_revenue?: string | null
-          bank_name?: string | null
-          bic?: string | null
+          business_description?: string | null
           company_name?: string | null
           current_period_end?: string | null
           email?: string
           first_name?: string | null
           full_name?: string | null
-          iban?: string | null
           id?: string
           is_pro?: boolean | null
           last_name?: string | null
+          last_seen_at?: string | null
+          last_seen_notifications_at?: string | null
+          legal_form?: string | null
+          notification_preferences?: Json | null
           num_contacts?: string | null
           phone?: string | null
           plan?: string | null
@@ -323,16 +326,14 @@ export type Database = {
           smtp_pass?: string | null
           smtp_port?: number | null
           smtp_user?: string | null
+          statement_descriptor?: string | null
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null
           stripe_customer_id?: string | null
           stripe_details_submitted?: boolean | null
           stripe_subscription_id?: string | null
+          tva_intra?: string | null
           updated_at?: string | null
-          last_seen_notifications_at?: string | null
-          notification_preferences?: Json | null
-          business_description?: string | null
-          statement_descriptor?: string | null
         }
         Relationships: []
       }
@@ -385,17 +386,20 @@ export type Database = {
       }
       quotes: {
         Row: {
+          artisan_signature_url: string | null
           client_id: string
+          client_signature_url: string | null
           created_at: string
+          estimated_duration: string | null
+          estimated_start_date: string | null
           id: string
+          last_viewed_at: string | null
           number: string
           paid_at: string | null
           payment_details: Json | null
           payment_method: string | null
           public_token: string | null
           public_token_expires_at: string | null
-          artisan_signature_url: string | null
-          client_signature_url: string | null
           signature_url: string | null
           status: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id: string | null
@@ -405,22 +409,22 @@ export type Database = {
           updated_at: string | null
           user_id: string
           valid_until: string | null
-          last_viewed_at: string | null
-          estimated_start_date: string | null
-          estimated_duration: string | null
         }
         Insert: {
+          artisan_signature_url?: string | null
           client_id: string
+          client_signature_url?: string | null
           created_at?: string
+          estimated_duration?: string | null
+          estimated_start_date?: string | null
           id?: string
+          last_viewed_at?: string | null
           number?: string
           paid_at?: string | null
           payment_details?: Json | null
           payment_method?: string | null
           public_token?: string | null
           public_token_expires_at?: string | null
-          artisan_signature_url?: string | null
-          client_signature_url?: string | null
           signature_url?: string | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
@@ -430,20 +434,22 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           valid_until?: string | null
-          last_viewed_at?: string | null
         }
         Update: {
+          artisan_signature_url?: string | null
           client_id?: string
+          client_signature_url?: string | null
           created_at?: string
+          estimated_duration?: string | null
+          estimated_start_date?: string | null
           id?: string
+          last_viewed_at?: string | null
           number?: string
           paid_at?: string | null
           payment_details?: Json | null
           payment_method?: string | null
           public_token?: string | null
           public_token_expires_at?: string | null
-          artisan_signature_url?: string | null
-          client_signature_url?: string | null
           signature_url?: string | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           stripe_session_id?: string | null
@@ -453,7 +459,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           valid_until?: string | null
-          last_viewed_at?: string | null
         }
         Relationships: [
           {
@@ -464,6 +469,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sent_emails: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          quote_id: string | null
+          recipient_email: string
+          subject: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          quote_id?: string | null
+          recipient_email: string
+          subject?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          quote_id?: string | null
+          recipient_email?: string
+          subject?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sent_emails_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sequences: {
+        Row: {
+          invoice_seq: number
+          quote_seq: number
+          user_id: string
+        }
+        Insert: {
+          invoice_seq?: number
+          quote_seq?: number
+          user_id: string
+        }
+        Update: {
+          invoice_seq?: number
+          quote_seq?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       webhook_logs: {
         Row: {
@@ -494,23 +555,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      accept_quote_v3:
-        | {
-            Args: {
-              p_public_token: string
-              p_quote_id: string
-              p_signature_url: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_public_token: string
-              p_quote_id: string
-              p_signature_url: string
-            }
-            Returns: string
-          }
+      accept_quote_v3: {
+        Args: {
+          p_public_token: string
+          p_quote_id: string
+          p_signature_url: string
+        }
+        Returns: string
+      }
       accept_quote_v4: {
         Args: {
           p_public_token: string
@@ -524,67 +576,55 @@ export type Database = {
         Args: { p_quote_id: string }
         Returns: Json
       }
-      create_quote_with_items: {
-        Args: {
-          p_client_id: string
-          p_items: Json
-          p_number: string
-          p_status: Database["public"]["Enums"]["quote_status"]
-          p_tax_rate: number
-          p_total_ht: number
-          p_total_ttc: number
-        }
-        Returns: Json
-      }
-      create_quote_with_items_v2:
+      create_quote_with_items_v3:
         | {
             Args: {
               p_client_id: string
               p_items: Json
               p_payment_details?: Json
               p_payment_method?: string
-              p_status: string
-              p_tax_rate: number
-              p_total_ht: number
-              p_total_ttc: number
-              p_user_id: string
+              p_status?: string
+              p_tax_rate?: number
+              p_total_ht?: number
+              p_total_ttc?: number
               p_valid_until?: string
             }
-            Returns: Json
+            Returns: string
           }
         | {
             Args: {
               p_client_id: string
+              p_estimated_duration?: string
+              p_estimated_start_date?: string
               p_items: Json
-              p_payment_details: Json
-              p_payment_method: string
-              p_status: string
-              p_tax_rate: number
-              p_total_ht: number
-              p_total_ttc: number
-              p_user_id: string
-              p_valid_until: string
+              p_payment_details?: Json
+              p_payment_method?: string
+              p_status?: string
+              p_tax_rate?: number
+              p_total_ht?: number
+              p_total_ttc?: number
+              p_valid_until?: string
             }
-            Returns: Json
+            Returns: string
           }
-      create_quote_with_items_v3: {
-        Args: {
-          p_client_id: string
-          p_items: Json
-          p_payment_details?: Json
-          p_payment_method?: string
-          p_status: string
-          p_tax_rate: number
-          p_total_ht: number
-          p_total_ttc: number
-          p_valid_until?: string
-        }
-        Returns: string
+      get_dashboard_activity: {
+        Args: { p_days: number; p_user_id: string }
+        Returns: Json
       }
       get_dashboard_analytics: { Args: { p_user_id: string }; Returns: Json }
+      get_next_invoice_number: { Args: { p_user_id: string }; Returns: string }
       get_next_quote_number: { Args: { p_user_id: string }; Returns: string }
+      get_public_quote_data: {
+        Args: { p_quote_id: string; p_token: string }
+        Returns: Json
+      }
+      track_quote_view_v1: {
+        Args: { p_quote_id: string; p_token: string }
+        Returns: undefined
+      }
     }
     Enums: {
+      invoice_status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
       quote_status:
         | "draft"
         | "sent"
@@ -595,7 +635,6 @@ export type Database = {
         | "overdue"
         | "cancelled"
         | "expired"
-      invoice_status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -719,3 +758,22 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      invoice_status: ["draft", "sent", "paid", "overdue", "cancelled"],
+      quote_status: [
+        "draft",
+        "sent",
+        "accepted",
+        "rejected",
+        "invoiced",
+        "paid",
+        "overdue",
+        "cancelled",
+        "expired",
+      ],
+    },
+  },
+} as const
