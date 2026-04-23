@@ -42,46 +42,45 @@ const FAQ: Record<string, string> = {
 
 function detectIntent(message: string): Intent {
   const m = message.trim()
+  const low = m.toLowerCase()
 
-  // Quote by number
+  // 1. IDs (most specific: e.g. "devis #42")
   const qId = QUOTE_ID_RE.exec(m)
   if (qId) return { type: 'quote_by_id', value: qId[1] }
 
-  // Invoice by number
   const invId = INVOICE_ID_RE.exec(m)
   if (invId) return { type: 'invoice_by_id', value: invId[1] }
 
-  // Quote by date
-  const qDate = QUOTE_DATE_RE.exec(m)
-  if (qDate) return { type: 'quote_by_date', value: qDate[1] }
+  // 2. Dates (e.g. "devis du 18 avril" or just "18 avril")
+  const dateMatch = m.match(new RegExp(`(${DATE_PATTERN})`, 'i'))
+  if (dateMatch) {
+    const dateVal = dateMatch[1]
+    const isQuote = low.includes('devis') || low.includes('quote')
+    const isInvoice = low.includes('facture') || low.includes('invoice')
+    
+    if (isQuote && !isInvoice) return { type: 'quote_by_date', value: dateVal }
+    if (isInvoice && !isQuote) return { type: 'invoice_by_date', value: dateVal }
+    return { type: 'general_by_date', value: dateVal }
+  }
 
-  // Invoice by date
-  const iDate = INVOICE_DATE_RE.exec(m)
-  if (iDate) return { type: 'invoice_by_date', value: iDate[1] }
-
-  // General date
-  const gDate = GENERAL_DATE_RE.exec(m)
-  if (gDate) return { type: 'general_by_date', value: gDate[1] }
-
-  // Standalone ID (must be after specific ones)
+  // 3. Standalone ID (e.g. "42")
   const standId = STANDALONE_ID_RE.exec(m)
   if (standId) return { type: 'standalone_id', value: standId[1] }
 
-  // Quote by client name
+  // 4. Client names (e.g. "devis de Dupont")
   const qClient = QUOTE_CLIENT_RE.exec(m)
   if (qClient) return { type: 'quote_by_client', value: qClient[1].trim() }
 
-  // Invoice by client name
   const invClient = INVOICE_CLIENT_RE.exec(m)
   if (invClient) return { type: 'invoice_by_client', value: invClient[1].trim() }
 
-  // Client lookup
+  // 5. Client lookup (e.g. "client Dupont")
   const cl = CLIENT_RE.exec(m)
   if (cl) return { type: 'client_lookup', value: cl[1].trim() }
 
-  // FAQ keywords
+  // 6. FAQ keywords
   for (const key of Object.keys(FAQ)) {
-    if (m.toLowerCase().includes(key)) return { type: 'faq', topic: key }
+    if (low.includes(key)) return { type: 'faq', topic: key }
   }
 
   return { type: 'unknown' }
