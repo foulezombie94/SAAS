@@ -93,7 +93,7 @@ export function ChatWidget() {
       setTyping(true)
       setTimeout(() => {
         pushAgent(
-          "Bonjour 👋 Je suis votre assistant ArtisanFlow. Je peux rechercher vos **devis** et **factures** par numéro ou nom de client.\n\nExemples :\n• *devis #42*\n• *devis de Dupont*\n• *facture #7*",
+          "Bonjour 👋 Je suis votre assistant ArtisanFlow. Je peux rechercher vos **devis** et **factures** par numéro, nom de client ou **date**.\n\nExemples :\n• *devis #42* ou juste *42*\n• *devis de Dupont*\n• *devis du 23/04*",
           true
         )
         setTyping(false)
@@ -346,7 +346,7 @@ export function ChatWidget() {
                           sendMessage()
                         }
                       }}
-                      placeholder='Tapez votre message… ex: "devis #42" ou "devis de Martin"'
+                      placeholder='Tapez votre message… ex: "42", "devis de Martin" ou "devis du 23/04"'
                       className="w-full bg-transparent border-none focus:ring-0 resize-none text-[13px] text-slate-700 placeholder:text-slate-400 leading-relaxed font-['Inter']"
                     />
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
