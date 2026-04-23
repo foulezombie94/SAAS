@@ -154,8 +154,6 @@ export function ChatWidget() {
     setSelectedItem({ type, id })
     
     try {
-      // In a real app, you'd fetch from a specific preview API
-      // Here we'll simulate fetching or use the search API logic
       const res = await fetch(`/api/chat/preview?type=${type}&id=${id}`)
       if (res.ok) {
         const data = await res.json()
