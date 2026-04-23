@@ -460,10 +460,3 @@ export function ChatWidget() {
     </>
   )
 }
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
-  )
-}
