@@ -146,37 +146,64 @@ export function QuoteActionsPanel({
         </div>
       )}
 
-      {/* EMAILS HISTORY (REPLACES PROJECT OVERVIEW) */}
-      <div className="bg-[#f3f4f8] p-5 rounded-md mt-2">
-        <h3 className="text-[10px] font-black uppercase text-[#818c9f] tracking-widest mb-5">EMAILS HISTORY</h3>
-        
-        <div className="space-y-4">
-          {quote.sent_emails && quote.sent_emails.length > 0 ? (
-            quote.sent_emails.map((email) => (
-              <div key={email.id} className="flex items-center gap-4">
-                <div className="w-11 h-11 bg-white rounded-sm shadow-sm flex items-center justify-center shrink-0">
-                  <Send className="w-5 h-5 text-[#072161]" strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-[9px] font-black uppercase text-[#a5aec1] tracking-wider truncate">
-                    {new Date(email.created_at).toLocaleDateString('fr-FR', { 
-                      day: 'numeric', 
-                      month: 'short',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                  <span className="font-black text-[#1a2130] text-[12px] truncate">{email.subject}</span>
-                  <span className="text-[10px] text-slate-400 font-medium truncate">{email.recipient_email}</span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 text-center opacity-40">
-               <Info className="w-8 h-8 mb-2 text-[#818c9f]" />
-               <p className="text-[10px] font-bold uppercase tracking-widest text-[#818c9f]">Aucun mail envoyé</p>
+      {/* PROJECT METADATA & EMAILS HISTORY */}
+      <div className="bg-[#f3f4f8] rounded-xl overflow-hidden shadow-sm border border-[#c5c5d3]/20">
+        {/* Project Metadata */}
+        <div className="p-5 border-b border-[#c5c5d3]/30">
+          <h3 className="text-[10px] font-black uppercase text-[#818c9f] tracking-widest mb-4 flex items-center gap-2">
+            <Info size={12} /> Project Details
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-[8px] font-black uppercase text-[#a5aec1] tracking-wider">Estimated Start</p>
+              <p className="text-[11px] font-black text-[#1a2130] uppercase">
+                {quote.estimated_start_date ? new Date(quote.estimated_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'NOT SET'}
+              </p>
             </div>
-          )}
+            <div className="space-y-1">
+              <p className="text-[8px] font-black uppercase text-[#a5aec1] tracking-wider">Project Duration</p>
+              <p className="text-[11px] font-black text-[#1a2130] uppercase">{quote.estimated_duration || 'NOT SPECIFIED'}</p>
+            </div>
+            <div className="col-span-2 space-y-1">
+              <p className="text-[8px] font-black uppercase text-[#a5aec1] tracking-wider">Taxable Region</p>
+              <p className="text-[11px] font-black text-[#1a2130] uppercase">Standard ({quote.tax_rate}%)</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Emails History */}
+        <div className="p-5">
+          <h3 className="text-[10px] font-black uppercase text-[#818c9f] tracking-widest mb-4 flex items-center gap-2">
+            <Timer size={12} /> Live History
+          </h3>
+          
+          <div className="space-y-4">
+            {quote.sent_emails && quote.sent_emails.length > 0 ? (
+              quote.sent_emails.map((email) => (
+                <div key={email.id} className="flex items-center gap-4 group/email">
+                  <div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center shrink-0 border border-[#c5c5d3]/10 group-hover/email:bg-[#00236f] group-hover/email:text-white transition-all">
+                    <Send className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-[8px] font-black uppercase text-[#a5aec1] tracking-wider">
+                      {new Date(email.created_at).toLocaleDateString('fr-FR', { 
+                        day: 'numeric', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                    <span className="font-black text-[#1a2130] text-[11px] truncate">{email.subject}</span>
+                    <span className="text-[9px] text-slate-400 font-bold truncate">{email.recipient_email}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-4 text-center opacity-30">
+                 <p className="text-[9px] font-bold uppercase tracking-widest text-[#818c9f]">No emails recorded yet</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       

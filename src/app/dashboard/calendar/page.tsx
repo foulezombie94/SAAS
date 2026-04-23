@@ -30,6 +30,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays
 import { fr } from 'date-fns/locale'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { DateTimePicker } from '@/components/ui/DateTimePicker'
+import { createClient } from '@/utils/supabase/client'
 
 function CalendarContent() {
   const searchParams = useSearchParams()
@@ -69,6 +70,28 @@ function CalendarContent() {
         end_time: format(addHours(new Date(), 2), "yyyy-MM-dd'T'11:00")
       }))
       setShowModal(true)
+    }
+
+    // ⚡ Real-time synchronization
+    const supabase = createClient()
+    const channel = supabase
+      .channel('calendar-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'interventions'
+        },
+        () => {
+          console.log("🔄 [Realtime] Mise à jour agenda détectée")
+          fetchInterventions()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
   }, [searchParams])
 

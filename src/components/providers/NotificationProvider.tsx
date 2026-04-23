@@ -192,6 +192,30 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     await refetchUnreadCount()
   }, [router, supabase, refetchUnreadCount])
 
+  // 🚀 INVOICE HANDLER
+  const handleInvoiceChange = useCallback(async (payload: any) => {
+    const newInvoice = payload.new as any
+    const oldInvoice = payload.old as any
+
+    console.log("🔥 [Realtime] Changement sur une facture !", { id: newInvoice?.id, status: newInvoice?.status })
+
+    startTransition(() => {
+      router.refresh()
+    })
+
+    if (newInvoice.status === 'paid' && (!oldInvoice || oldInvoice.status !== 'paid')) {
+       const staticKey = `AF_INV_PAID_${newInvoice.id}`
+       if (typeof window !== 'undefined' && !localStorage.getItem(staticKey)) {
+         localStorage.setItem(staticKey, Date.now().toString())
+         toast.success("💰 Facture Payée !", { description: `La facture ${newInvoice.number} a été réglée.` })
+         
+         if (!audioLockRef.current) {
+            audioRef.current?.play().finally(() => { audioLockRef.current = false })
+         }
+       }
+    }
+  }, [router])
+
   // 🏗️ MAIN EFFECT
   useEffect(() => {
     if (!userId || !supabase) return
@@ -294,20 +318,62 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
          filter: `user_id=eq.${userId}` 
       }, 
         (payload: any) => {
-          console.log("⚡ [Realtime] Message reçu (Invoices) !", payload)
-          router.refresh()
+          handleInvoiceChange(payload)
         }
       )
-      .subscribe((status) => {
-         console.log(`📡 [Realtime] Statut du canal Invoices : ${status}`)
+      .subscribe()
+
+    // 📧 Realtime : Sent Emails (For history updates)
+    const emailChannel = supabase
+      .channel(`emails-sync-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'sent_emails',
+        filter: `user_id=eq.${userId}`
+      }, (payload) => {
+        console.log("⚡ [Realtime] Nouvel email envoyé !", payload)
+        router.refresh()
       })
+      .subscribe()
+
+    // 📅 Realtime : Interventions (For calendar updates)
+    const interventionChannel = supabase
+      .channel(`interventions-sync-${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'interventions',
+        filter: `user_id=eq.${userId}`
+      }, (payload) => {
+        console.log("⚡ [Realtime] Changement agenda !", payload)
+        router.refresh()
+      })
+      .subscribe()
+
+    // 👥 Realtime : Clients
+    const clientChannel = supabase
+      .channel(`clients-sync-${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'clients',
+        filter: `user_id=eq.${userId}`
+      }, (payload) => {
+        console.log("⚡ [Realtime] Client mis à jour !", payload)
+        router.refresh()
+      })
+      .subscribe()
 
     return () => {
       supabase.removeChannel(quoteChannel)
       supabase.removeChannel(profileChannel)
       supabase.removeChannel(invoiceChannel)
+      supabase.removeChannel(emailChannel)
+      supabase.removeChannel(interventionChannel)
+      supabase.removeChannel(clientChannel)
     }
-  }, [userId, supabase, handleQuoteChange, refetchUnreadCount, router])
+  }, [userId, supabase, handleQuoteChange, handleInvoiceChange, refetchUnreadCount, router])
 
   const markAllAsRead = async () => {
     if (!userId) return

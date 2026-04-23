@@ -102,6 +102,23 @@ export function useQuoteRealtime(initialQuote: Quote) {
           })
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sent_emails',
+          filter: `quote_id=eq.${quoteId}`
+        },
+        async (payload) => {
+          console.log("⚡ [Realtime] Nouvel email historique !", payload)
+          const newEmail = payload.new as any
+          setCurrentQuote(prev => {
+            const updatedEmails = [newEmail, ...(prev.sent_emails || [])].slice(0, 3)
+            return { ...prev, sent_emails: updatedEmails }
+          })
+        }
+      )
       .subscribe()
 
     return () => {
