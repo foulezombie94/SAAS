@@ -200,18 +200,17 @@ export function ChatWidget() {
 
             <motion.div
               key="chat-modal"
-              initial={{ opacity: 0, scale: 0.92, y: 24 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
               className="fixed inset-0 z-[99] flex items-center justify-center pointer-events-none p-4 sm:p-6"
             >
-              <motion.div
-                layout
-                className="pointer-events-auto bg-surface flex flex-row relative rounded-3xl shadow-[0_20px_50px_rgba(0,17,66,0.3)] overflow-hidden"
-                style={{ height: '85vh', maxHeight: '800px' }}
+              <div
+                className="pointer-events-auto bg-surface flex flex-row relative rounded-3xl shadow-[0_20px_50px_rgba(0,17,66,0.3)] overflow-hidden transition-all duration-500 ease-out"
+                style={{ height: '85vh', maxHeight: '800px', width: 'auto' }}
               >
                 {/* Main Chat Column */}
-                <div className="flex flex-col w-full max-w-2xl min-w-[320px] relative h-full">
+                <div className="flex flex-col w-full lg:w-[600px] min-w-[320px] relative h-full shrink-0">
                 {/* Background Glow */}
                 <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-gradient-to-br from-primary-fixed-dim/20 to-transparent rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/2 -translate-y-1/2" />
 
@@ -480,7 +479,7 @@ export function ChatWidget() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             </motion.div>
           </>
         )}
