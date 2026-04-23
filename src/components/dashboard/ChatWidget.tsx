@@ -321,6 +321,7 @@ export function ChatWidget() {
                     </div>
                   </div>
                 </div>
+              </div>
 
                 {/* Side Details Panel (Now side-by-side on desktop) */}
                 <AnimatePresence>
