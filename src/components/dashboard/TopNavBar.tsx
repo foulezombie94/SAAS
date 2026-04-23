@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, Bell, User, CheckCircle2, CreditCard, ChevronRight, LogOut, Check, Sun, Moon } from 'lucide-react'
+import { Bell, User, CheckCircle2, LogOut, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { useNotifications } from '@/components/providers/NotificationProvider'
@@ -24,10 +24,8 @@ interface TopNavBarProps {
 export function TopNavBar({ userEmail }: TopNavBarProps) {
   const { unreadCount, notifications, markAllAsRead, clearAllNotifications } = useNotifications()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { t } = useI18n()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
@@ -49,18 +47,6 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
     document.documentElement.classList.toggle('dark', newTheme === 'dark')
   }
 
-  // 🛡️ OPTIMISATION RECHERCHE : Debounce de 500ms pour éviter de bombarder la DB
-  useEffect(() => {
-    if (!searchQuery.trim()) return
-
-    const timer = setTimeout(() => {
-      if (searchQuery.trim().length >= 2) {
-        router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`)
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [searchQuery, router])
 
   const handleSignOut = async () => {
     await signOut()
@@ -80,23 +66,7 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
 
   return (
     <header className="bg-white border-b border-slate-100 shadow-sm flex justify-between items-center w-full px-8 h-20 sticky top-0 z-40 transition-all">
-      <div className="flex items-center gap-4 flex-1">
-        <div className="relative w-full max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-          <input 
-            className="w-full bg-slate-50 border border-slate-100 rounded-full pl-12 pr-6 py-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 placeholder:font-medium font-bold" 
-            placeholder={t('navbar.search_placeholder')} 
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchQuery.trim()) {
-                router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`)
-              }
-            }}
-          />
-        </div>
-      </div>
+      <div className="flex-1" />
 
       <div className="flex items-center gap-6">
         <div className="hidden lg:flex items-center gap-3 pr-6 border-r border-slate-200/20 h-10">
