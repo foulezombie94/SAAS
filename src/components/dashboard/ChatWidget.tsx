@@ -198,7 +198,6 @@ export function ChatWidget() {
               className="fixed inset-0 z-[98] bg-slate-900/40 backdrop-blur-sm"
             />
 
-            {/* Panel */}
             <motion.div
               key="chat-modal"
               initial={{ opacity: 0, scale: 0.92, y: 24 }}
@@ -206,10 +205,13 @@ export function ChatWidget() {
               exit={{ opacity: 0, scale: 0.92, y: 24 }}
               className="fixed inset-0 z-[99] flex items-center justify-center pointer-events-none p-4 sm:p-6"
             >
-              <div
-                className="pointer-events-auto w-full max-w-2xl bg-surface flex flex-col relative rounded-3xl shadow-[0_20px_50px_rgba(0,17,66,0.3)] overflow-hidden"
+              <motion.div
+                layout
+                className="pointer-events-auto bg-surface flex flex-row relative rounded-3xl shadow-[0_20px_50px_rgba(0,17,66,0.3)] overflow-hidden"
                 style={{ height: '85vh', maxHeight: '800px' }}
               >
+                {/* Main Chat Column */}
+                <div className="flex flex-col w-full max-w-2xl min-w-[320px] relative h-full">
                 {/* Background Glow */}
                 <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-gradient-to-br from-primary-fixed-dim/20 to-transparent rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/2 -translate-y-1/2" />
 
@@ -320,16 +322,16 @@ export function ChatWidget() {
                   </div>
                 </div>
 
-                {/* Side Details Panel */}
+                {/* Side Details Panel (Now side-by-side on desktop) */}
                 <AnimatePresence>
                   {selectedItem && (
                     <motion.div
-                      initial={{ x: '100%', opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: '100%', opacity: 0 }}
-                      className="absolute inset-y-0 right-0 w-full sm:w-[400px] bg-white border-l border-surface-variant shadow-2xl z-20 flex flex-col overflow-hidden"
+                      initial={{ width: 0, opacity: 0, x: 20 }}
+                      animate={{ width: 400, opacity: 1, x: 0 }}
+                      exit={{ width: 0, opacity: 0, x: 20 }}
+                      className="hidden lg:flex flex-col border-l border-surface-variant bg-white shrink-0 overflow-hidden"
                     >
-                      <div className="bg-surface-container-low border-b border-surface-variant p-6 flex items-center justify-between">
+                      <div className="bg-surface-container-low border-b border-surface-variant p-6 flex items-center justify-between shrink-0">
                         <h3 className="font-bold text-[10px] text-primary uppercase tracking-[0.2em] font-headline">Détails du document</h3>
                         <button 
                           onClick={() => setSelectedItem(null)}
@@ -398,7 +400,86 @@ export function ChatWidget() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+
+                {/* Mobile Side Panel (Absolute, like before) */}
+                <AnimatePresence>
+                  {selectedItem && (
+                    <motion.div
+                      initial={{ x: '100%', opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: '100%', opacity: 0 }}
+                      className="lg:hidden absolute inset-0 bg-white z-20 flex flex-col overflow-hidden"
+                    >
+                      <div className="bg-surface-container-low border-b border-surface-variant p-6 flex items-center justify-between shrink-0">
+                        <h3 className="font-bold text-[10px] text-primary uppercase tracking-[0.2em] font-headline">Détails du document</h3>
+                        <button 
+                          onClick={() => setSelectedItem(null)}
+                          className="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: '18px' }}>close</span>
+                        </button>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto p-8 space-y-8 font-body">
+                        {loadingItem ? (
+                          <div className="h-full flex items-center justify-center">
+                            <div className="w-8 h-8 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+                          </div>
+                        ) : selectedItem.data ? (
+                          <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-6">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary">
+                                {selectedItem.type === 'quote' ? <FileText size={28} /> : <CheckCircle2 size={28} />}
+                              </div>
+                              <div>
+                                <h4 className="text-xl font-bold text-primary">
+                                  {selectedItem.type === 'quote' ? 'Devis' : 'Facture'} #{selectedItem.data.number}
+                                </h4>
+                                <span className="text-xs font-bold text-on-surface-variant bg-surface-container-low px-2 py-1 rounded-md uppercase tracking-wider">
+                                  {selectedItem.data.status}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-6">
+                              <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-variant">
+                                <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-3">Informations Client</p>
+                                <div className="flex items-center gap-3 mb-2">
+                                  <User size={16} className="text-primary/40" />
+                                  <span className="text-sm font-bold text-on-surface">{selectedItem.data.clients?.name}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Calendar size={16} className="text-primary/40" />
+                                  <span className="text-sm font-medium text-on-surface-variant">Créé le {new Date(selectedItem.data.created_at).toLocaleDateString('fr-FR')}</span>
+                                </div>
+                              </div>
+
+                              <div className="bg-primary p-6 rounded-2xl text-on-primary shadow-xl">
+                                <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-2 text-center">Montant Total</p>
+                                <p className="text-3xl font-bold text-center tabular-nums">
+                                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedItem.data.total_ttc)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-surface-variant">
+                               <a 
+                                 href={`/dashboard/${selectedItem.type === 'quote' ? 'quotes' : 'invoices'}/${selectedItem.id}`}
+                                 className="w-full h-14 bg-surface-container-low hover:bg-surface-container-high border border-surface-variant flex items-center justify-center gap-2 rounded-2xl text-[12px] font-bold text-primary uppercase tracking-widest transition-all"
+                               >
+                                 Voir la page complète
+                                 <span className="material-symbols-outlined" style={{ fontSize: '14px', marginLeft: '4px' }}>open_in_new</span>
+                               </a>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-center text-on-surface-variant py-12">Données indisponibles.</p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </motion.div>
           </>
         )}
