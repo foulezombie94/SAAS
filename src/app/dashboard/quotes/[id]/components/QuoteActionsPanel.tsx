@@ -146,40 +146,37 @@ export function QuoteActionsPanel({
         </div>
       )}
 
-      {/* PROJECT OVERVIEW */}
+      {/* EMAILS HISTORY (REPLACES PROJECT OVERVIEW) */}
       <div className="bg-[#f3f4f8] p-5 rounded-md mt-2">
-        <h3 className="text-[10px] font-black uppercase text-[#818c9f] tracking-widest mb-5">PROJECT OVERVIEW</h3>
+        <h3 className="text-[10px] font-black uppercase text-[#818c9f] tracking-widest mb-5">EMAILS HISTORY</h3>
         
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-white rounded-sm shadow-sm flex items-center justify-center shrink-0">
-              <Calendar className="w-5 h-5 text-[#072161]" strokeWidth={2.5} />
+          {quote.sent_emails && quote.sent_emails.length > 0 ? (
+            quote.sent_emails.map((email) => (
+              <div key={email.id} className="flex items-center gap-4">
+                <div className="w-11 h-11 bg-white rounded-sm shadow-sm flex items-center justify-center shrink-0">
+                  <Send className="w-5 h-5 text-[#072161]" strokeWidth={2.5} />
+                </div>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-[9px] font-black uppercase text-[#a5aec1] tracking-wider truncate">
+                    {new Date(email.created_at).toLocaleDateString('fr-FR', { 
+                      day: 'numeric', 
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                  <span className="font-black text-[#1a2130] text-[12px] truncate">{email.subject}</span>
+                  <span className="text-[10px] text-slate-400 font-medium truncate">{email.recipient_email}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 text-center opacity-40">
+               <Info className="w-8 h-8 mb-2 text-[#818c9f]" />
+               <p className="text-[10px] font-bold uppercase tracking-widest text-[#818c9f]">Aucun mail envoyé</p>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase text-[#a5aec1] tracking-wider">ESTIMATED START</span>
-              <span className="font-black text-[#1a2130] text-[13px]">{createdDate}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-white rounded-sm shadow-sm flex items-center justify-center shrink-0">
-              <Timer className="w-5 h-5 text-[#072161] fill-[#072161]" strokeWidth={2.5} />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase text-[#a5aec1] tracking-wider">PROJECT DURATION</span>
-              <span className="font-black text-[#1a2130] text-[13px]">14 Working Days</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-white rounded-sm shadow-sm flex items-center justify-center shrink-0">
-              <Wallet className="w-5 h-5 text-[#072161] fill-[#072161]" strokeWidth={2.5} />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-black uppercase text-[#a5aec1] tracking-wider">TAXABLE REGION</span>
-              <span className="font-black text-[#1a2130] text-[13px]">UK Standard (20%)</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
       

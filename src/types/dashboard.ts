@@ -26,6 +26,12 @@ export type Quote = Omit<Database['public']['Tables']['quotes']['Row'], 'status'
   quote_items?: QuoteItem[] | null
   artisan_signature_url?: string | null
   client_signature_url?: string | null
+  sent_emails?: {
+    id: string
+    recipient_email: string
+    subject: string
+    created_at: string
+  }[] | null
 }
 
 export type QuoteNotification = Quote & {

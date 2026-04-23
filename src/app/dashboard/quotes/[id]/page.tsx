@@ -15,11 +15,14 @@ export default async function QuoteViewPage({ params }: { params: Promise<{ id: 
     supabase
       .from('quotes')
       .select(`
-        id, number, client_id, status, total_ht, total_ttc, public_token, public_token_expires_at, artisan_signature_url, client_signature_url, signature_url, stripe_session_id, user_id, created_at, updated_at, payment_method, payment_details, last_viewed_at,
+        id, number, client_id, status, total_ht, total_ttc, public_token, public_token_expires_at, artisan_signature_url, client_signature_url, signature_url, stripe_session_id, user_id, created_at, updated_at, payment_method, payment_details, last_viewed_at, estimated_start_date, estimated_duration, tax_rate,
         clients (id, name, email, phone, address, postal_code, city, country),
-        quote_items (id, description, quantity, unit_price, total_price, tax_rate)
+        quote_items (id, description, quantity, unit_price, total_price, tax_rate),
+        sent_emails (id, recipient_email, subject, created_at)
       `)
       .eq('id', id)
+      .order('created_at', { foreignTable: 'sent_emails', ascending: false })
+      .limit(3, { foreignTable: 'sent_emails' })
       .single(),
     getUserProfile(user.id)
   ])

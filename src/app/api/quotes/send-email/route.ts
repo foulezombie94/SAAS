@@ -172,7 +172,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Échec de l'envoi de l'email via votre serveur SMTP." }, { status: 500 })
     }
 
-    // 5. Update Status
+    // 5. Log Email History
+    await supabase
+      .from('sent_emails')
+      .insert({
+        quote_id: quoteId,
+        user_id: user.id,
+        recipient_email: to || quote.clients?.email,
+        subject: subject || `Devis ${quote.number}`,
+        message: message
+      })
+
+    // 6. Update Status
     if (quote.status === 'draft') {
       await supabase
         .from('quotes')
