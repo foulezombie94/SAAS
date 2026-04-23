@@ -19,13 +19,15 @@ type Intent =
   | { type: 'faq'; topic: string }
   | { type: 'unknown' }
 
+const DATE_PATTERN = `(?:\\d{1,2}[/-]\\d{1,2}(?:[/-]\\d{2,4})?|\\d{1,2}\\s+(?:janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[ûu]t|septembre|octobre|novembre|d[ée]cembre)(?:\\s+\\d{2,4})?|aujourd'hui|hier)`
+
 const QUOTE_ID_RE = /(?:devis|quote)\s*(?:n[°o]?|#|numéro)?\s*(\d+)/i
 const INVOICE_ID_RE = /(?:facture|invoice)\s*(?:n[°o]?|#|numéro)?\s*(\d+)/i
 const QUOTE_CLIENT_RE = /(?:devis|devis de|quotes?\s+(?:de|pour|du client))\s+([A-Za-zÀ-ÿ\s\-']{2,40})/i
 const INVOICE_CLIENT_RE = /(?:facture|factures?\s+(?:de|pour|du client))\s+([A-Za-zÀ-ÿ\s\-']{2,40})/i
-const QUOTE_DATE_RE = /(?:devis|quote)\s+(?:du|le\s+)?(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)/i
-const INVOICE_DATE_RE = /(?:facture|invoice)\s+(?:du|le\s+)?(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)/i
-const GENERAL_DATE_RE = /(?:du|le\s+)?(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)/i
+const QUOTE_DATE_RE = new RegExp(`(?:devis|quote)\\s+(?:du|le\\s+)?(${DATE_PATTERN})`, 'i')
+const INVOICE_DATE_RE = new RegExp(`(?:facture|invoice)\\s+(?:du|le\\s+)?(${DATE_PATTERN})`, 'i')
+const GENERAL_DATE_RE = new RegExp(`(?:du|le\\s+)?(${DATE_PATTERN})`, 'i')
 const CLIENT_RE = /(?:client|contact)\s+([A-Za-zÀ-ÿ\s\-']{2,40})/i
 const STANDALONE_ID_RE = /^(?:#|n[°o])?\s*(\d+)$/i
 
@@ -139,7 +141,32 @@ async function findQuotesByClient(supabase: any, userId: string, name: string) {
 }
 
 function parseDateStr(str: string): Date | null {
-  const parts = str.split(/[/-]/)
+  const s = str.toLowerCase().trim()
+  
+  if (s === "aujourd'hui") return new Date()
+  if (s === "hier") {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    return d
+  }
+
+  // Check for month names (e.g. "18 avril")
+  const monthMatch = s.match(/(\d{1,2})\s+(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[ûu]t|septembre|octobre|novembre|d[ée]cembre)(?:\s+(\d{2,4}))?/i)
+  if (monthMatch) {
+    const day = parseInt(monthMatch[1])
+    const monthStr = monthMatch[2].replace(/[ée]/g, 'e').replace(/[ûu]/g, 'u')
+    const months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
+    const month = months.indexOf(monthStr)
+    let year = new Date().getFullYear()
+    if (monthMatch[3]) {
+      year = parseInt(monthMatch[3])
+      if (year < 100) year += 2000
+    }
+    const d = new Date(year, month, day)
+    return isValid(d) ? d : null
+  }
+
+  const parts = s.split(/[/-]/)
   if (parts.length < 2) return null
   
   const day = parseInt(parts[0])
