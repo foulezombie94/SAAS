@@ -9,6 +9,7 @@ import { Toaster } from 'sonner'
 import { NotificationProvider } from '@/components/providers/NotificationProvider'
 import { LanguageProvider } from '@/components/providers/LanguageProvider'
 import { NavLabel } from '@/components/dashboard/NavLabel'
+import { ChatWidget } from '@/components/dashboard/ChatWidget'
 
 import { Suspense } from 'react'
 
@@ -91,6 +92,7 @@ export default async function DashboardLayout({
           </nav>
         </div>
       </div>
+      <ChatWidget />
      </LanguageProvider>
     </NotificationProvider>
   )
