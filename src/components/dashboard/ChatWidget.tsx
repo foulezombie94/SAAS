@@ -84,6 +84,26 @@ export function ChatWidget() {
     return () => window.removeEventListener('keydown', fn)
   }, [])
 
+  // 🚀 Proactive Notifications Listener
+  useEffect(() => {
+    const handleNotification = (e: any) => {
+      const { text, quoteId } = e.detail
+      
+      // Auto-open chat if a notification comes in? 
+      // (Maybe not, let's just push the message so it's there when they open it)
+      
+      pushAgent(`${text}\n\n[Voir les détails](quote:${quoteId})`, true)
+      
+      // If chat is closed, we could trigger a special animation on the button
+      if (!open) {
+        // The ping animation is already running, which is good.
+      }
+    }
+
+    window.addEventListener('af-notification', handleNotification)
+    return () => window.removeEventListener('af-notification', handleNotification)
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Greeting on first open (no DB call)
   useEffect(() => {
     if (open && !started) {

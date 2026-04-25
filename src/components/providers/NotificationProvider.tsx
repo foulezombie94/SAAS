@@ -150,7 +150,23 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
        (isViewed && prefs.quotes_viewed === false)
     ) return
 
-    // Toast UI
+    // Toast UI & Chat Bot Sync
+    const botMessage = isViewed 
+      ? `👀 Le devis **#${newQuote.number}** vient d'être consulté par votre client.`
+      : isPaid 
+        ? `💰 Bonne nouvelle ! Le devis **#${newQuote.number}** a été payé.`
+        : `✍️ Le devis **#${newQuote.number}** a été accepté et signé !`
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('af-notification', { 
+        detail: { 
+          text: botMessage,
+          type: eventType,
+          quoteId: newQuote.id
+        } 
+      }))
+    }
+
     if (isViewed) toast.info("👀 Devis consulté !", { description: `Le devis #${newQuote.number} vient d'être ouvert par le client.` })
     if (isPaid) toast.success("🎉 Paiement reçu !", { description: `Le devis #${newQuote.number} a été payé.` })
     if (isAccepted) toast.success("✍️ Devis signé !", { description: `Le devis #${newQuote.number} a été accepté.` })
