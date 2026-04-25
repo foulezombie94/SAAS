@@ -88,21 +88,17 @@ export function ChatWidget() {
   useEffect(() => {
     const handleNotification = (e: any) => {
       const { text, quoteId } = e.detail
-      
-      // Auto-open chat if a notification comes in? 
-      // (Maybe not, let's just push the message so it's there when they open it)
-      
+      console.log("📥 [ChatWidget] CustomEvent 'af-notification' received", { text, quoteId })
       pushAgent(`${text}\n\n[Voir les détails](quote:${quoteId})`, true)
-      
-      // If chat is closed, we could trigger a special animation on the button
-      if (!open) {
-        // The ping animation is already running, which is good.
-      }
     }
 
+    console.log("🔌 [ChatWidget] Subscribing to 'af-notification' window event")
     window.addEventListener('af-notification', handleNotification)
-    return () => window.removeEventListener('af-notification', handleNotification)
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      console.log("🔌 [ChatWidget] Unsubscribing from 'af-notification'")
+      window.removeEventListener('af-notification', handleNotification)
+    }
+  }, [pushAgent]) // Dependency on stable pushAgent
 
   // Greeting on first open (no DB call)
   useEffect(() => {
@@ -120,7 +116,8 @@ export function ChatWidget() {
     if (open) setTimeout(() => inputRef.current?.focus(), 300)
   }, [open, started]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function pushAgent(text: string, isMarkdown = false) {
+  const pushAgent = useCallback((text: string, isMarkdown = false) => {
+    console.log("🤖 [ChatWidget] pushAgent called", { text })
     setMessages(prev => [...prev, {
       id: crypto.randomUUID(),
       role: 'agent',
@@ -128,7 +125,7 @@ export function ChatWidget() {
       time: nowLabel(),
       isMarkdown,
     }])
-  }
+  }, [])
 
   // ── Send message → API ────────────────────────
   const sendMessage = useCallback(async (text = input.trim()) => {

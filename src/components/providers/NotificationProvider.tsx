@@ -127,7 +127,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
     const staticKey = `AF_EVT_${newQuote.id}_${eventType}`
     
     if (typeof window !== 'undefined' && localStorage.getItem(staticKey)) {
-       console.log("🛡️ [Realtime] Événement déjà traité (devis déjà notifié)")
+       console.log("🛡️ [Realtime] Événement déjà traité ou ignoré (dedup localStorage)", { staticKey })
        return
     }
     
@@ -158,6 +158,7 @@ export function NotificationProvider({ children, userId }: { children: React.Rea
         : `✍️ Le devis **#${newQuote.number}** a été accepté et signé !`
 
     if (typeof window !== 'undefined') {
+      console.log("📢 [NotificationProvider] Dispatching 'af-notification' event", { text: botMessage, quoteId: newQuote.id })
       window.dispatchEvent(new CustomEvent('af-notification', { 
         detail: { 
           text: botMessage,
