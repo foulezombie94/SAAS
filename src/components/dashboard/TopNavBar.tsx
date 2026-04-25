@@ -54,10 +54,9 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
 
   return (
     <header className="bg-white border-b border-slate-100 shadow-sm flex justify-center items-center w-full px-8 h-20 sticky top-0 z-40 transition-all">
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         {/* 👤 PREMIUM USER SECTION */}
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/profile">
+        <Link href="/dashboard/profile">
             <motion.div 
               whileHover={{ x: -4 }}
               className="flex items-center gap-4 bg-slate-50/50 hover:bg-white border border-slate-100/50 hover:border-slate-200 hover:shadow-sm px-4 py-2 rounded-[1.25rem] transition-all group cursor-pointer"
@@ -97,7 +96,6 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
             </motion.div>
             <span className="text-[10px] font-black uppercase tracking-[0.1em]">{t('navbar.logout')}</span>
           </Button>
-        </div>
       </div>
     </header>
   )
