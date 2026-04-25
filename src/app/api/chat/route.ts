@@ -36,8 +36,8 @@ const FAQ: Record<string, string> = {
   facture: "🧾 Vos factures sont dans la section **Factures**. Chaque facture peut être exportée en PDF ou envoyée par e-mail.",
   paiement: "💳 Les paiements sont traités via Stripe. Vérifiez dans **Factures** si un paiement est en attente.",
   client: "👤 Gérez vos clients dans **Clients**. Chaque fiche client regroupe ses devis et factures associés.",
-  aide: "💡 Posez-moi votre question ! Je peux rechercher vos devis ou factures par numéro ou nom de client.",
-  bonjour: "👋 Bonjour ! Comment puis-je vous aider ? Dites-moi par exemple : *devis #42* ou *devis de Dupont*.",
+  aide: "💡 **Besoin d'un coup de main ?**\n\nJe suis votre assistant ArtisanFlow. Je peux :\n• Rechercher un **devis** ou une **facture** (ex: *#42* ou *devis de Dupont*)\n• Trouver un **client** (ex: *client Durand*)\n• Filtrer par **date** (ex: *devis d'hier* ou *du 12 mars*)\n\nQue cherchez-vous précisément ?",
+  bonjour: "👋 **Bonjour ! Ravi de vous voir.**\n\nComment puis-je vous aider aujourd'hui ? Vous pouvez me demander de retrouver un document ou un client en quelques secondes.",
 }
 
 function detectIntent(message: string): Intent {
@@ -318,7 +318,7 @@ export async function POST(req: NextRequest) {
     }
     if (intent.type === 'unknown') {
       return NextResponse.json({
-        reply: "Je n'ai pas compris votre demande. Essayez par exemple :\n• *devis #42*\n• *devis de Dupont*\n• *facture #12*\n• *aide*",
+        reply: "Je n'ai pas compris votre demande.\n\nVoici ce que je peux rechercher pour vous :\n\n**Par référence** : Tapez directement le numéro (ex: *Devis #42* ou *Facture #12*).\n\n**Par contact** : Entrez le nom d'un client (ex: *Marie Durand*).\n\n**Par période** : Demandez les *Documents d'hier* ou de *la semaine dernière*.",
         intent: 'unknown',
       })
     }
