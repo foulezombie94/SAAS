@@ -60,10 +60,16 @@ function renderMarkdown(text: string, onLinkClick: (type: string, id: string) =>
 // ─── Component ───────────────────────────────────
 export function ChatWidget() {
   const [open, setOpen] = useState(false)
+  const openRef = useRef(open)
+  
+  useEffect(() => {
+    openRef.current = open
+  }, [open])
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const [started, setStarted] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   
   // Side Panel State
   const [selectedItem, setSelectedItem] = useState<{ type: string; id: string; data?: any } | null>(null)
@@ -100,6 +106,11 @@ export function ChatWidget() {
     }
   }, [pushAgent]) // Dependency on stable pushAgent
 
+  // Clear unread on open
+  useEffect(() => {
+    if (open) setUnreadCount(0)
+  }, [open])
+
   // Greeting on first open (no DB call)
   useEffect(() => {
     if (open && !started) {
@@ -125,6 +136,9 @@ export function ChatWidget() {
       time: nowLabel(),
       isMarkdown,
     }])
+    
+    // Increment unread if chat is closed
+    if (!openRef.current) setUnreadCount(prev => prev + 1)
   }, [])
 
   // ── Send message → API ────────────────────────
@@ -199,6 +213,20 @@ export function ChatWidget() {
           )}
         </AnimatePresence>
         {!open && <span className="absolute inset-0 rounded-2xl animate-ping bg-white/15 pointer-events-none" />}
+        
+        {/* Badge Notifications */}
+        <AnimatePresence>
+          {!open && unreadCount > 0 && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10"
+            >
+              {unreadCount}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.button>
 
       {/* ── Modal centré ── */}
