@@ -65,18 +65,8 @@ export function TopNavBar({ userEmail }: TopNavBarProps) {
   }, [])
 
   return (
-    <header className="bg-white border-b border-slate-100 shadow-sm flex justify-between items-center w-full px-8 h-20 sticky top-0 z-40 transition-all">
-      <div className="flex-1" />
-
+    <header className="bg-white border-b border-slate-100 shadow-sm flex justify-center items-center w-full px-8 h-20 sticky top-0 z-40 transition-all">
       <div className="flex items-center gap-6">
-        <div className="hidden lg:flex items-center gap-3 pr-6 border-r border-slate-200/20 h-10">
-          <Link href="/dashboard/quotes/new">
-            <Button size="sm" className="px-6 font-bold tracking-tight bg-[#00236f] hover:bg-[#001b54] text-white rounded-lg">
-              {t('sidebar.create_quote')}
-            </Button>
-          </Link>
-        </div>
-
         <div className="flex items-center gap-3 relative" ref={dropdownRef}>
           <motion.button 
             id="notifications-trigger"
