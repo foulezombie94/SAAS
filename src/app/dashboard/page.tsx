@@ -11,6 +11,7 @@ import { IntegrationsTable } from '@/components/dashboard/IntegrationsTable'
 import { Calendar, Filter, Download } from 'lucide-react'
 
 export default async function DashboardPage() {
+  // Trigger deployment: 2026-04-27 13:06
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
