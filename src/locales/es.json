@@ -16,7 +16,20 @@
     "emails": "Correos",
     "create_quote": "Crear Presupuesto",
     "pro_plan": "Plan Pro Activo",
-    "free_plan": "Suscripción Gratuita"
+    "free_plan": "Suscripción Gratuita",
+    "general": "GENERAL",
+    "tools": "HERRAMIENTAS",
+    "support": "SOPORTE",
+    "payment": "Pagos",
+    "message": "Mensajes",
+    "product": "Productos",
+    "analytics": "Análisis",
+    "automation": "Automatización",
+    "security": "Seguridad",
+    "help": "Ayuda",
+    "upgrade_plan": "Actualizar Plan",
+    "team": "Equipo",
+    "marketing": "Marketing"
   },
   "settings": {
     "title": "Controles de Empresa",

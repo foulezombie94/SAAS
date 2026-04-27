@@ -90,6 +90,20 @@ export function ChatWidget() {
     return () => window.removeEventListener('keydown', fn)
   }, [])
 
+  const pushAgent = useCallback((text: string, isMarkdown = false) => {
+    console.log("🤖 [ChatWidget] pushAgent called", { text })
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      role: 'agent',
+      text,
+      time: nowLabel(),
+      isMarkdown,
+    }])
+    
+    // Increment unread if chat is closed
+    if (!openRef.current) setUnreadCount(prev => prev + 1)
+  }, [])
+
   // 🚀 Proactive Notifications Listener
   useEffect(() => {
     const handleNotification = (e: any) => {
@@ -126,20 +140,6 @@ export function ChatWidget() {
     }
     if (open) setTimeout(() => inputRef.current?.focus(), 300)
   }, [open, started]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const pushAgent = useCallback((text: string, isMarkdown = false) => {
-    console.log("🤖 [ChatWidget] pushAgent called", { text })
-    setMessages(prev => [...prev, {
-      id: crypto.randomUUID(),
-      role: 'agent',
-      text,
-      time: nowLabel(),
-      isMarkdown,
-    }])
-    
-    // Increment unread if chat is closed
-    if (!openRef.current) setUnreadCount(prev => prev + 1)
-  }, [])
 
   // ── Send message → API ────────────────────────
   const sendMessage = useCallback(async (text = input.trim()) => {

@@ -16,7 +16,20 @@
     "emails": "E-mails",
     "create_quote": "Créer un Devis",
     "pro_plan": "Plan Pro Actif",
-    "free_plan": "Abonnement Gratuit"
+    "free_plan": "Abonnement Gratuit",
+    "general": "GÉNÉRAL",
+    "tools": "OUTILS",
+    "support": "SUPPORT",
+    "payment": "Paiements",
+    "message": "Messages",
+    "product": "Produits",
+    "analytics": "Analyses",
+    "automation": "Automatisation",
+    "security": "Sécurité",
+    "help": "Aide",
+    "upgrade_plan": "Mettre à jour le plan",
+    "team": "Équipe",
+    "marketing": "Marketing"
   },
   "settings": {
     "title": "Contrôles d'Entreprise",

@@ -16,7 +16,20 @@
     "emails": "Emails",
     "create_quote": "Create Quote",
     "pro_plan": "Pro Plan Active",
-    "free_plan": "Free Subscription"
+    "free_plan": "Free Subscription",
+    "general": "GENERAL",
+    "tools": "TOOLS",
+    "support": "SUPPORT",
+    "payment": "Payments",
+    "message": "Messages",
+    "product": "Products",
+    "analytics": "Analytics",
+    "automation": "Automation",
+    "security": "Security",
+    "help": "Help",
+    "upgrade_plan": "Upgrade Plan",
+    "team": "Team",
+    "marketing": "Marketing"
   },
   "settings": {
     "title": "Business Controls",
