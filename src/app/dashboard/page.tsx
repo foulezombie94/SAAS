@@ -1,7 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { 
-  getCachedDashboardStats, 
-  getCachedRecentQuotes 
+  getCachedDashboardStats
 } from '@/utils/supabase/cached-queries'
 import { DashboardStats } from '@/types/dashboard'
 import { StatCard } from '@/components/dashboard/StatCard'
@@ -16,7 +15,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  // 🚀 Fetch stats with Session Security
+  // Fetch stats with Session Security
   const stats = await getCachedDashboardStats(user.id) as DashboardStats
 
   return (
