@@ -8,7 +8,7 @@ import { SalesOverviewChart } from '@/components/dashboard/SalesOverviewChart'
 import { SubscribersChart } from '@/components/dashboard/SubscribersChart'
 import { SalesDistributionChart } from '@/components/dashboard/SalesDistributionChart'
 import { IntegrationsTable } from '@/components/dashboard/IntegrationsTable'
-import { Eye, Banknote, LineChart, Calendar, Filter, Download } from 'lucide-react'
+import { Calendar, Filter, Download } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -52,21 +52,21 @@ export default async function DashboardPage() {
           title="Page Views" 
           value="12,450" 
           change={15.8} 
-          icon={Eye} 
+          iconName="eye" 
           changeType="positive" 
         />
         <StatCard 
           title="Total Revenue" 
           value={`${Math.round(stats.revenue).toLocaleString('fr-FR')}€`} 
           change={stats.revenue_change} 
-          icon={Banknote} 
+          iconName="banknote" 
           changeType={stats.revenue_change >= 0 ? 'positive' : 'negative'} 
         />
         <StatCard 
           title="Bounce Rate" 
           value="86.5%" 
           change={24.2} 
-          icon={LineChart} 
+          iconName="lineChart" 
           changeType="positive" 
         />
       </div>

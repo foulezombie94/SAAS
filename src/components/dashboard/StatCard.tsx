@@ -2,18 +2,25 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { LucideIcon, Info } from 'lucide-react'
+import { Eye, Banknote, LineChart, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+const ICONS = {
+  eye: Eye,
+  banknote: Banknote,
+  lineChart: LineChart
+}
 
 interface StatCardProps {
   title: string
   value: string | number
   change?: number
-  icon: LucideIcon
+  iconName: keyof typeof ICONS
   changeType?: 'positive' | 'negative'
 }
 
-export function StatCard({ title, value, change, icon: Icon, changeType = 'positive' }: StatCardProps) {
+export function StatCard({ title, value, change, iconName, changeType = 'positive' }: StatCardProps) {
+  const Icon = ICONS[iconName]
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}

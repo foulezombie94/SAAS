@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'raw.githack.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
+      },
     ],
   },
 
