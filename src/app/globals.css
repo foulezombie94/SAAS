@@ -57,6 +57,12 @@
   --color-inverse-on-surface: #f1f0f7;
   --color-on-secondary-fixed: #111a37;
   
+  /* Brand Colors from Nexus.io Dashboard */
+  --color-brand-purple: #5347CE;
+  --color-brand-lightpurple: #887CFD;
+  --color-brand-blue: #4896FE;
+  --color-brand-teal: #16C8C7;
+
   /* Border Radii (Updated per HTML request) */
   --radius-default: 0.125rem;
   --radius-lg: 0.25rem;

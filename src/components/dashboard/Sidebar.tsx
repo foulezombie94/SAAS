@@ -105,17 +105,17 @@ export function Sidebar({ isPro }: { isPro: boolean }) {
       )}
     >
       {/* Header / Logo */}
-      <div className={cn("h-20 flex items-center px-6 border-b border-slate-50", isCollapsed && "justify-center px-0")}>
+      <div className={cn("h-20 flex items-center px-6", isCollapsed && "justify-center px-0")}>
         {!isCollapsed ? (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#00236f] rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-xl italic leading-none">A</span>
+          <div className="flex items-center gap-3 text-2xl font-bold text-brand-purple">
+            <div className="w-7 h-7 bg-brand-blue rounded flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l6 14H4l6-14z"/></svg>
             </div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tighter">ArtisanFlow</h1>
+            ArtisanFlow
           </div>
         ) : (
-          <div className="w-10 h-10 bg-[#00236f] rounded-lg flex items-center justify-center">
-            <span className="text-white font-black text-2xl italic leading-none">A</span>
+          <div className="w-10 h-10 bg-brand-blue rounded-lg flex items-center justify-center text-white">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l6 14H4l6-14z"/></svg>
           </div>
         )}
       </div>
