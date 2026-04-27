@@ -13,6 +13,7 @@ import {
   LineChart,
   Sparkles,
   Shield,
+  ShieldCheck,
   HelpCircle,
   ArrowLeftRight,
   ChevronLeft,
@@ -197,39 +198,39 @@ export function Sidebar({ isPro }: { isPro: boolean }) {
       </div>
 
       {/* Bottom Actions */}
-      <div className="mt-auto border-t border-slate-50 p-4 space-y-4 bg-slate-50/30">
-        {/* Team Switcher */}
-        {!isCollapsed ? (
-          <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-sm hover:border-slate-200 transition-colors cursor-pointer group">
-            <div className="w-10 h-10 bg-cyan-400 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm">
-              <Sparkles size={20} />
+      <div className="mt-auto border-t border-slate-50 pt-6 px-4">
+        <Link href="/dashboard/quotes/new">
+          <Button className={cn(
+            "w-full justify-start gap-3 h-12 mb-4 bg-[#00236f] hover:bg-[#001b54] text-white rounded-xl shadow-lg shadow-blue-900/10 active:scale-95 transition-all overflow-hidden",
+            isCollapsed && "justify-center px-0"
+          )}>
+            <PlusCircle size={18} className="shrink-0" />
+            {!isCollapsed && <span className="font-bold uppercase tracking-widest text-[10px]">{t('sidebar.create_quote')}</span>}
+          </Button>
+        </Link>
+        
+        {!isCollapsed && (
+          isPro ? (
+            <div className="flex items-center gap-3 p-3 text-[#00236f] font-bold text-[10px] uppercase tracking-widest bg-blue-50/50 rounded-xl border border-blue-100/50">
+              <ShieldCheck size={16} className="text-[#00236f]" />
+              {t('sidebar.pro_plan')}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('sidebar.team')}</p>
-              <p className="text-sm font-bold text-slate-900 truncate">{t('sidebar.marketing')}</p>
-            </div>
-            <ChevronsUpDown size={16} className="text-slate-400 group-hover:text-slate-600" />
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <div className="w-10 h-10 bg-cyan-400 rounded-lg flex items-center justify-center text-white shadow-sm cursor-pointer">
-              <Sparkles size={20} />
-            </div>
-          </div>
+          ) : (
+            <Link href="/onboarding/plans">
+              <div className="flex items-center gap-3 p-3 text-slate-500 hover:text-[#00236f] hover:bg-slate-50 transition-all font-bold text-[10px] uppercase tracking-widest rounded-xl group border border-transparent hover:border-slate-100">
+                <div className="w-4 h-4 rounded-full border-2 border-slate-200 group-hover:border-[#00236f] flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-slate-200 group-hover:bg-[#00236f] rounded-full" />
+                </div>
+                {t('sidebar.free_plan')}
+              </div>
+            </Link>
+          )
         )}
 
-        {/* Upgrade Button */}
-        {!isCollapsed ? (
-          <Button 
-            className="w-full bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 shadow-sm rounded-xl h-11 text-xs font-bold"
-            variant="outline"
-          >
-            {t('sidebar.upgrade_plan')}
-          </Button>
-        ) : (
+        {isCollapsed && (
           <button 
             onClick={toggleCollapse}
-            className="w-full flex justify-center p-2 text-slate-400 hover:text-slate-900 transition-colors"
+            className="w-full flex justify-center p-2 text-slate-400 hover:text-[#00236f] transition-colors"
           >
             <ChevronRight size={20} />
           </button>
